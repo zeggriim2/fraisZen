@@ -18,7 +18,7 @@ final readonly class CreatePersonCommandHandler implements CommandHandlerInterfa
     public function __invoke(CreatePersonCommand $command): string
     {
         $id = PersonId::generate();
-        $this->repository->save(new Person($id, $command->firstName, $command->lastName, $command->email));
+        $this->repository->save(new Person($id, $command->userId, $command->firstName, $command->lastName, $command->email));
         return $id->value();
     }
 }

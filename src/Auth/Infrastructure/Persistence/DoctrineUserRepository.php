@@ -19,6 +19,12 @@ final readonly class DoctrineUserRepository implements UserRepositoryInterface
         $this->em->flush();
     }
 
+    public function delete(User $user): void
+    {
+        $this->em->remove($user);
+        $this->em->flush();
+    }
+
     public function findById(UserId $id): ?User
     {
         return $this->em->find(User::class, $id->value());
@@ -27,5 +33,10 @@ final readonly class DoctrineUserRepository implements UserRepositoryInterface
     public function findByEmail(string $email): ?User
     {
         return $this->em->getRepository(User::class)->findOneBy(['email' => $email]);
+    }
+
+    public function findByStripeCustomerId(string $customerId): ?User
+    {
+        return $this->em->getRepository(User::class)->findOneBy(['stripeCustomerId' => $customerId]);
     }
 }

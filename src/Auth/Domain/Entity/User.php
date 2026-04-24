@@ -33,6 +33,12 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(type: Types::STRING, length: 50, nullable: true)]
     private ?string $subscriptionStatus = null;
 
+    #[ORM\Column(type: Types::SMALLINT, nullable: true)]
+    private ?int $defaultYear = null;
+
+    #[ORM\Column(type: Types::SMALLINT, nullable: true)]
+    private ?int $defaultFiscalPower = null;
+
     #[ORM\Column(type: Types::DATETIME_IMMUTABLE)]
     private \DateTimeImmutable $createdAt;
 
@@ -51,8 +57,14 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function subscriptionStatus(): ?string { return $this->subscriptionStatus; }
     public function createdAt(): \DateTimeImmutable { return $this->createdAt; }
 
+    public function defaultYear(): ?int { return $this->defaultYear; }
+    public function defaultFiscalPower(): ?int { return $this->defaultFiscalPower; }
+
     public function setStripeCustomerId(string $id): void { $this->stripeCustomerId = $id; }
     public function setSubscriptionStatus(string $status): void { $this->subscriptionStatus = $status; }
+    public function setEmail(string $email): void { $this->email = $email; }
+    public function setDefaultYear(?int $year): void { $this->defaultYear = $year; }
+    public function setDefaultFiscalPower(?int $power): void { $this->defaultFiscalPower = $power; }
 
     public function getUserIdentifier(): string { return $this->email; }
     public function getRoles(): array { return $this->roles; }
@@ -67,6 +79,8 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
             'email' => $this->email,
             'roles' => $this->getRoles(),
             'subscriptionStatus' => $this->subscriptionStatus,
+            'defaultYear' => $this->defaultYear,
+            'defaultFiscalPower' => $this->defaultFiscalPower,
             'createdAt' => $this->createdAt->format('Y-m-d H:i:s'),
         ];
     }

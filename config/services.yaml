@@ -31,6 +31,16 @@ services:
     App\Auth\Domain\Repository\UserRepositoryInterface:
         class: App\Auth\Infrastructure\Persistence\DoctrineUserRepository
 
+    Stripe\StripeClient:
+        arguments:
+            $config: '%env(STRIPE_SECRET_KEY)%'
+
+    App\Billing\Infrastructure\Http\BillingController:
+        arguments:
+            $webhookSecret: '%env(STRIPE_WEBHOOK_SECRET)%'
+            $priceIdMonthly: '%env(STRIPE_PRICE_ID_MONTHLY)%'
+            $priceIdYearly: '%env(STRIPE_PRICE_ID_YEARLY)%'
+
     # Tag command & query handlers to their respective buses
     _instanceof:
         App\SharedKernel\Application\Bus\CommandHandlerInterface:

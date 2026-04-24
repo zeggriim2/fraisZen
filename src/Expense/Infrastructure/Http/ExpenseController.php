@@ -28,7 +28,7 @@ final class ExpenseController extends AbstractController
         private readonly QueryBusInterface $queryBus,
     ) {}
 
-    #[Route('', methods: ['GET'])]
+    #[Route('', methods: [Request::METHOD_GET])]
     public function list(Request $request): JsonResponse
     {
         $from     = $request->query->get('from', date('Y-m-01'));
@@ -38,7 +38,7 @@ final class ExpenseController extends AbstractController
         return $this->json($this->queryBus->ask(new GetExpensesByPeriodQuery($from, $to, $personId)));
     }
 
-    #[Route('/summary', methods: ['GET'])]
+    #[Route('/summary', methods: [Request::METHOD_GET])]
     public function summary(Request $request): JsonResponse
     {
         $personId = $request->query->get('personId', '');
@@ -51,7 +51,7 @@ final class ExpenseController extends AbstractController
         return $this->json($this->queryBus->ask(new GetExpensesSummaryQuery($personId, $year)));
     }
 
-    #[Route('', methods: ['POST'])]
+    #[Route('', methods: [Request::METHOD_POST])]
     public function create(Request $request): JsonResponse
     {
         $data = json_decode($request->getContent(), true) ?? [];
@@ -95,7 +95,7 @@ final class ExpenseController extends AbstractController
         return $this->json(['message' => 'Expense created'], Response::HTTP_CREATED);
     }
 
-    #[Route('/{id}', methods: ['DELETE'])]
+    #[Route('/{id}', methods: [Request::METHOD_DELETE])]
     public function delete(string $id): JsonResponse
     {
         try {

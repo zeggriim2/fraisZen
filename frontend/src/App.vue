@@ -6,6 +6,16 @@
         <p class="text-xs text-gray-500 mt-0.5">Déclaration d'impôts</p>
       </div>
 
+      <!-- Bandeau abonnement inactif -->
+      <div v-if="authStore.user && authStore.user.subscriptionStatus !== 'active'" class="mx-3 my-3 bg-amber-50 border border-amber-200 rounded-xl p-3">
+        <p class="text-xs font-semibold text-amber-800 mb-1">Accès limité</p>
+        <p class="text-xs text-amber-600 mb-2">Abonnez-vous pour accéder à toutes les fonctionnalités.</p>
+        <RouterLink to="/pricing"
+          class="block w-full py-1.5 px-3 bg-amber-500 text-white rounded-lg text-xs font-medium hover:bg-amber-600 transition-colors text-center">
+          Voir les offres
+        </RouterLink>
+      </div>
+
       <div class="px-4 py-4 border-b border-gray-200">
         <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Personne</p>
         <div v-if="personStore.loading" class="text-sm text-gray-400">Chargement…</div>
@@ -69,10 +79,12 @@ function logout() {
   authStore.logout()
   router.push('/login')
 }
+
 const nav = [
   { to: '/calendar', label: 'Calendrier', icon: '📅' },
   { to: '/summary', label: 'Récapitulatif', icon: '📊' },
   { to: '/persons', label: 'Personnes', icon: '👤' },
+  { to: '/settings', label: 'Paramètres', icon: '⚙️' },
 ]
 const types = [
   { label: 'Trajet', color: 'bg-blue-500' },

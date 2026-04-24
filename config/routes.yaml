@@ -14,3 +14,7 @@ expense_api:
 auth_api:
     resource: '../src/Auth/Infrastructure/Http/AuthController.php'
     type: attribute
+
+billing_api:
+    resource: '../src/Billing/Infrastructure/Http/BillingController.php'
+    type: attribute

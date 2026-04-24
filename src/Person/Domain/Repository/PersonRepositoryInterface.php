@@ -16,5 +16,5 @@ interface PersonRepositoryInterface
     public function findById(PersonId $id): ?Person;
 
     /** @return Person[] */
-    public function findAll(): array;
+    public function findAllByUserId(string $userId): array;
 }

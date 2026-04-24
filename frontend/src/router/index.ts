@@ -5,6 +5,8 @@ const router = createRouter({
   routes: [
     { path: '/login', component: () => import('@/views/LoginView.vue'), meta: { public: true } },
     { path: '/register', component: () => import('@/views/RegisterView.vue'), meta: { public: true } },
+    { path: '/pricing', component: () => import('@/views/PricingView.vue'), meta: { public: false } },
+    { path: '/settings', component: () => import('@/views/SettingsView.vue') },
     { path: '/', redirect: '/calendar' },
     { path: '/calendar', component: () => import('@/views/CalendarView.vue') },
     { path: '/summary', component: () => import('@/views/SummaryView.vue') },

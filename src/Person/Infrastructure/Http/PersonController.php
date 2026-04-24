@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Person\Infrastructure\Http;
 
+use App\Auth\Domain\Entity\User;
 use App\Person\Application\Command\CreatePerson\CreatePersonCommand;
 use App\Person\Application\Command\DeletePerson\DeletePersonCommand;
 use App\Person\Application\Command\UpdatePerson\UpdatePersonCommand;
@@ -27,13 +28,13 @@ final class PersonController extends AbstractController
         private readonly QueryBusInterface $queryBus,
     ) {}
 
-    #[Route('', methods: ['GET'])]
+    #[Route('', methods: [Request::METHOD_GET])]
     public function list(): JsonResponse
     {
-        return $this->json($this->queryBus->ask(new GetAllPersonsQuery()));
+        return $this->json($this->queryBus->ask(new GetAllPersonsQuery($this->userId())));
     }
 
-    #[Route('/{id}', methods: ['GET'])]
+    #[Route('/{id}', methods: [Request::METHOD_GET])]
     public function show(string $id): JsonResponse
     {
         try {
@@ -46,21 +47,21 @@ final class PersonController extends AbstractController
         }
     }
 
-    #[Route('', methods: ['POST'])]
+    #[Route('', methods: [Request::METHOD_POST])]
     public function create(Request $request): JsonResponse
     {
         $data = json_decode($request->getContent(), true) ?? [];
-        $this->commandBus->dispatch(new CreatePersonCommand(
+        $id = $this->commandBus->dispatch(new CreatePersonCommand(
+            userId: $this->userId(),
             firstName: $data['firstName'] ?? '',
             lastName: $data['lastName'] ?? '',
             email: $data['email'] ?? null,
         ));
 
-        $all = $this->queryBus->ask(new GetAllPersonsQuery());
-        return $this->json(end($all), Response::HTTP_CREATED);
+        return $this->json($this->queryBus->ask(new GetPersonByIdQuery($id)), Response::HTTP_CREATED);
     }
 
-    #[Route('/{id}', methods: ['PUT'])]
+    #[Route('/{id}', methods: [Request::METHOD_PUT])]
     public function update(string $id, Request $request): JsonResponse
     {
         $data = json_decode($request->getContent(), true) ?? [];
@@ -92,5 +93,12 @@ final class PersonController extends AbstractController
             }
             throw $e;
         }
+    }
+
+    private function userId(): string
+    {
+        /** @var User $user */
+        $user = $this->getUser();
+        return $user->id()->value();
     }
 }

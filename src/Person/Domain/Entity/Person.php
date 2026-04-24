@@ -24,16 +24,21 @@ class Person
     #[ORM\Column(type: 'string', length: 255, nullable: true)]
     private ?string $email;
 
+    #[ORM\Column(type: 'string', length: 36)]
+    private string $userId;
+
     #[ORM\Column(type: 'datetime_immutable')]
     private \DateTimeImmutable $createdAt;
 
     public function __construct(
         PersonId $id,
+        string $userId,
         string $firstName,
         string $lastName,
         ?string $email = null,
     ) {
         $this->id = $id->value();
+        $this->userId = $userId;
         $this->firstName = $firstName;
         $this->lastName = $lastName;
         $this->email = $email;
@@ -45,6 +50,7 @@ class Person
         return PersonId::fromString($this->id);
     }
 
+    public function userId(): string { return $this->userId; }
     public function firstName(): string { return $this->firstName; }
     public function lastName(): string { return $this->lastName; }
     public function email(): ?string { return $this->email; }

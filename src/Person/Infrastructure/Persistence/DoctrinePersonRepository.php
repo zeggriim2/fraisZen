@@ -30,10 +30,11 @@ final readonly class DoctrinePersonRepository implements PersonRepositoryInterfa
         return $this->em->find(Person::class, $id->value());
     }
 
-    public function findAll(): array
+    public function findAllByUserId(string $userId): array
     {
         return $this->em->createQueryBuilder()
             ->select('p')->from(Person::class, 'p')
+            ->where('p.userId = :userId')->setParameter('userId', $userId)
             ->orderBy('p.lastName', 'ASC')->addOrderBy('p.firstName', 'ASC')
             ->getQuery()->getResult();
     }

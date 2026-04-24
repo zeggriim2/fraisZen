@@ -6,5 +6,5 @@ namespace App\SharedKernel\Application\Bus;
 
 interface CommandBusInterface
 {
-    public function dispatch(object $command): void;
+    public function dispatch(object $command): mixed;
 }
