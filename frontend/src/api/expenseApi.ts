@@ -1,7 +1,5 @@
-import axios from 'axios'
+import http from './http'
 import type { CreateExpenseDto, Expense, ExpenseSummary } from '@/types'
-
-const http = axios.create({ baseURL: '/api' })
 
 export const expenseApi = {
   getByPeriod: (from: string, to: string, personId?: string) => {

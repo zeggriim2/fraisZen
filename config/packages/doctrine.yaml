@@ -26,6 +26,12 @@ doctrine:
                 dir: '%kernel.project_dir%/src/Expense/Domain/Entity'
                 prefix: 'App\Expense\Domain\Entity'
                 alias: Expense
+            Auth:
+                type: attribute
+                is_bundle: false
+                dir: '%kernel.project_dir%/src/Auth/Domain/Entity'
+                prefix: 'App\Auth\Domain\Entity'
+                alias: Auth
 
 when@test:
     doctrine:

@@ -28,6 +28,9 @@ services:
     App\Expense\Domain\Repository\ExpenseRepositoryInterface:
         class: App\Expense\Infrastructure\Persistence\DoctrineExpenseRepository
 
+    App\Auth\Domain\Repository\UserRepositoryInterface:
+        class: App\Auth\Infrastructure\Persistence\DoctrineUserRepository
+
     # Tag command & query handlers to their respective buses
     _instanceof:
         App\SharedKernel\Application\Bus\CommandHandlerInterface:

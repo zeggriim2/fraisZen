@@ -38,6 +38,13 @@
           <span :class="['w-3 h-3 rounded-full shrink-0', t.color]"></span>{{ t.label }}
         </div>
       </div>
+
+      <div class="px-4 pb-4 border-t border-gray-200 pt-3">
+        <p v-if="authStore.user" class="text-xs text-gray-400 truncate mb-2">{{ authStore.user.email }}</p>
+        <button @click="logout" class="w-full text-left px-3 py-1.5 text-xs text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors">
+          Déconnexion
+        </button>
+      </div>
     </aside>
 
     <main class="flex-1 overflow-auto">
@@ -48,9 +55,18 @@
 
 <script setup lang="ts">
 import { onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { usePersonStore } from '@/stores/personStore'
+import { useAuthStore } from '@/stores/authStore'
 
 const personStore = usePersonStore()
+const authStore = useAuthStore()
+const router = useRouter()
+
+function logout() {
+  authStore.logout()
+  router.push('/login')
+}
 const nav = [
   { to: '/calendar', label: 'Calendrier', icon: '📅' },
   { to: '/summary', label: 'Récapitulatif', icon: '📊' },
@@ -61,5 +77,10 @@ const types = [
   { label: 'Télétravail', color: 'bg-emerald-500' },
   { label: 'Péage', color: 'bg-amber-500' },
 ]
-onMounted(() => personStore.fetchAll())
+onMounted(() => {
+  if (authStore.isAuthenticated) {
+    authStore.fetchMe()
+    personStore.fetchAll()
+  }
+})
 </script>

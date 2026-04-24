@@ -1,7 +1,5 @@
-import axios from 'axios'
+import http from './http'
 import type { Person } from '@/types'
-
-const http = axios.create({ baseURL: '/api' })
 
 export const personApi = {
   getAll: () => http.get<Person[]>('/persons').then(r => r.data),

@@ -10,3 +10,7 @@ person_api:
 expense_api:
     resource: '../src/Expense/Infrastructure/Http/ExpenseController.php'
     type: attribute
+
+auth_api:
+    resource: '../src/Auth/Infrastructure/Http/AuthController.php'
+    type: attribute
