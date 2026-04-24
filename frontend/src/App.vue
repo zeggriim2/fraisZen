@@ -1,6 +1,6 @@
 <template>
   <div class="min-h-screen bg-gray-50 flex">
-    <aside class="w-64 bg-white border-r border-gray-200 flex flex-col shrink-0">
+    <aside v-if="!isPublicRoute" class="w-64 bg-white border-r border-gray-200 flex flex-col shrink-0">
       <div class="px-6 py-5 border-b border-gray-200">
         <h1 class="text-lg font-bold text-gray-900">Frais Réels</h1>
         <p class="text-xs text-gray-500 mt-0.5">Déclaration d'impôts</p>
@@ -54,14 +54,16 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { computed, onMounted } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { usePersonStore } from '@/stores/personStore'
 import { useAuthStore } from '@/stores/authStore'
 
 const personStore = usePersonStore()
 const authStore = useAuthStore()
 const router = useRouter()
+const route = useRoute()
+const isPublicRoute = computed(() => !!route.meta.public)
 
 function logout() {
   authStore.logout()

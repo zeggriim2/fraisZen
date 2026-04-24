@@ -9,7 +9,7 @@ http.interceptors.request.use(config => {
 })
 
 http.interceptors.response.use(
-  res => res,
+  undefined,
   err => {
     if (err.response?.status === 401 && window.location.pathname !== '/login') {
       localStorage.removeItem('jwt_token')

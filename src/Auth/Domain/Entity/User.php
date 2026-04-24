@@ -33,7 +33,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(type: Types::STRING, length: 50, nullable: true)]
     private ?string $subscriptionStatus = null;
 
-    #[ORM\Column(type: 'datetime_immutable')]
+    #[ORM\Column(type: Types::DATETIME_IMMUTABLE)]
     private \DateTimeImmutable $createdAt;
 
     public function __construct(UserId $id, string $email, string $hashedPassword)
@@ -54,12 +54,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setStripeCustomerId(string $id): void { $this->stripeCustomerId = $id; }
     public function setSubscriptionStatus(string $status): void { $this->subscriptionStatus = $status; }
 
-    // UserInterface
     public function getUserIdentifier(): string { return $this->email; }
-    public function getRoles(): array { return array_unique(array_merge($this->roles, ['ROLE_USER'])); }
+    public function getRoles(): array { return $this->roles; }
     public function eraseCredentials(): void {}
-
-    // PasswordAuthenticatedUserInterface
     public function getPassword(): string { return $this->password; }
     public function setPassword(string $hashedPassword): void { $this->password = $hashedPassword; }
 

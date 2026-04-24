@@ -6,8 +6,6 @@ namespace App\Auth\Infrastructure\Http;
 
 use App\Auth\Application\Command\RegisterUser\RegisterUserCommand;
 use App\Auth\Domain\Exception\UserAlreadyExistsException;
-use App\Auth\Domain\Repository\UserRepositoryInterface;
-use App\Auth\Domain\ValueObject\UserId;
 use App\SharedKernel\Application\Bus\CommandBusInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -19,10 +17,7 @@ use Symfony\Component\Routing\Attribute\Route;
 #[Route('/api/auth')]
 final class AuthController extends AbstractController
 {
-    public function __construct(
-        private readonly CommandBusInterface $commandBus,
-        private readonly UserRepositoryInterface $userRepository,
-    ) {}
+    public function __construct(private readonly CommandBusInterface $commandBus) {}
 
     #[Route('/login', name: 'api_login', methods: ['POST'])]
     public function login(): never
@@ -48,9 +43,13 @@ final class AuthController extends AbstractController
             throw $e;
         }
 
-        $user = $this->userRepository->findById(UserId::fromString($id));
-
-        return $this->json($user->toArray(), Response::HTTP_CREATED);
+        return $this->json([
+            'id' => $id,
+            'email' => $data['email'],
+            'roles' => ['ROLE_USER'],
+            'subscriptionStatus' => null,
+            'createdAt' => (new \DateTimeImmutable())->format('Y-m-d H:i:s'),
+        ], Response::HTTP_CREATED);
     }
 
     #[Route('/me', methods: ['GET'])]
