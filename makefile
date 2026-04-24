@@ -11,7 +11,8 @@ SYMFONY  = $(PHP) bin/console
 
 # Misc
 .DEFAULT_GOAL = help
-.PHONY        : help build up start down logs sh composer vendor sf cc test
+.PHONY        : help build up start down logs sh composer vendor sf cc test \
+                frontend-install frontend-dev frontend-build db-setup
 
 ## —— 🎵 🐳 The Symfony Docker Makefile 🐳 🎵 ——————————————————————————————————
 help: ## Outputs this help screen
@@ -59,3 +60,18 @@ sf: ## List all Symfony commands or pass the parameter "c=" to run a given comma
 
 cc: c=c:c ## Clear the cache
 cc: sf
+
+## —— Database 🗄️  ——————————————————————————————————————————————————————————————
+db-setup: ## Create DB schema and run migrations (first run)
+	@$(SYMFONY) doctrine:database:create --if-not-exists
+	@$(SYMFONY) doctrine:migrations:migrate --no-interaction
+
+## —— Frontend 🎨 ——————————————————————————————————————————————————————————————
+frontend-logs: ## Tail logs du container node (Vite)
+	@$(DOCKER_COMP) logs --tail=50 --follow node
+
+frontend-build: ## Build Vue app into public/app/ (dans le container node)
+	@$(DOCKER_COMP) exec node npm run build
+
+frontend-sh: ## Shell dans le container node
+	@$(DOCKER_COMP) exec node sh

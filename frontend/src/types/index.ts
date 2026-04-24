@@ -1,0 +1,72 @@
+export type ExpenseType = 'travel' | 'remote_work' | 'toll'
+export type VehicleType = 'car' | 'motorcycle' | 'moped'
+
+export interface Person {
+  id: string
+  firstName: string
+  lastName: string
+  fullName: string
+  email: string | null
+  createdAt: string
+}
+
+export interface BaseExpense {
+  id: string
+  personId: string
+  type: ExpenseType
+  typeLabel: string
+  date: string
+  description: string | null
+  amount: number
+  createdAt: string
+}
+
+export interface TravelExpense extends BaseExpense {
+  type: 'travel'
+  departure: string | null
+  arrival: string | null
+  distanceKm: number
+  vehiclePower: number | null
+  roundTrip: boolean
+  vehicleType: VehicleType
+  isElectric: boolean
+}
+
+export interface RemoteWorkExpense extends BaseExpense {
+  type: 'remote_work'
+}
+
+export interface TollExpense extends BaseExpense {
+  type: 'toll'
+  tollAmount: number
+  departure: string | null
+  arrival: string | null
+}
+
+export type Expense = TravelExpense | RemoteWorkExpense | TollExpense
+
+export interface ExpenseSummary {
+  personId: string
+  year: number
+  travel: { trips: TripData[]; totalKm: number; deduction: number }
+  remoteWork: { days: number; dailyAllowance: number; deduction: number }
+  toll: { entries: number; deduction: number }
+  total: number
+}
+
+export interface TripData {
+  distanceKm: number
+  vehiclePower: number | null
+  vehicleType: VehicleType
+  isElectric: boolean
+  date: string
+  departure: string | null
+  arrival: string | null
+  description: string | null
+  roundTrip: boolean
+}
+
+export type CreateExpenseDto =
+  | { type: 'travel'; personId: string; date: string; distanceKm: number; vehiclePower?: number; vehicleType?: VehicleType; isElectric?: boolean; departure?: string; arrival?: string; description?: string; roundTrip?: boolean }
+  | { type: 'remote_work'; personId: string; date: string; description?: string }
+  | { type: 'toll'; personId: string; date: string; amount: number; departure?: string; arrival?: string; description?: string }
