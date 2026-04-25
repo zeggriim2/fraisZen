@@ -14,4 +14,12 @@ interface UserRepositoryInterface
     public function findById(UserId $id): ?User;
     public function findByEmail(string $email): ?User;
     public function findByStripeCustomerId(string $customerId): ?User;
+
+    /** @return User[] */
+    public function findAll(): array;
+
+    /** @return User[] */
+    public function findByEmailLike(string $search): array;
+
+    public function count(): int;
 }

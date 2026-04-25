@@ -16,6 +16,7 @@ use Doctrine\ORM\Mapping as ORM;
     'travel'      => TravelExpense::class,
     'remote_work' => RemoteWorkExpense::class,
     'toll'        => TollExpense::class,
+    'meal'        => MealExpense::class,
 ])]
 abstract class Expense
 {
@@ -56,6 +57,14 @@ abstract class Expense
     public function personId(): string { return $this->personId; }
     public function date(): \DateTimeImmutable { return $this->date; }
     public function description(): ?string { return $this->description; }
+
+    public function setDescription(?string $description): void
+    {
+        $this->description = $description;
+        $this->updatedAt = new \DateTimeImmutable();
+    }
+
+    protected function touch(): void { $this->updatedAt = new \DateTimeImmutable(); }
 
     abstract public function type(): ExpenseType;
     abstract public function amount(): float;

@@ -21,4 +21,6 @@ interface ExpenseRepositoryInterface
 
     /** @return Expense[] */
     public function findByPeriod(\DateTimeImmutable $from, \DateTimeImmutable $to): array;
+
+    public function countByPersonId(string $personId): int;
 }

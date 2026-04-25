@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { useAuthStore } from '@/stores/authStore'
 
 const router = createRouter({
   history: createWebHistory(),
@@ -11,12 +12,22 @@ const router = createRouter({
     { path: '/calendar', component: () => import('@/views/CalendarView.vue') },
     { path: '/summary', component: () => import('@/views/SummaryView.vue') },
     { path: '/persons', component: () => import('@/views/PersonsView.vue') },
+    { path: '/admin', redirect: '/admin/dashboard', meta: { admin: true } },
+    { path: '/admin/dashboard', component: () => import('@/views/admin/AdminDashboardView.vue'), meta: { admin: true } },
+    { path: '/admin/users', component: () => import('@/views/admin/AdminUsersView.vue'), meta: { admin: true } },
+    { path: '/admin/users/:id', component: () => import('@/views/admin/AdminUserDetailView.vue'), meta: { admin: true } },
   ],
 })
 
-router.beforeEach(to => {
+router.beforeEach(async to => {
   const token = localStorage.getItem('jwt_token')
   if (!to.meta.public && !token) return '/login'
+
+  if (to.meta.admin) {
+    const authStore = useAuthStore()
+    if (!authStore.user) await authStore.fetchMe()
+    if (!authStore.user?.roles.includes('ROLE_ADMIN')) return '/calendar'
+  }
 })
 
 export default router

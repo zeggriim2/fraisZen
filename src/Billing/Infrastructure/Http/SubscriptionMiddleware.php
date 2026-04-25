@@ -18,6 +18,7 @@ final readonly class SubscriptionMiddleware
     private const EXEMPT_PREFIXES = [
         '/api/auth/',
         '/api/billing/',
+        '/api/admin/',
     ];
 
     public function __construct(private TokenStorageInterface $tokenStorage) {}

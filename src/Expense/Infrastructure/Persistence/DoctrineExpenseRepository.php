@@ -64,4 +64,13 @@ final readonly class DoctrineExpenseRepository implements ExpenseRepositoryInter
             ->setParameter('to', $to)
             ->getQuery()->getResult();
     }
+
+    public function countByPersonId(string $personId): int
+    {
+        return (int) $this->em->createQueryBuilder()
+            ->select('COUNT(e.id)')->from(Expense::class, 'e')
+            ->where('e.personId = :personId')
+            ->setParameter('personId', $personId)
+            ->getQuery()->getSingleScalarResult();
+    }
 }

@@ -71,7 +71,7 @@
       </div>
     </div>
 
-    <ExpenseModal v-if="showModal" :date="selectedDate!" :expense="selectedExpense" @close="closeModal" @saved="onSaved" />
+    <ExpenseModal v-if="showModal" :date="selectedDate!" :expense="selectedExpense" :prefill="duplicateSource" @close="closeModal" @saved="onSaved" @duplicate="onDuplicate" />
   </div>
 </template>
 
@@ -79,20 +79,23 @@
 import { ref, computed, watch, onMounted } from 'vue'
 import { usePersonStore } from '@/stores/personStore'
 import { useExpenseStore } from '@/stores/expenseStore'
-import type { Expense, TravelExpense, TollExpense } from '@/types'
+import { useAuthStore } from '@/stores/authStore'
+import type { Expense, TravelExpense, TollExpense, MealExpense } from '@/types'
 import ExpenseModal from '@/components/expense/ExpenseModal.vue'
 
 const personStore = usePersonStore()
 const expenseStore = useExpenseStore()
+const authStore = useAuthStore()
 
 const today = new Date()
-const year = ref(today.getFullYear())
+const year = ref(authStore.user?.defaultYear ?? today.getFullYear())
 const month = ref(today.getMonth())
 const monthNames = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre']
 const years = Array.from({ length: 8 }, (_, i) => today.getFullYear() - 5 + i)
 const showModal = ref(false)
 const selectedDate = ref<string | null>(null)
 const selectedExpense = ref<Expense | null>(null)
+const duplicateSource = ref<Expense | null>(null)
 
 function toDateStr(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
@@ -137,21 +140,29 @@ const stats = computed(() => {
 })
 
 function badgeClass(type: string) {
-  return ({ travel: 'bg-blue-100 text-blue-700', remote_work: 'bg-emerald-100 text-emerald-700', toll: 'bg-amber-100 text-amber-700' } as Record<string,string>)[type] ?? ''
+  return ({ travel: 'bg-blue-100 text-blue-700', remote_work: 'bg-emerald-100 text-emerald-700', toll: 'bg-amber-100 text-amber-700', meal: 'bg-orange-100 text-orange-700' } as Record<string,string>)[type] ?? ''
 }
 function expenseIcon(type: string) {
-  return ({ travel: '🚗', remote_work: '🏠', toll: '🛣️' } as Record<string,string>)[type] ?? '📌'
+  return ({ travel: '🚗', remote_work: '🏠', toll: '🛣️', meal: '🍽️' } as Record<string,string>)[type] ?? '📌'
 }
 function label(e: Expense): string {
   if (e.type === 'travel') { const t = e as TravelExpense; return t.arrival ? `→ ${t.arrival}` : `${t.distanceKm} km` }
   if (e.type === 'remote_work') return '2,50 €'
   if (e.type === 'toll') return `${(e as TollExpense).tollAmount.toFixed(2)} €`
+  if (e.type === 'meal') return `${(e as MealExpense).mealAmount.toFixed(2)} €`
   return ''
 }
 function openModal(date: string) { selectedDate.value = date; selectedExpense.value = null; showModal.value = true }
 function openDetail(e: Expense) { selectedDate.value = e.date; selectedExpense.value = e; showModal.value = true }
-function closeModal() { showModal.value = false; selectedExpense.value = null }
+function closeModal() { showModal.value = false; selectedExpense.value = null; duplicateSource.value = null }
 async function onSaved() { closeModal(); await load() }
+function onDuplicate(e: Expense) {
+  showModal.value = false
+  selectedDate.value = toDateStr(new Date())
+  selectedExpense.value = null
+  duplicateSource.value = e
+  showModal.value = true
+}
 async function load() { await expenseStore.fetchByPeriod(from.value, to.value, personStore.activePerson?.id) }
 function prevMonth() { if (month.value === 0) { month.value = 11; year.value-- } else month.value-- }
 function nextMonth() { if (month.value === 11) { month.value = 0; year.value++ } else month.value++ }

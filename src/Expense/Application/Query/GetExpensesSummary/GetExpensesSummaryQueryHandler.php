@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Expense\Application\Query\GetExpensesSummary;
 
+use App\Expense\Domain\Entity\MealExpense;
 use App\Expense\Domain\Entity\RemoteWorkExpense;
 use App\Expense\Domain\Entity\TollExpense;
 use App\Expense\Domain\Entity\TravelExpense;
@@ -27,6 +28,7 @@ final readonly class GetExpensesSummaryQueryHandler implements QueryHandlerInter
         $trips = [];
         $remoteWorkDays = 0;
         $tollTotal = 0.0;
+        $mealEntries = [];
 
         foreach ($expenses as $expense) {
             if ($expense instanceof TravelExpense) {
@@ -45,11 +47,14 @@ final readonly class GetExpensesSummaryQueryHandler implements QueryHandlerInter
                 ++$remoteWorkDays;
             } elseif ($expense instanceof TollExpense) {
                 $tollTotal += $expense->amount();
+            } elseif ($expense instanceof MealExpense) {
+                $mealEntries[] = $expense->amount();
             }
         }
 
         $travelDeduction     = $this->calculator->calculateAnnualDeduction($trips, $query->year);
         $remoteWorkDeduction = round($remoteWorkDays * 2.50, 2);
+        $mealDeduction       = round(array_sum($mealEntries), 2);
 
         return [
             'personId'   => $query->personId,
@@ -68,7 +73,11 @@ final readonly class GetExpensesSummaryQueryHandler implements QueryHandlerInter
                 'entries'   => count(array_filter($expenses, fn ($e) => $e instanceof TollExpense)),
                 'deduction' => round($tollTotal, 2),
             ],
-            'total'      => round($travelDeduction + $remoteWorkDeduction + $tollTotal, 2),
+            'meal'       => [
+                'entries'   => count($mealEntries),
+                'deduction' => $mealDeduction,
+            ],
+            'total'      => round($travelDeduction + $remoteWorkDeduction + $tollTotal + $mealDeduction, 2),
         ];
     }
 }

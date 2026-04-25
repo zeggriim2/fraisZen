@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { expenseApi } from '@/api/expenseApi'
-import type { CreateExpenseDto, Expense, ExpenseSummary } from '@/types'
+import type { CreateExpenseDto, UpdateExpenseDto, Expense, ExpenseSummary } from '@/types'
 
 export const useExpenseStore = defineStore('expense', () => {
   const expenses = ref<Expense[]>([])
@@ -30,10 +30,14 @@ export const useExpenseStore = defineStore('expense', () => {
     await expenseApi.create(data)
   }
 
+  async function update(id: string, data: UpdateExpenseDto) {
+    await expenseApi.update(id, data)
+  }
+
   async function remove(id: string) {
     await expenseApi.remove(id)
     expenses.value = expenses.value.filter(e => e.id !== id)
   }
 
-  return { expenses, summary, loading, fetchByPeriod, fetchSummary, create, remove }
+  return { expenses, summary, loading, fetchByPeriod, fetchSummary, create, update, remove }
 })

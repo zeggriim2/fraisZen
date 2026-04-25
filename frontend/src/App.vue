@@ -1,6 +1,35 @@
 <template>
   <div class="min-h-screen bg-gray-50 flex">
-    <aside v-if="!isPublicRoute" class="w-64 bg-white border-r border-gray-200 flex flex-col shrink-0">
+    <!-- Admin sidebar -->
+    <aside v-if="isAdminRoute" class="w-64 bg-gray-900 border-r border-gray-800 flex flex-col shrink-0">
+      <div class="px-6 py-5 border-b border-gray-800">
+        <h1 class="text-lg font-bold text-white">Administration</h1>
+        <p class="text-xs text-gray-400 mt-0.5">Back-office</p>
+      </div>
+
+      <nav class="flex-1 px-4 py-4 space-y-1">
+        <RouterLink
+          v-for="item in adminNav" :key="item.to" :to="item.to"
+          :class="['flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors',
+            $route.path === item.to ? 'bg-indigo-600 text-white' : 'text-gray-300 hover:bg-gray-800 hover:text-white']"
+        >
+          <span class="text-lg leading-none">{{ item.icon }}</span>{{ item.label }}
+        </RouterLink>
+      </nav>
+
+      <div class="px-4 pb-4 border-t border-gray-800 pt-3 space-y-1.5">
+        <RouterLink to="/calendar" class="flex items-center gap-2 px-3 py-1.5 text-xs text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-colors">
+          ← Retour à l'app
+        </RouterLink>
+        <p v-if="authStore.user" class="text-xs text-gray-500 truncate px-3">{{ authStore.user.email }}</p>
+        <button @click="logout" class="w-full text-left px-3 py-1.5 text-xs text-gray-500 hover:text-red-400 hover:bg-gray-800 rounded-lg transition-colors">
+          Déconnexion
+        </button>
+      </div>
+    </aside>
+
+    <!-- User sidebar -->
+    <aside v-else-if="!isPublicRoute" class="w-64 bg-white border-r border-gray-200 flex flex-col shrink-0">
       <div class="px-6 py-5 border-b border-gray-200">
         <h1 class="text-lg font-bold text-gray-900">Frais Réels</h1>
         <p class="text-xs text-gray-500 mt-0.5">Déclaration d'impôts</p>
@@ -50,6 +79,10 @@
       </div>
 
       <div class="px-4 pb-4 border-t border-gray-200 pt-3">
+        <RouterLink v-if="authStore.user?.roles.includes('ROLE_ADMIN')" to="/admin/dashboard"
+          class="flex items-center gap-2 px-3 py-1.5 text-xs text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors mb-1">
+          🔧 Administration
+        </RouterLink>
         <p v-if="authStore.user" class="text-xs text-gray-400 truncate mb-2">{{ authStore.user.email }}</p>
         <button @click="logout" class="w-full text-left px-3 py-1.5 text-xs text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors">
           Déconnexion
@@ -74,6 +107,7 @@ const authStore = useAuthStore()
 const router = useRouter()
 const route = useRoute()
 const isPublicRoute = computed(() => !!route.meta.public)
+const isAdminRoute = computed(() => route.path.startsWith('/admin'))
 
 function logout() {
   authStore.logout()
@@ -86,14 +120,27 @@ const nav = [
   { to: '/persons', label: 'Personnes', icon: '👤' },
   { to: '/settings', label: 'Paramètres', icon: '⚙️' },
 ]
+const adminNav = [
+  { to: '/admin/dashboard', label: 'Tableau de bord', icon: '📊' },
+  { to: '/admin/users', label: 'Utilisateurs', icon: '👥' },
+]
 const types = [
   { label: 'Trajet', color: 'bg-blue-500' },
   { label: 'Télétravail', color: 'bg-emerald-500' },
   { label: 'Péage', color: 'bg-amber-500' },
 ]
-onMounted(() => {
+onMounted(async () => {
+  // Handle impersonation token from admin
+  const urlParams = new URLSearchParams(window.location.search)
+  const impToken = urlParams.get('impersonate_token')
+  if (impToken) {
+    localStorage.setItem('jwt_token', impToken)
+    authStore.token = impToken
+    window.history.replaceState({}, '', window.location.pathname)
+  }
+
   if (authStore.isAuthenticated) {
-    authStore.fetchMe()
+    await authStore.fetchMe()
     personStore.fetchAll()
   }
 })

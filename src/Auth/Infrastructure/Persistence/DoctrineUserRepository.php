@@ -39,4 +39,29 @@ final readonly class DoctrineUserRepository implements UserRepositoryInterface
     {
         return $this->em->getRepository(User::class)->findOneBy(['stripeCustomerId' => $customerId]);
     }
+
+    public function findAll(): array
+    {
+        return $this->em->createQueryBuilder()
+            ->select('u')->from(User::class, 'u')
+            ->orderBy('u.createdAt', 'DESC')
+            ->getQuery()->getResult();
+    }
+
+    public function findByEmailLike(string $search): array
+    {
+        return $this->em->createQueryBuilder()
+            ->select('u')->from(User::class, 'u')
+            ->where('u.email LIKE :search')
+            ->setParameter('search', '%' . $search . '%')
+            ->orderBy('u.createdAt', 'DESC')
+            ->getQuery()->getResult();
+    }
+
+    public function count(): int
+    {
+        return (int) $this->em->createQueryBuilder()
+            ->select('COUNT(u.id)')->from(User::class, 'u')
+            ->getQuery()->getSingleScalarResult();
+    }
 }

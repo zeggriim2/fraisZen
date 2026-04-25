@@ -56,6 +56,14 @@ class TravelExpense extends Expense
         $this->isElectric   = $isElectric;
     }
 
+    public function setDeparture(?string $departure): void { $this->departure = $departure; $this->touch(); }
+    public function setArrival(?string $arrival): void { $this->arrival = $arrival; $this->touch(); }
+    public function setDistanceKm(float $km): void { $this->distanceKm = $km; $this->touch(); }
+    public function setVehiclePower(?int $power): void { $this->vehiclePower = $power; $this->touch(); }
+    public function setRoundTrip(bool $rt): void { $this->roundTrip = $rt; $this->touch(); }
+    public function setVehicleType(VehicleType $vt): void { $this->vehicleType = $vt; $this->touch(); }
+    public function setIsElectric(bool $e): void { $this->isElectric = $e; $this->touch(); }
+
     public function type(): ExpenseType { return ExpenseType::Travel; }
     public function amount(): float { return 0.0; }
     public function departure(): ?string { return $this->departure; }
