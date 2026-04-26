@@ -16,9 +16,15 @@
         </button>
         <button @click="goToday" class="px-3 py-1.5 text-sm font-medium text-indigo-600 border border-indigo-200 rounded-lg hover:bg-indigo-50">Aujourd'hui</button>
       </div>
-      <span v-if="personStore.activePerson" class="text-sm text-gray-500">
-        <span class="font-medium text-gray-900">{{ personStore.activePerson.fullName }}</span>
-      </span>
+      <div class="flex items-center gap-3">
+        <span v-if="personStore.activePerson" class="text-sm text-gray-500">
+          <span class="font-medium text-gray-900">{{ personStore.activePerson.fullName }}</span>
+        </span>
+        <button @click="showCsvImport = true" class="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50" title="Importer depuis un relevé bancaire CSV">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+          Import CSV
+        </button>
+      </div>
     </div>
 
     <!-- Stats -->
@@ -72,6 +78,7 @@
     </div>
 
     <ExpenseModal v-if="showModal" :date="selectedDate!" :expense="selectedExpense" :prefill="duplicateSource" @close="closeModal" @saved="onSaved" @duplicate="onDuplicate" />
+    <CsvImportModal v-if="showCsvImport" @close="showCsvImport = false" @imported="onCsvImported" />
   </div>
 </template>
 
@@ -82,6 +89,7 @@ import { useExpenseStore } from '@/stores/expenseStore'
 import { useAuthStore } from '@/stores/authStore'
 import type { Expense, TravelExpense, TollExpense, MealExpense } from '@/types'
 import ExpenseModal from '@/components/expense/ExpenseModal.vue'
+import CsvImportModal from '@/components/expense/CsvImportModal.vue'
 
 const personStore = usePersonStore()
 const expenseStore = useExpenseStore()
@@ -93,6 +101,7 @@ const month = ref(today.getMonth())
 const monthNames = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre']
 const years = Array.from({ length: 8 }, (_, i) => today.getFullYear() - 5 + i)
 const showModal = ref(false)
+const showCsvImport = ref(false)
 const selectedDate = ref<string | null>(null)
 const selectedExpense = ref<Expense | null>(null)
 const duplicateSource = ref<Expense | null>(null)
@@ -164,6 +173,7 @@ function onDuplicate(e: Expense) {
   showModal.value = true
 }
 async function load() { await expenseStore.fetchByPeriod(from.value, to.value, personStore.activePerson?.id) }
+async function onCsvImported(count: number) { showCsvImport.value = false; await load(); if (count) alert(`${count} frais importés avec succès.`) }
 function prevMonth() { if (month.value === 0) { month.value = 11; year.value-- } else month.value-- }
 function nextMonth() { if (month.value === 11) { month.value = 0; year.value++ } else month.value++ }
 function goToday() { month.value = today.getMonth(); year.value = today.getFullYear() }

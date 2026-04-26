@@ -22,9 +22,9 @@ Liste des idées de fonctionnalités à implémenter, classées par catégorie.
 
 ## UX & Saisie
 
-- [ ] **Calcul de distance automatique** — Saisir une adresse de départ et d'arrivée, l'app calcule la distance via une API de géocodage (ex : OpenRouteService).
-- [ ] **Trajets récurrents (favoris)** — Définir un trajet "Domicile → Bureau" et le réutiliser en un clic sans ressaisir les informations.
-- [ ] **Import CSV relevé bancaire** — Détecter automatiquement les péages et repas professionnels depuis un export bancaire.
+- [x] **Calcul de distance automatique** — Saisir une adresse de départ et d'arrivée, l'app calcule la distance via une API de géocodage (ex : OpenRouteService).
+- [x] **Trajets récurrents (favoris)** — Définir un trajet "Domicile → Bureau" et le réutiliser en un clic sans ressaisir les informations.
+- [x] **Import CSV relevé bancaire** — Détecter automatiquement les péages et repas professionnels depuis un export bancaire.
 
 ---
 

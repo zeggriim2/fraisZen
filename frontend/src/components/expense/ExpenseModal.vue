@@ -75,13 +75,50 @@
             </div>
           </div>
 
+          <!-- Favorite routes -->
+          <div v-if="!expense && favorites.length" class="space-y-1.5">
+            <label class="block text-xs font-medium text-gray-500 uppercase tracking-wide">Trajets favoris</label>
+            <div class="flex flex-wrap gap-2">
+              <div v-for="fav in favorites" :key="fav.id" class="flex items-center">
+                <button
+                  @click="applyFavorite(fav)"
+                  class="flex items-center gap-1.5 pl-2.5 pr-1.5 py-1 rounded-l-full border-2 border-indigo-200 bg-indigo-50 text-xs font-medium text-indigo-700 hover:bg-indigo-100 transition-colors"
+                >
+                  <span>⭐</span>
+                  <span>{{ fav.name }}</span>
+                </button>
+                <button
+                  @click="removeFavorite(fav.id)"
+                  class="px-1.5 py-1 rounded-r-full border-2 border-l-0 border-indigo-200 bg-indigo-50 text-gray-400 hover:text-red-500 hover:bg-red-50 hover:border-red-200 transition-colors text-xs leading-none"
+                  title="Supprimer ce favori"
+                >×</button>
+              </div>
+            </div>
+          </div>
+
           <div class="grid grid-cols-2 gap-4">
             <div><label class="block text-sm font-medium text-gray-700 mb-1.5">Départ</label><input v-model="form.departure" type="text" class="w-full rounded-lg border-gray-300 shadow-sm text-sm" placeholder="Adresse de départ" /></div>
             <div><label class="block text-sm font-medium text-gray-700 mb-1.5">Arrivée</label><input v-model="form.arrival" type="text" class="w-full rounded-lg border-gray-300 shadow-sm text-sm" placeholder="Adresse d'arrivée" /></div>
           </div>
 
+          <div class="flex items-center gap-2">
+            <button
+              @click="calcDistance"
+              :disabled="calculating || !form.departure || !form.arrival"
+              class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-300 bg-gray-50 text-xs font-medium text-gray-600 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+            >
+              <span v-if="calculating" class="animate-spin inline-block">⟳</span>
+              <span v-else>📍</span>
+              {{ calculating ? 'Calcul en cours…' : 'Calculer la distance' }}
+            </button>
+            <p v-if="calcError" class="text-xs text-red-600">{{ calcError }}</p>
+          </div>
+
           <div :class="['grid gap-4', form.vehicleType !== 'moped' ? 'grid-cols-2' : 'grid-cols-1']">
-            <div><label class="block text-sm font-medium text-gray-700 mb-1.5">Distance (km)</label><input v-model.number="form.distanceKm" type="number" min="0" step="0.1" class="w-full rounded-lg border-gray-300 shadow-sm text-sm" placeholder="0" /></div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1.5">Distance (km)</label>
+              <input v-model.number="form.distanceKm" type="number" min="0" step="0.1" class="w-full rounded-lg border-gray-300 shadow-sm text-sm" placeholder="0" />
+            </div>
             <div v-if="form.vehicleType !== 'moped'">
               <label class="block text-sm font-medium text-gray-700 mb-1.5">Puissance fiscale (CV)</label>
               <input v-model.number="form.vehiclePower" type="number" min="1" max="20" class="w-full rounded-lg border-gray-300 shadow-sm text-sm" placeholder="ex : 5" />
@@ -102,6 +139,25 @@
               :class="['relative inline-flex h-6 w-11 items-center rounded-full transition-colors', form.isElectric ? 'bg-emerald-600' : 'bg-gray-300']">
               <span :class="['inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform', form.isElectric ? 'translate-x-6' : 'translate-x-1']" />
             </button>
+          </div>
+
+          <!-- Save as favorite -->
+          <div v-if="form.departure && form.arrival && !showSaveFavorite">
+            <button @click="openSaveFavorite" class="text-xs text-indigo-500 hover:text-indigo-700 flex items-center gap-1">
+              <span>⭐</span> Sauvegarder ce trajet en favori
+            </button>
+          </div>
+          <div v-if="showSaveFavorite" class="flex gap-2 items-center">
+            <input
+              v-model="favoriteName"
+              type="text"
+              class="flex-1 rounded-lg border-gray-300 shadow-sm text-sm"
+              placeholder="Nom du favori (ex : Domicile → Bureau)"
+              @keyup.enter="confirmSaveFavorite"
+              @keyup.escape="showSaveFavorite = false"
+            />
+            <button @click="confirmSaveFavorite" class="px-3 py-1.5 bg-indigo-600 text-white rounded-lg text-xs font-medium hover:bg-indigo-700">Sauvegarder</button>
+            <button @click="showSaveFavorite = false" class="px-2 py-1.5 border border-gray-200 rounded-lg text-xs text-gray-600 hover:bg-gray-50">✕</button>
           </div>
         </template>
 
@@ -154,6 +210,8 @@ import { usePersonStore } from '@/stores/personStore'
 import { useAuthStore } from '@/stores/authStore'
 import type { Expense, TravelExpense, TollExpense, MealExpense, VehicleType } from '@/types'
 import InfoRow from '@/components/ui/InfoRow.vue'
+import { useRouteDistance } from '@/composables/useRouteDistance'
+import { useFavoriteRoutes } from '@/composables/useFavoriteRoutes'
 
 const props = defineProps<{ date: string; expense?: Expense | null; prefill?: Expense | null }>()
 const emit = defineEmits<{ close: []; saved: []; duplicate: [expense: Expense] }>()
@@ -164,6 +222,45 @@ const authStore = useAuthStore()
 const editing = ref(false)
 const saving = ref(false)
 const error = ref('')
+
+const { calculating, calcError, calculate } = useRouteDistance()
+const { favorites, saveFavorite, removeFavorite } = useFavoriteRoutes()
+const showSaveFavorite = ref(false)
+const favoriteName = ref('')
+
+function applyFavorite(fav: typeof favorites.value[number]) {
+  form.value.departure = fav.departure
+  form.value.arrival = fav.arrival
+  form.value.vehicleType = fav.vehicleType
+  form.value.vehiclePower = fav.vehiclePower
+  form.value.isElectric = fav.isElectric
+  form.value.roundTrip = fav.roundTrip
+}
+
+async function calcDistance() {
+  const km = await calculate(form.value.departure, form.value.arrival)
+  if (km !== null) form.value.distanceKm = km
+}
+
+function openSaveFavorite() {
+  favoriteName.value = [form.value.departure, form.value.arrival].filter(Boolean).join(' → ')
+  showSaveFavorite.value = true
+}
+
+function confirmSaveFavorite() {
+  if (!favoriteName.value.trim()) return
+  saveFavorite({
+    name: favoriteName.value.trim(),
+    departure: form.value.departure,
+    arrival: form.value.arrival,
+    vehicleType: form.value.vehicleType,
+    vehiclePower: form.value.vehiclePower,
+    isElectric: form.value.isElectric,
+    roundTrip: form.value.roundTrip,
+  })
+  showSaveFavorite.value = false
+  favoriteName.value = ''
+}
 
 const formattedDate = computed(() =>
   new Date(props.date + 'T12:00:00').toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
