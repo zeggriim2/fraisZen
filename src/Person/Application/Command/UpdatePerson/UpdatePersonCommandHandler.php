@@ -20,7 +20,7 @@ final readonly class UpdatePersonCommandHandler implements CommandHandlerInterfa
         $person = $this->repository->findById(PersonId::fromString($command->id))
             ?? throw PersonNotFoundException::withId($command->id);
 
-        $person->update($command->firstName, $command->lastName, $command->email);
+        $person->update($command->firstName, $command->lastName, $command->email, $command->favorite);
         $this->repository->save($person);
     }
 }

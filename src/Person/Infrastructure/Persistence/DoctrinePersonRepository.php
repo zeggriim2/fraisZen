@@ -35,7 +35,7 @@ final readonly class DoctrinePersonRepository implements PersonRepositoryInterfa
         return $this->em->createQueryBuilder()
             ->select('p')->from(Person::class, 'p')
             ->where('p.userId = :userId')->setParameter('userId', $userId)
-            ->orderBy('p.lastName', 'ASC')->addOrderBy('p.firstName', 'ASC')
+            ->orderBy('p.favorite', 'DESC')->addOrderBy('p.lastName', 'ASC')->addOrderBy('p.firstName', 'ASC')
             ->getQuery()->getResult();
     }
 }

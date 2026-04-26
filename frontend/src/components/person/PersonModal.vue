@@ -23,6 +23,18 @@
           <label class="block text-sm font-medium text-gray-700 mb-1.5">Email (optionnel)</label>
           <input v-model="form.email" type="email" class="w-full rounded-lg border-gray-300 shadow-sm text-sm" placeholder="jean@email.fr" />
         </div>
+        <div class="flex items-center justify-between p-3 rounded-xl border border-gray-200 bg-gray-50">
+          <div>
+            <p class="text-sm font-medium text-gray-700">Favori</p>
+            <p class="text-xs text-gray-500 mt-0.5">S'affiche en priorité dans toutes les listes</p>
+          </div>
+          <button
+            type="button"
+            @click="form.favorite = !form.favorite"
+            :title="form.favorite ? 'Retirer des favoris' : 'Ajouter aux favoris'"
+            :class="['text-2xl leading-none transition-colors', form.favorite ? 'text-yellow-400 hover:text-yellow-500' : 'text-gray-300 hover:text-yellow-300']"
+          >★</button>
+        </div>
         <p v-if="error" class="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg">{{ error }}</p>
       </div>
       <div class="px-6 py-4 border-t border-gray-200 flex gap-3">
@@ -34,6 +46,7 @@
     </div>
   </div>
 </template>
+
 <script setup lang="ts">
 import { ref } from 'vue'
 import { usePersonStore } from '@/stores/personStore'
@@ -44,13 +57,23 @@ const emit = defineEmits<{ close: []; saved: [] }>()
 const store = usePersonStore()
 const saving = ref(false)
 const error = ref('')
-const form = ref({ firstName: props.person?.firstName ?? '', lastName: props.person?.lastName ?? '', email: props.person?.email ?? '' })
+const form = ref({
+  firstName: props.person?.firstName ?? '',
+  lastName: props.person?.lastName ?? '',
+  email: props.person?.email ?? '',
+  favorite: props.person?.favorite ?? false,
+})
 
 async function save() {
   if (!form.value.firstName.trim() || !form.value.lastName.trim()) { error.value = 'Prénom et nom obligatoires.'; return }
   saving.value = true
   try {
-    const data = { firstName: form.value.firstName.trim(), lastName: form.value.lastName.trim(), email: form.value.email.trim() || null }
+    const data = {
+      firstName: form.value.firstName.trim(),
+      lastName: form.value.lastName.trim(),
+      email: form.value.email.trim() || null,
+      favorite: form.value.favorite,
+    }
     props.person ? await store.update(props.person.id, data) : await store.create(data)
     emit('saved')
   } catch { error.value = 'Une erreur est survenue.' }

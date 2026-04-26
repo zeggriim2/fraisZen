@@ -56,6 +56,7 @@ final class PersonController extends AbstractController
             firstName: $data['firstName'] ?? '',
             lastName: $data['lastName'] ?? '',
             email: $data['email'] ?? null,
+            favorite: (bool) ($data['favorite'] ?? false),
         ));
 
         return $this->json($this->queryBus->ask(new GetPersonByIdQuery($id)), Response::HTTP_CREATED);
@@ -71,6 +72,7 @@ final class PersonController extends AbstractController
                 firstName: $data['firstName'] ?? '',
                 lastName: $data['lastName'] ?? '',
                 email: $data['email'] ?? null,
+                favorite: (bool) ($data['favorite'] ?? false),
             ));
             return $this->json($this->queryBus->ask(new GetPersonByIdQuery($id)));
         } catch (HandlerFailedException $e) {

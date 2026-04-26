@@ -13,12 +13,20 @@
     </div>
 
     <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-      <div v-for="p in store.persons" :key="p.id" class="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm">
+      <div
+        v-for="p in store.persons" :key="p.id"
+        :class="['bg-white rounded-2xl border p-5 shadow-sm transition-colors', p.favorite ? 'border-yellow-200 bg-yellow-50/30' : 'border-gray-200']"
+      >
         <div class="flex items-start justify-between mb-3">
           <div class="w-12 h-12 rounded-xl bg-indigo-100 flex items-center justify-center text-xl font-bold text-indigo-600">
             {{ initials(p) }}
           </div>
-          <div class="flex gap-1">
+          <div class="flex gap-1 items-center">
+            <button
+              @click="store.toggleFavorite(p.id)"
+              :title="p.favorite ? 'Retirer des favoris' : 'Ajouter aux favoris'"
+              :class="['text-xl leading-none p-1 rounded-lg transition-colors', p.favorite ? 'text-yellow-400 hover:text-yellow-500' : 'text-gray-300 hover:text-yellow-300 hover:bg-gray-50']"
+            >★</button>
             <button @click="openEdit(p)" class="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100">
               <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
             </button>
@@ -27,7 +35,9 @@
             </button>
           </div>
         </div>
-        <h3 class="font-semibold text-gray-900">{{ p.fullName }}</h3>
+        <h3 class="font-semibold text-gray-900 flex items-center gap-1.5">
+          {{ p.fullName }}
+        </h3>
         <p v-if="p.email" class="text-sm text-gray-500 mt-0.5">{{ p.email }}</p>
         <p class="text-xs text-gray-400 mt-2">Depuis le {{ fmt(p.createdAt) }}</p>
       </div>

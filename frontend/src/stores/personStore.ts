@@ -42,5 +42,12 @@ export const usePersonStore = defineStore('person', () => {
 
   function setActive(person: Person) { activePerson.value = person }
 
-  return { persons, activePerson, loading, fetchAll, create, update, remove, setActive }
+  async function toggleFavorite(id: string) {
+    const person = persons.value.find(p => p.id === id)
+    if (!person) return
+    const { fullName: _fn, createdAt: _ca, id: _id, ...rest } = person
+    await update(id, { ...rest, favorite: !person.favorite })
+  }
+
+  return { persons, activePerson, loading, fetchAll, create, update, remove, setActive, toggleFavorite }
 })

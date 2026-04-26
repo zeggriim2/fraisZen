@@ -7,6 +7,7 @@ export interface Person {
   lastName: string
   fullName: string
   email: string | null
+  favorite: boolean
   createdAt: string
 }
 
