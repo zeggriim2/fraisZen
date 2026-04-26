@@ -1,44 +1,34 @@
-import { ref } from 'vue'
-import type { VehicleType } from '@/types'
+import { computed, watch } from 'vue'
+import type { Ref } from 'vue'
+import { useFavoriteRouteStore } from '@/stores/favoriteRouteStore'
+import type { CreateFavoriteRouteDto } from '@/types'
 
-export interface FavoriteRoute {
-  id: string
-  name: string
-  departure: string
-  arrival: string
-  vehicleType: VehicleType
-  vehiclePower: number
-  isElectric: boolean
-  roundTrip: boolean
-}
+export type { FavoriteRoute } from '@/types'
 
-const STORAGE_KEY = 'frais_reel_favorites'
+export function useFavoriteRoutes(personId: Ref<string | undefined>) {
+  const store = useFavoriteRouteStore()
 
-function loadFromStorage(): FavoriteRoute[] {
-  try {
-    return JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '[]')
-  } catch {
-    return []
-  }
-}
+  watch(personId, async (id) => {
+    if (id) await store.fetchByPerson(id)
+    else store.reset()
+  }, { immediate: true })
 
-function persist(routes: FavoriteRoute[]) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(routes))
-}
+  const favorites = computed(() => store.routes)
 
-export function useFavoriteRoutes() {
-  const favorites = ref<FavoriteRoute[]>(loadFromStorage())
-
-  function saveFavorite(route: Omit<FavoriteRoute, 'id'>) {
-    const entry: FavoriteRoute = { ...route, id: crypto.randomUUID() }
-    favorites.value = [...favorites.value, entry]
-    persist(favorites.value)
+  async function saveFavorite(data: CreateFavoriteRouteDto) {
+    if (!personId.value) return
+    await store.create(personId.value, data)
   }
 
-  function removeFavorite(id: string) {
-    favorites.value = favorites.value.filter(f => f.id !== id)
-    persist(favorites.value)
+  async function updateFavorite(id: string, data: CreateFavoriteRouteDto) {
+    if (!personId.value) return
+    await store.update(personId.value, id, data)
   }
 
-  return { favorites, saveFavorite, removeFavorite }
+  async function removeFavorite(id: string) {
+    if (!personId.value) return
+    await store.remove(personId.value, id)
+  }
+
+  return { favorites, saveFavorite, updateFavorite, removeFavorite, loading: computed(() => store.loading) }
 }

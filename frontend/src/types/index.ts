@@ -81,3 +81,18 @@ export type CreateExpenseDto =
   | { type: 'meal'; personId: string; date: string; mealAmount: number; description?: string }
 
 export type UpdateExpenseDto = Record<string, unknown>
+
+export interface FavoriteRoute {
+  id: string
+  personId: string
+  name: string
+  departure: string
+  arrival: string
+  vehicleType: VehicleType
+  vehiclePower: number | null
+  isElectric: boolean
+  roundTrip: boolean
+  createdAt: string
+}
+
+export type CreateFavoriteRouteDto = Omit<FavoriteRoute, 'id' | 'personId' | 'createdAt'>

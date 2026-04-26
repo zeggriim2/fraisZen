@@ -239,7 +239,9 @@ const saving = ref(false)
 const error = ref('')
 
 const { calculating, calcError, calculate } = useRouteDistance()
-const { favorites, saveFavorite, removeFavorite } = useFavoriteRoutes()
+const { favorites, saveFavorite, removeFavorite } = useFavoriteRoutes(
+  computed(() => personStore.activePerson?.id)
+)
 
 const personInitials = computed(() => {
   const p = personStore.activePerson
@@ -272,9 +274,9 @@ function openSaveFavorite() {
   showSaveFavorite.value = true
 }
 
-function confirmSaveFavorite() {
+async function confirmSaveFavorite() {
   if (!favoriteName.value.trim()) return
-  saveFavorite({
+  await saveFavorite({
     name: favoriteName.value.trim(),
     departure: form.value.departure,
     arrival: form.value.arrival,
