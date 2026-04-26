@@ -15,6 +15,9 @@ http.interceptors.response.use(
       localStorage.removeItem('jwt_token')
       window.location.href = '/login'
     }
+    if (err.response?.status === 402 && window.location.pathname !== '/pricing') {
+      window.location.href = '/pricing'
+    }
     return Promise.reject(err)
   }
 )

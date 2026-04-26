@@ -6,10 +6,16 @@
         <select v-model="selectedYear" class="rounded-lg border-gray-300 shadow-sm text-sm">
           <option v-for="y in years" :key="y" :value="y">{{ y }}</option>
         </select>
-        <button v-if="summary && personStore.activePerson" @click="downloadPdf" :disabled="pdfLoading"
-          class="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-indigo-600 border border-indigo-200 rounded-lg hover:bg-indigo-50 disabled:opacity-50 transition-colors">
-          <span>📄</span>{{ pdfLoading ? 'Génération…' : 'PDF' }}
-        </button>
+        <template v-if="summary && personStore.activePerson">
+          <button @click="downloadCsv" :disabled="csvLoading"
+            class="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 transition-colors">
+            <span>📊</span>{{ csvLoading ? 'Génération…' : 'CSV' }}
+          </button>
+          <button @click="downloadPdf" :disabled="pdfLoading"
+            class="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-indigo-600 border border-indigo-200 rounded-lg hover:bg-indigo-50 disabled:opacity-50 transition-colors">
+            <span>📄</span>{{ pdfLoading ? 'Génération…' : 'PDF' }}
+          </button>
+        </template>
       </div>
     </div>
 
@@ -64,6 +70,32 @@
             <div class="flex justify-between text-sm"><span class="text-gray-500">Repas</span><span class="font-medium">{{ summary.meal.entries }}</span></div>
           </template>
         </SummaryCard>
+      </div>
+
+      <!-- Guide Cerfa -->
+      <div class="bg-white rounded-2xl border border-emerald-200 shadow-sm p-5 mb-4">
+        <div class="flex items-start gap-3">
+          <div class="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center text-xl shrink-0">🧾</div>
+          <div class="flex-1">
+            <p class="font-semibold text-gray-900 text-sm mb-1">Aide au remplissage — Déclaration {{ summary.year }}</p>
+            <p class="text-xs text-gray-500 mb-3">Reportez les montants suivants dans votre déclaration de revenus 2042.</p>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div class="bg-emerald-50 rounded-xl p-3 border border-emerald-100">
+                <p class="text-xs font-semibold text-emerald-700 uppercase tracking-wide mb-1">Déclarant 1 — Case 1AK</p>
+                <p class="text-xl font-bold text-emerald-700">{{ fmt(summary.total) }}</p>
+                <p class="text-xs text-gray-500 mt-1">Frais réels déductibles (remplace l'abattement 10 %)</p>
+              </div>
+              <div class="bg-gray-50 rounded-xl p-3 border border-gray-200">
+                <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Déclarant 2 — Case 1BK</p>
+                <p class="text-sm text-gray-400 italic mt-2">Reporter le montant du second déclarant</p>
+                <p class="text-xs text-gray-400 mt-1">Si foyer fiscal avec conjoint/partenaire</p>
+              </div>
+            </div>
+            <p class="text-xs text-amber-600 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2 mt-3">
+              Conservez tous vos justificatifs (relevés kilométriques, tickets de péage, notes de repas) en cas de contrôle fiscal.
+            </p>
+          </div>
+        </div>
       </div>
 
       <!-- Détail des trajets -->
@@ -164,6 +196,7 @@ const years = Array.from({ length: 6 }, (_, i) => now - i)
 const multiYears = Array.from({ length: 5 }, (_, i) => now - i)
 const loading = ref(false)
 const pdfLoading = ref(false)
+const csvLoading = ref(false)
 const summary = ref<ExpenseSummary | null>(null)
 const multiYearData = ref<(ExpenseSummary | null)[]>([])
 const showBareme = ref(false)
@@ -244,6 +277,19 @@ async function loadMultiYear() {
     multiYears.map(y => expenseApi.getSummary(pid, y).catch(() => null))
   )
   multiYearData.value = results
+}
+
+// A — CSV
+async function downloadCsv() {
+  if (!personStore.activePerson) return
+  csvLoading.value = true
+  try {
+    const blob = await expenseApi.downloadCsv(personStore.activePerson.id, selectedYear.value)
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url; a.download = `frais-reels-${selectedYear.value}.csv`; a.click()
+    URL.revokeObjectURL(url)
+  } finally { csvLoading.value = false }
 }
 
 // A — PDF

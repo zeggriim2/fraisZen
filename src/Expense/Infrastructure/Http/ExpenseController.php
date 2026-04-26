@@ -21,6 +21,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 use Symfony\Component\Messenger\Exception\HandlerFailedException;
 use Symfony\Component\Routing\Attribute\Route;
 
@@ -133,6 +134,78 @@ HTML;
                 'Content-Disposition' => sprintf('attachment; filename="frais-reels-%s.pdf"', $year),
             ]
         );
+    }
+
+    #[Route('/summary/csv', methods: [Request::METHOD_GET])]
+    public function summaryCsv(Request $request): StreamedResponse
+    {
+        $personId = $request->query->get('personId', '');
+        $year     = (int) $request->query->get('year', (int) date('Y'));
+
+        if (empty($personId)) {
+            return new StreamedResponse(fn () => print('personId is required'), Response::HTTP_BAD_REQUEST);
+        }
+
+        $data = $this->queryBus->ask(new GetExpensesSummaryQuery($personId, $year));
+
+        $response = new StreamedResponse(function () use ($data, $year) {
+            $handle = fopen('php://output', 'w');
+            // BOM UTF-8 pour compatibilité Excel
+            fwrite($handle, "\xEF\xBB\xBF");
+
+            // En-tête
+            fputcsv($handle, ["Récapitulatif frais réels - $year"], ';');
+            fputcsv($handle, [], ';');
+
+            // Totaux par catégorie
+            fputcsv($handle, ['Catégorie', 'Détail', 'Déduction (€)'], ';');
+            fputcsv($handle, [
+                'Trajets',
+                count($data['travel']['trips']) . ' trajets — ' . round($data['travel']['totalKm']) . ' km',
+                number_format($data['travel']['deduction'], 2, ',', ' '),
+            ], ';');
+            fputcsv($handle, [
+                'Télétravail',
+                $data['remoteWork']['days'] . ' jours × 2,50 €',
+                number_format($data['remoteWork']['deduction'], 2, ',', ' '),
+            ], ';');
+            fputcsv($handle, [
+                'Péages',
+                $data['toll']['entries'] . ' entrées',
+                number_format($data['toll']['deduction'], 2, ',', ' '),
+            ], ';');
+            fputcsv($handle, [
+                'Repas',
+                $data['meal']['entries'] . ' repas',
+                number_format($data['meal']['deduction'], 2, ',', ' '),
+            ], ';');
+            fputcsv($handle, ['TOTAL DÉDUCTIBLE', '', number_format($data['total'], 2, ',', ' ')], ';');
+            fputcsv($handle, [], ';');
+
+            // Détail des trajets
+            if (!empty($data['travel']['trips'])) {
+                fputcsv($handle, ['Détail des trajets'], ';');
+                fputcsv($handle, ['Date', 'Départ', 'Arrivée', 'Description', 'Distance (km)', 'Puissance (CV)', 'A/R'], ';');
+                foreach ($data['travel']['trips'] as $t) {
+                    fputcsv($handle, [
+                        $t['date'],
+                        $t['departure'] ?? '',
+                        $t['arrival']   ?? '',
+                        $t['description'] ?? '',
+                        $t['distanceKm'],
+                        $t['vehiclePower'] ?? '',
+                        $t['roundTrip'] ? 'Oui' : 'Non',
+                    ], ';');
+                }
+            }
+
+            fclose($handle);
+        });
+
+        $response->headers->set('Content-Type', 'text/csv; charset=UTF-8');
+        $response->headers->set('Content-Disposition', sprintf('attachment; filename="frais-reels-%s.csv"', $year));
+
+        return $response;
     }
 
     #[Route('/summary', methods: [Request::METHOD_GET])]

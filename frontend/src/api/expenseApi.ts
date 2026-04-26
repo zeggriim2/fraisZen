@@ -14,4 +14,6 @@ export const expenseApi = {
   remove: (id: string) => http.delete(`/expenses/${id}`),
   downloadPdf: (personId: string, year: number) =>
     http.get('/expenses/summary/pdf', { params: { personId, year }, responseType: 'blob' }).then(r => r.data as Blob),
+  downloadCsv: (personId: string, year: number) =>
+    http.get('/expenses/summary/csv', { params: { personId, year }, responseType: 'blob' }).then(r => r.data as Blob),
 }
