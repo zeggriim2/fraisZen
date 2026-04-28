@@ -142,7 +142,7 @@ const stats = computed(() => {
   const remote = es.filter(e => e.type === 'remote_work')
   return {
     travelCount: es.filter(e => e.type === 'travel').length,
-    travelKm: es.filter(e => e.type === 'travel').reduce((s, e) => s + ((e as TravelExpense).distanceKm ?? 0), 0),
+    travelKm: es.filter(e => e.type === 'travel').reduce((s, e) => { const t = e as TravelExpense; return s + ((t.distanceKm ?? 0) * (t.roundTrip ? 2 : 1)) }, 0),
     remoteCount: remote.length,
     remoteTotalAmount: remote.reduce((s, e) => s + e.amount, 0),
     tollCount: es.filter(e => e.type === 'toll').length,
