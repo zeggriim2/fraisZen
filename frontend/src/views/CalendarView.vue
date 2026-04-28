@@ -37,7 +37,7 @@
       <div class="bg-emerald-50 border border-emerald-100 rounded-xl p-4">
         <p class="text-xs text-emerald-600 font-medium">Télétravail</p>
         <p class="text-2xl font-bold text-emerald-700 mt-1">{{ stats.remoteCount }}</p>
-        <p class="text-xs text-emerald-500 mt-1">{{ (stats.remoteCount * 2.5).toFixed(2) }} €</p>
+        <p class="text-xs text-emerald-500 mt-1">{{ stats.remoteTotalAmount.toFixed(2) }} €</p>
       </div>
       <div class="bg-amber-50 border border-amber-100 rounded-xl p-4">
         <p class="text-xs text-amber-600 font-medium">Péages</p>
@@ -139,10 +139,12 @@ const cells = computed(() => {
 
 const stats = computed(() => {
   const es = expenseStore.expenses
+  const remote = es.filter(e => e.type === 'remote_work')
   return {
     travelCount: es.filter(e => e.type === 'travel').length,
     travelKm: es.filter(e => e.type === 'travel').reduce((s, e) => s + ((e as TravelExpense).distanceKm ?? 0), 0),
-    remoteCount: es.filter(e => e.type === 'remote_work').length,
+    remoteCount: remote.length,
+    remoteTotalAmount: remote.reduce((s, e) => s + e.amount, 0),
     tollCount: es.filter(e => e.type === 'toll').length,
     tollAmount: es.filter(e => e.type === 'toll').reduce((s, e) => s + ((e as TollExpense).tollAmount ?? 0), 0),
   }
@@ -156,7 +158,7 @@ function expenseIcon(type: string) {
 }
 function label(e: Expense): string {
   if (e.type === 'travel') { const t = e as TravelExpense; return t.arrival ? `→ ${t.arrival}` : `${t.distanceKm} km` }
-  if (e.type === 'remote_work') return '2,50 €'
+  if (e.type === 'remote_work') return `${e.amount.toFixed(2)} €`
   if (e.type === 'toll') return `${(e as TollExpense).tollAmount.toFixed(2)} €`
   if (e.type === 'meal') return `${(e as MealExpense).mealAmount.toFixed(2)} €`
   return ''

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Admin\Infrastructure\Http;
 
+use App\Admin\Domain\Entity\FiscalConfig;
+use App\Admin\Domain\Repository\FiscalConfigRepositoryInterface;
 use App\Auth\Domain\Entity\User;
 use App\Auth\Domain\Repository\UserRepositoryInterface;
 use App\Auth\Domain\ValueObject\UserId;
@@ -27,6 +29,7 @@ final class AdminController extends AbstractController
         private readonly UserRepositoryInterface $userRepository,
         private readonly PersonRepositoryInterface $personRepository,
         private readonly ExpenseRepositoryInterface $expenseRepository,
+        private readonly FiscalConfigRepositoryInterface $fiscalConfigRepository,
         private readonly StripeClient $stripe,
         private readonly JWTEncoderInterface $jwtEncoder,
     ) {}
@@ -201,5 +204,46 @@ final class AdminController extends AbstractController
         ]);
 
         return $this->json(['token' => $token]);
+    }
+
+    #[Route('/fiscal-config', methods: [Request::METHOD_GET])]
+    public function listFiscalConfigs(): JsonResponse
+    {
+        $configs = $this->fiscalConfigRepository->findAll();
+
+        return $this->json(array_map(fn (FiscalConfig $c) => $c->toArray(), $configs));
+    }
+
+    #[Route('/fiscal-config/{year}', methods: [Request::METHOD_GET])]
+    public function getFiscalConfig(int $year): JsonResponse
+    {
+        $config = $this->fiscalConfigRepository->findByYear($year);
+        if (!$config) {
+            return $this->json(['error' => 'No config for this year'], Response::HTTP_NOT_FOUND);
+        }
+
+        return $this->json($config->toArray());
+    }
+
+    #[Route('/fiscal-config/{year}', methods: [Request::METHOD_PUT])]
+    public function upsertFiscalConfig(int $year, Request $request): JsonResponse
+    {
+        $data = json_decode($request->getContent(), true) ?? [];
+        $allowance = $data['remoteWorkDailyAllowance'] ?? null;
+
+        if (!is_numeric($allowance) || $allowance <= 0) {
+            return $this->json(['error' => 'Invalid remoteWorkDailyAllowance'], Response::HTTP_BAD_REQUEST);
+        }
+
+        $config = $this->fiscalConfigRepository->findByYear($year);
+        if ($config) {
+            $config->setRemoteWorkDailyAllowance((float) $allowance);
+        } else {
+            $config = new FiscalConfig($year, (float) $allowance);
+        }
+
+        $this->fiscalConfigRepository->save($config);
+
+        return $this->json($config->toArray());
     }
 }

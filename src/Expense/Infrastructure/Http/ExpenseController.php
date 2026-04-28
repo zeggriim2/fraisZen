@@ -77,13 +77,14 @@ final class ExpenseController extends AbstractController
             );
         }
 
-        $tripCount  = count($data['travel']['trips']);
-        $totalKm    = round($data['travel']['totalKm'], 0);
-        $travelDed  = $fmt($data['travel']['deduction']);
-        $remoteDed  = $fmt($data['remoteWork']['deduction']);
-        $tollDed    = $fmt($data['toll']['deduction']);
-        $totalDed   = $fmt($data['total']);
-        $today      = date('d/m/Y');
+        $tripCount      = count($data['travel']['trips']);
+        $totalKm        = round($data['travel']['totalKm'], 0);
+        $travelDed      = $fmt($data['travel']['deduction']);
+        $remoteDed      = $fmt($data['remoteWork']['deduction']);
+        $tollDed        = $fmt($data['toll']['deduction']);
+        $totalDed       = $fmt($data['total']);
+        $today          = date('d/m/Y');
+        $dailyAllowance = number_format($data['remoteWork']['dailyAllowance'], 2, ',', ' ');
 
         $html = <<<HTML
 <!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8">
@@ -103,7 +104,7 @@ td { padding: 5px 8px; border-bottom: 1px solid #f3f4f6; }
 <table>
 <tr><th>Categorie</th><th>Detail</th><th>Deduction</th></tr>
 <tr><td>Trajets</td><td>$tripCount trajets - $totalKm km</td><td>$travelDed</td></tr>
-<tr><td>Teletravail</td><td>{$data['remoteWork']['days']} jours x 2,50 EUR</td><td>$remoteDed</td></tr>
+<tr><td>Teletravail</td><td>{$data['remoteWork']['days']} jours x $dailyAllowance EUR</td><td>$remoteDed</td></tr>
 <tr><td>Peages</td><td>{$data['toll']['entries']} entrees</td><td>$tollDed</td></tr>
 $mealSection
 <tr class="total-row"><td colspan="2">Total deductible $year</td><td>$totalDed</td></tr>
@@ -166,7 +167,7 @@ HTML;
             ], ';');
             fputcsv($handle, [
                 'Télétravail',
-                $data['remoteWork']['days'] . ' jours × 2,50 €',
+                $data['remoteWork']['days'] . ' jours × ' . number_format($data['remoteWork']['dailyAllowance'], 2, ',', ' ') . ' €',
                 number_format($data['remoteWork']['deduction'], 2, ',', ' '),
             ], ';');
             fputcsv($handle, [

@@ -40,6 +40,11 @@ export interface AdminUsersResponse {
   pages: number
 }
 
+export interface FiscalConfig {
+  year: number
+  remoteWorkDailyAllowance: number
+}
+
 export const adminApi = {
   getStats: () =>
     http.get<AdminStats>('/admin/stats').then(r => r.data),
@@ -61,4 +66,10 @@ export const adminApi = {
 
   impersonate: (id: string) =>
     http.post<{ token: string }>(`/admin/users/${id}/impersonate`).then(r => r.data),
+
+  listFiscalConfigs: () =>
+    http.get<FiscalConfig[]>('/admin/fiscal-config').then(r => r.data),
+
+  upsertFiscalConfig: (year: number, remoteWorkDailyAllowance: number) =>
+    http.put<FiscalConfig>(`/admin/fiscal-config/${year}`, { remoteWorkDailyAllowance }).then(r => r.data),
 }

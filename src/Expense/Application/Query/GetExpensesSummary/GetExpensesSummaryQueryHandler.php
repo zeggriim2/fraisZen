@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Expense\Application\Query\GetExpensesSummary;
 
+use App\Admin\Domain\Repository\FiscalConfigRepositoryInterface;
 use App\Expense\Domain\Entity\MealExpense;
 use App\Expense\Domain\Entity\RemoteWorkExpense;
 use App\Expense\Domain\Entity\TollExpense;
@@ -16,9 +17,12 @@ use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 #[AsMessageHandler(bus: 'query.bus')]
 final readonly class GetExpensesSummaryQueryHandler implements QueryHandlerInterface
 {
+    private const FALLBACK_DAILY_ALLOWANCE = 2.70;
+
     public function __construct(
         private ExpenseRepositoryInterface $repository,
         private KilometricAllowanceCalculator $calculator,
+        private FiscalConfigRepositoryInterface $fiscalConfigRepository,
     ) {}
 
     public function __invoke(GetExpensesSummaryQuery $query): array
@@ -52,8 +56,11 @@ final readonly class GetExpensesSummaryQueryHandler implements QueryHandlerInter
             }
         }
 
+        $fiscalConfig    = $this->fiscalConfigRepository->findByYear($query->year);
+        $dailyAllowance  = $fiscalConfig?->remoteWorkDailyAllowance() ?? self::FALLBACK_DAILY_ALLOWANCE;
+
         $travelDeduction     = $this->calculator->calculateAnnualDeduction($trips, $query->year);
-        $remoteWorkDeduction = round($remoteWorkDays * 2.50, 2);
+        $remoteWorkDeduction = round($remoteWorkDays * $dailyAllowance, 2);
         $mealDeduction       = round(array_sum($mealEntries), 2);
 
         return [
@@ -66,7 +73,7 @@ final readonly class GetExpensesSummaryQueryHandler implements QueryHandlerInter
             ],
             'remoteWork' => [
                 'days'           => $remoteWorkDays,
-                'dailyAllowance' => 2.50,
+                'dailyAllowance' => $dailyAllowance,
                 'deduction'      => $remoteWorkDeduction,
             ],
             'toll'       => [

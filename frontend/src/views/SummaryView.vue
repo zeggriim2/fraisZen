@@ -55,7 +55,7 @@
             <div class="flex justify-between text-sm"><span class="text-gray-500">Distance</span><span class="font-medium">{{ summary.travel.totalKm.toFixed(0) }} km</span></div>
           </template>
         </SummaryCard>
-        <SummaryCard icon="🏠" title="Télétravail" subtitle="2,50 € / jour" :amount="summary.remoteWork.deduction" color="emerald">
+        <SummaryCard icon="🏠" title="Télétravail" :subtitle="`${summary.remoteWork.dailyAllowance.toFixed(2)} € / jour`" :amount="summary.remoteWork.deduction" color="emerald">
           <template #details>
             <div class="flex justify-between text-sm"><span class="text-gray-500">Jours</span><span class="font-medium">{{ summary.remoteWork.days }}</span></div>
           </template>

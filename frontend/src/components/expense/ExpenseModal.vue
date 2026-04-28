@@ -40,7 +40,7 @@
           <InfoRow label="Montant déductible" :value="`${expense.amount.toFixed(2)} €`" />
         </template>
         <template v-else-if="expense.type === 'remote_work'">
-          <InfoRow label="Indemnité" value="2,50 €" />
+          <InfoRow label="Indemnité" :value="`${expense.amount.toFixed(2)} €`" />
         </template>
         <InfoRow v-if="expense.description" label="Description" :value="expense.description" />
         <div class="flex gap-3 pt-4">
@@ -196,8 +196,8 @@
 
         <template v-else>
           <div class="bg-emerald-50 border border-emerald-100 rounded-xl p-4 text-sm text-emerald-700">
-            <p class="font-medium">Indemnité télétravail 2024</p>
-            <p class="mt-1 text-emerald-600">2,50 € par jour · Plafond 580 €/an (232 jours)</p>
+            <p class="font-medium">Indemnité télétravail</p>
+            <p class="mt-1 text-emerald-600">Montant journalier selon le barème fiscal de l'année · Plafond 232 jours/an</p>
           </div>
         </template>
 

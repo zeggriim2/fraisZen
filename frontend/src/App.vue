@@ -123,6 +123,7 @@ const nav = [
 const adminNav = [
   { to: '/admin/dashboard', label: 'Tableau de bord', icon: '📊' },
   { to: '/admin/users', label: 'Utilisateurs', icon: '👥' },
+  { to: '/admin/fiscal-config', label: 'Config fiscale', icon: '⚙️' },
 ]
 const types = [
   { label: 'Trajet', color: 'bg-blue-500' },

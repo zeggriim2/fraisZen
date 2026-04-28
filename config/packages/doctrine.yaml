@@ -32,6 +32,12 @@ doctrine:
                 dir: '%kernel.project_dir%/src/Auth/Domain/Entity'
                 prefix: 'App\Auth\Domain\Entity'
                 alias: Auth
+            Admin:
+                type: attribute
+                is_bundle: false
+                dir: '%kernel.project_dir%/src/Admin/Domain/Entity'
+                prefix: 'App\Admin\Domain\Entity'
+                alias: Admin
 
 when@test:
     doctrine:
