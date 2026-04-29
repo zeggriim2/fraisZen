@@ -65,7 +65,7 @@
             <div class="flex justify-between text-sm"><span class="text-gray-500">Entrées</span><span class="font-medium">{{ summary.toll.entries }}</span></div>
           </template>
         </SummaryCard>
-        <SummaryCard icon="🍽️" title="Repas" subtitle="Montant réel − 5,35 €" :amount="summary.meal.deduction" color="orange">
+        <SummaryCard icon="🍽️" title="Repas" :subtitle="`Montant réel − ${summary.meal.homeMealValue.toFixed(2)} €`" :amount="summary.meal.deduction" color="orange">
           <template #details>
             <div class="flex justify-between text-sm"><span class="text-gray-500">Repas</span><span class="font-medium">{{ summary.meal.entries }}</span></div>
           </template>

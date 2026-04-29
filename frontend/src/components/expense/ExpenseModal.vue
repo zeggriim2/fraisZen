@@ -185,13 +185,41 @@
         </template>
 
         <template v-else-if="form.type === 'meal'">
-          <div class="bg-orange-50 border border-orange-100 rounded-xl p-4 text-sm text-orange-700">
-            <p class="font-medium">Repas professionnel 2024</p>
-            <p class="mt-1 text-orange-600">5,35 € (valeur repas à domicile) seront déduits automatiquement du montant saisi.</p>
+          <!-- Toggle sans justificatif -->
+          <label class="flex items-center gap-3 cursor-pointer select-none">
+            <span class="relative inline-flex h-5 w-9 shrink-0">
+              <input type="checkbox" v-model="form.withoutReceipt" class="peer sr-only" />
+              <span class="w-9 h-5 rounded-full bg-gray-200 peer-checked:bg-orange-500 transition-colors"></span>
+              <span class="absolute top-0.5 left-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform peer-checked:translate-x-4"></span>
+            </span>
+            <span class="text-sm font-medium text-gray-700">Sans justificatif</span>
+          </label>
+
+          <div v-if="form.withoutReceipt" class="bg-orange-50 border border-orange-100 rounded-xl p-4 text-sm text-orange-700">
+            <p class="font-medium">Mode forfaitaire</p>
+            <p class="mt-1 text-orange-600">Déduction directe de <strong>{{ mealRate.toFixed(2) }} €</strong> par repas (valeur repas domicile {{ mealRateYear }}).</p>
           </div>
-          <div><label class="block text-sm font-medium text-gray-700 mb-1.5">Montant du repas (€)</label><input v-model.number="form.mealAmount" type="number" min="0" step="0.01" class="w-full rounded-lg border-gray-300 shadow-sm text-sm" placeholder="ex : 12.50" /></div>
-          <p v-if="form.mealAmount > 5.35" class="text-xs text-emerald-600">Montant déductible : {{ (form.mealAmount - 5.35).toFixed(2) }} €</p>
-          <p v-else-if="form.mealAmount > 0" class="text-xs text-amber-600">Montant inférieur à 5,35 € — non déductible.</p>
+
+          <template v-else>
+            <div class="bg-orange-50 border border-orange-100 rounded-xl p-4 text-sm text-orange-700">
+              <p class="font-medium">Repas professionnel</p>
+              <p class="mt-1 text-orange-600"><strong>{{ mealRate.toFixed(2) }} €</strong> (valeur repas à domicile {{ mealRateYear }}) seront déduits automatiquement du montant saisi.</p>
+            </div>
+            <div><label class="block text-sm font-medium text-gray-700 mb-1.5">Montant du repas (€)</label><input v-model.number="form.mealAmount" type="number" min="0" step="0.01" class="w-full rounded-lg border-gray-300 shadow-sm text-sm" placeholder="ex : 12.50" /></div>
+
+            <!-- Ticket-restaurant -->
+            <label class="flex items-center gap-2 cursor-pointer select-none text-sm text-gray-600">
+              <input type="checkbox" v-model="form.useTicketRestaurant" class="rounded border-gray-300 text-orange-500" />
+              Ticket-restaurant (part employeur)
+            </label>
+            <div v-if="form.useTicketRestaurant">
+              <label class="block text-sm font-medium text-gray-700 mb-1.5">Part employeur (€)</label>
+              <input v-model.number="form.employerTicketContribution" type="number" min="0" step="0.01" class="w-full rounded-lg border-gray-300 shadow-sm text-sm" placeholder="ex : 5.00" />
+            </div>
+
+            <p v-if="mealDeductible > 0" class="text-xs text-emerald-600">Montant déductible : {{ mealDeductible.toFixed(2) }} €</p>
+            <p v-else-if="form.mealAmount > 0" class="text-xs text-amber-600">Montant non déductible (inférieur ou égal au seuil).</p>
+          </template>
         </template>
 
         <template v-else>
@@ -219,10 +247,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useExpenseStore } from '@/stores/expenseStore'
 import { usePersonStore } from '@/stores/personStore'
 import { useAuthStore } from '@/stores/authStore'
+import { expenseApi } from '@/api/expenseApi'
 import type { Expense, TravelExpense, TollExpense, MealExpense, VehicleType } from '@/types'
 import InfoRow from '@/components/ui/InfoRow.vue'
 import { useRouteDistance } from '@/composables/useRouteDistance'
@@ -304,7 +333,7 @@ function buildForm(source?: Expense | null) {
   }
   if (source?.type === 'meal') {
     const m = source as MealExpense
-    return { type: 'meal' as const, vehicleType: 'car' as VehicleType, departure: '', arrival: '', distanceKm: 0, vehiclePower: authStore.user?.defaultFiscalPower ?? 5, amount: 0, mealAmount: m.mealAmount, description: m.description ?? '', roundTrip: false, isElectric: false }
+    return { type: 'meal' as const, vehicleType: 'car' as VehicleType, departure: '', arrival: '', distanceKm: 0, vehiclePower: authStore.user?.defaultFiscalPower ?? 5, amount: 0, mealAmount: m.mealAmount, description: m.description ?? '', roundTrip: false, isElectric: false, employerTicketContribution: m.employerTicketContribution, withoutReceipt: m.withoutReceipt, useTicketRestaurant: m.employerTicketContribution > 0 }
   }
   return {
     type: (source?.type ?? 'travel') as 'travel' | 'remote_work' | 'toll' | 'meal',
@@ -318,10 +347,34 @@ function buildForm(source?: Expense | null) {
     description: source?.description ?? '',
     roundTrip: false,
     isElectric: false,
+    employerTicketContribution: 0,
+    withoutReceipt: false,
+    useTicketRestaurant: false,
   }
 }
 
 const form = ref(buildForm(props.prefill ?? props.expense))
+
+const mealRate = ref(5.35)
+const mealRateYear = ref('')
+
+async function fetchMealRate() {
+  const year = parseInt(props.date.slice(0, 4))
+  try {
+    const config = await expenseApi.getFiscalConfig(year)
+    mealRate.value = config.homeMealValue
+    mealRateYear.value = String(year)
+  } catch {
+    mealRate.value = 5.35
+  }
+}
+
+const mealDeductible = computed(() => {
+  const raw = form.value.mealAmount - mealRate.value - (form.value.useTicketRestaurant ? form.value.employerTicketContribution : 0)
+  return Math.max(0, raw)
+})
+
+watch(() => form.value.type, (type) => { if (type === 'meal') fetchMealRate() }, { immediate: true })
 
 function startEdit() {
   form.value = buildForm(props.expense)
@@ -361,7 +414,7 @@ async function save() {
   if (!personStore.activePerson) { error.value = 'Sélectionnez une personne dans le menu.'; return }
   if (form.value.type === 'travel' && form.value.distanceKm <= 0) { error.value = 'Distance requise (> 0).'; return }
   if (form.value.type === 'toll' && form.value.amount <= 0) { error.value = 'Montant requis (> 0).'; return }
-  if (form.value.type === 'meal' && form.value.mealAmount <= 0) { error.value = 'Montant requis (> 0).'; return }
+  if (form.value.type === 'meal' && !form.value.withoutReceipt && form.value.mealAmount <= 0) { error.value = 'Montant requis (> 0).'; return }
 
   saving.value = true
   try {
@@ -373,7 +426,7 @@ async function save() {
       } else if (f.type === 'toll') {
         await expenseStore.update(props.expense.id, { amount: f.amount, departure: f.departure || null, arrival: f.arrival || null, description: f.description || null })
       } else if (f.type === 'meal') {
-        await expenseStore.update(props.expense.id, { mealAmount: f.mealAmount, description: f.description || null })
+        await expenseStore.update(props.expense.id, { mealAmount: f.withoutReceipt ? 0 : f.mealAmount, employerTicketContribution: f.useTicketRestaurant ? f.employerTicketContribution : 0, withoutReceipt: f.withoutReceipt, description: f.description || null })
       } else {
         await expenseStore.update(props.expense.id, { description: f.description || null })
       }
@@ -387,7 +440,7 @@ async function save() {
       } else if (form.value.type === 'toll') {
         await expenseStore.create({ ...base, type: 'toll', amount: form.value.amount, departure: form.value.departure || undefined, arrival: form.value.arrival || undefined, description: form.value.description || undefined })
       } else {
-        await expenseStore.create({ ...base, type: 'meal', mealAmount: form.value.mealAmount, description: form.value.description || undefined })
+        await expenseStore.create({ ...base, type: 'meal', mealAmount: form.value.withoutReceipt ? 0 : form.value.mealAmount, employerTicketContribution: form.value.useTicketRestaurant ? form.value.employerTicketContribution : 0, withoutReceipt: form.value.withoutReceipt, description: form.value.description || undefined })
       }
     }
     emit('saved')

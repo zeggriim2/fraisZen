@@ -228,18 +228,23 @@ final class AdminController extends AbstractController
     #[Route('/fiscal-config/{year}', methods: [Request::METHOD_PUT])]
     public function upsertFiscalConfig(int $year, Request $request): JsonResponse
     {
-        $data = json_decode($request->getContent(), true) ?? [];
-        $allowance = $data['remoteWorkDailyAllowance'] ?? null;
+        $data          = json_decode($request->getContent(), true) ?? [];
+        $allowance     = $data['remoteWorkDailyAllowance'] ?? null;
+        $homeMealValue = $data['homeMealValue'] ?? null;
 
         if (!is_numeric($allowance) || $allowance <= 0) {
             return $this->json(['error' => 'Invalid remoteWorkDailyAllowance'], Response::HTTP_BAD_REQUEST);
+        }
+        if ($homeMealValue !== null && (!is_numeric($homeMealValue) || $homeMealValue <= 0)) {
+            return $this->json(['error' => 'Invalid homeMealValue'], Response::HTTP_BAD_REQUEST);
         }
 
         $config = $this->fiscalConfigRepository->findByYear($year);
         if ($config) {
             $config->setRemoteWorkDailyAllowance((float) $allowance);
+            if ($homeMealValue !== null) $config->setHomeMealValue((float) $homeMealValue);
         } else {
-            $config = new FiscalConfig($year, (float) $allowance);
+            $config = new FiscalConfig($year, (float) $allowance, $homeMealValue ? (float) $homeMealValue : 5.35);
         }
 
         $this->fiscalConfigRepository->save($config);

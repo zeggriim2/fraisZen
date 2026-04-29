@@ -48,6 +48,8 @@ export interface MealExpense extends BaseExpense {
   type: 'meal'
   mealAmount: number
   homeMealValue: number
+  employerTicketContribution: number
+  withoutReceipt: boolean
 }
 
 export type Expense = TravelExpense | RemoteWorkExpense | TollExpense | MealExpense
@@ -58,7 +60,7 @@ export interface ExpenseSummary {
   travel: { trips: TripData[]; totalKm: number; deduction: number }
   remoteWork: { days: number; dailyAllowance: number; deduction: number }
   toll: { entries: number; deduction: number }
-  meal: { entries: number; deduction: number }
+  meal: { entries: number; homeMealValue: number; deduction: number }
   total: number
 }
 
@@ -78,7 +80,7 @@ export type CreateExpenseDto =
   | { type: 'travel'; personId: string; date: string; distanceKm: number; vehiclePower?: number; vehicleType?: VehicleType; isElectric?: boolean; departure?: string; arrival?: string; description?: string; roundTrip?: boolean }
   | { type: 'remote_work'; personId: string; date: string; description?: string }
   | { type: 'toll'; personId: string; date: string; amount: number; departure?: string; arrival?: string; description?: string }
-  | { type: 'meal'; personId: string; date: string; mealAmount: number; description?: string }
+  | { type: 'meal'; personId: string; date: string; mealAmount: number; employerTicketContribution?: number; withoutReceipt?: boolean; description?: string }
 
 export type UpdateExpenseDto = Record<string, unknown>
 

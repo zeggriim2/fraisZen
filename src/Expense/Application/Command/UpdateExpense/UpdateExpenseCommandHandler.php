@@ -47,6 +47,8 @@ final readonly class UpdateExpenseCommandHandler implements CommandHandlerInterf
             if (array_key_exists('arrival', $f)) $expense->setArrival($f['arrival'] ?: null);
         } elseif ($expense instanceof MealExpense) {
             if (array_key_exists('mealAmount', $f)) $expense->setMealAmount((float) $f['mealAmount']);
+            if (array_key_exists('employerTicketContribution', $f)) $expense->setEmployerTicketContribution((float) $f['employerTicketContribution']);
+            if (array_key_exists('withoutReceipt', $f)) $expense->setWithoutReceipt((bool) $f['withoutReceipt']);
         }
 
         $this->repository->save($expense);

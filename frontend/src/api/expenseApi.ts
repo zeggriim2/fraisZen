@@ -16,4 +16,7 @@ export const expenseApi = {
     http.get('/expenses/summary/pdf', { params: { personId, year }, responseType: 'blob' }).then(r => r.data as Blob),
   downloadCsv: (personId: string, year: number) =>
     http.get('/expenses/summary/csv', { params: { personId, year }, responseType: 'blob' }).then(r => r.data as Blob),
+
+  getFiscalConfig: (year: number) =>
+    http.get<{ year: number; remoteWorkDailyAllowance: number; homeMealValue: number }>(`/expenses/fiscal-config/${year}`).then(r => r.data),
 }

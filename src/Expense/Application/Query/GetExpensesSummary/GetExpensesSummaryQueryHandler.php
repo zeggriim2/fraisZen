@@ -18,6 +18,7 @@ use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 final readonly class GetExpensesSummaryQueryHandler implements QueryHandlerInterface
 {
     private const FALLBACK_DAILY_ALLOWANCE = 2.70;
+    private const FALLBACK_HOME_MEAL_VALUE = 5.35;
 
     public function __construct(
         private ExpenseRepositoryInterface $repository,
@@ -58,6 +59,7 @@ final readonly class GetExpensesSummaryQueryHandler implements QueryHandlerInter
 
         $fiscalConfig    = $this->fiscalConfigRepository->findByYear($query->year);
         $dailyAllowance  = $fiscalConfig?->remoteWorkDailyAllowance() ?? self::FALLBACK_DAILY_ALLOWANCE;
+        $homeMealValue   = $fiscalConfig?->homeMealValue() ?? self::FALLBACK_HOME_MEAL_VALUE;
 
         $travelDeduction     = $this->calculator->calculateAnnualDeduction($trips, $query->year);
         $remoteWorkDeduction = round($remoteWorkDays * $dailyAllowance, 2);
@@ -81,8 +83,9 @@ final readonly class GetExpensesSummaryQueryHandler implements QueryHandlerInter
                 'deduction' => round($tollTotal, 2),
             ],
             'meal'       => [
-                'entries'   => count($mealEntries),
-                'deduction' => $mealDeduction,
+                'entries'      => count($mealEntries),
+                'homeMealValue' => $homeMealValue,
+                'deduction'    => $mealDeduction,
             ],
             'total'      => round($travelDeduction + $remoteWorkDeduction + $tollTotal + $mealDeduction, 2),
         ];

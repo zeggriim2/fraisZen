@@ -43,6 +43,7 @@ export interface AdminUsersResponse {
 export interface FiscalConfig {
   year: number
   remoteWorkDailyAllowance: number
+  homeMealValue: number
 }
 
 export const adminApi = {
@@ -70,6 +71,6 @@ export const adminApi = {
   listFiscalConfigs: () =>
     http.get<FiscalConfig[]>('/admin/fiscal-config').then(r => r.data),
 
-  upsertFiscalConfig: (year: number, remoteWorkDailyAllowance: number) =>
-    http.put<FiscalConfig>(`/admin/fiscal-config/${year}`, { remoteWorkDailyAllowance }).then(r => r.data),
+  upsertFiscalConfig: (year: number, remoteWorkDailyAllowance: number, homeMealValue: number) =>
+    http.put<FiscalConfig>(`/admin/fiscal-config/${year}`, { remoteWorkDailyAllowance, homeMealValue }).then(r => r.data),
 }

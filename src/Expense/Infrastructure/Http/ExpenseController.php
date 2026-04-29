@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Expense\Infrastructure\Http;
 
+use App\Admin\Domain\Repository\FiscalConfigRepositoryInterface;
 use App\Expense\Application\Command\CreateMealExpense\CreateMealExpenseCommand;
 use App\Expense\Application\Command\CreateRemoteWorkExpense\CreateRemoteWorkExpenseCommand;
 use App\Expense\Application\Command\CreateTollExpense\CreateTollExpenseCommand;
@@ -28,10 +29,26 @@ use Symfony\Component\Routing\Attribute\Route;
 #[Route('/api/expenses')]
 final class ExpenseController extends AbstractController
 {
+    private const FALLBACK_HOME_MEAL_VALUE    = 5.35;
+    private const FALLBACK_DAILY_ALLOWANCE    = 2.70;
+
     public function __construct(
         private readonly CommandBusInterface $commandBus,
         private readonly QueryBusInterface $queryBus,
+        private readonly FiscalConfigRepositoryInterface $fiscalConfigRepository,
     ) {}
+
+    #[Route('/fiscal-config/{year}', methods: [Request::METHOD_GET])]
+    public function fiscalConfig(int $year): JsonResponse
+    {
+        $config = $this->fiscalConfigRepository->findByYear($year);
+
+        return $this->json([
+            'year'                     => $year,
+            'remoteWorkDailyAllowance' => $config?->remoteWorkDailyAllowance() ?? self::FALLBACK_DAILY_ALLOWANCE,
+            'homeMealValue'            => $config?->homeMealValue() ?? self::FALLBACK_HOME_MEAL_VALUE,
+        ]);
+    }
 
     #[Route('', methods: [Request::METHOD_GET])]
     public function list(Request $request): JsonResponse
@@ -71,9 +88,10 @@ final class ExpenseController extends AbstractController
 
         $mealSection = '';
         if (($data['meal']['entries'] ?? 0) > 0) {
+            $homeMealFmt = number_format($data['meal']['homeMealValue'], 2, ',', ' ');
             $mealSection = sprintf(
-                '<tr><td>Repas professionnels</td><td>%d repas</td><td>%s</td></tr>',
-                $data['meal']['entries'], $fmt($data['meal']['deduction'])
+                '<tr><td>Repas professionnels</td><td>%d repas − %s EUR/repas</td><td>%s</td></tr>',
+                $data['meal']['entries'], $homeMealFmt, $fmt($data['meal']['deduction'])
             );
         }
 
@@ -177,7 +195,7 @@ HTML;
             ], ';');
             fputcsv($handle, [
                 'Repas',
-                $data['meal']['entries'] . ' repas',
+                $data['meal']['entries'] . ' repas − ' . number_format($data['meal']['homeMealValue'], 2, ',', ' ') . ' €/repas',
                 number_format($data['meal']['deduction'], 2, ',', ' '),
             ], ';');
             fputcsv($handle, ['TOTAL DÉDUCTIBLE', '', number_format($data['total'], 2, ',', ' ')], ';');
@@ -258,8 +276,10 @@ HTML;
                 'meal' => new CreateMealExpenseCommand(
                     personId: $data['personId'],
                     date: $data['date'],
-                    mealAmount: (float) $data['mealAmount'],
+                    mealAmount: (float) ($data['mealAmount'] ?? 0),
                     description: $data['description'] ?? null,
+                    employerTicketContribution: (float) ($data['employerTicketContribution'] ?? 0),
+                    withoutReceipt: (bool) ($data['withoutReceipt'] ?? false),
                 ),
                 default => throw new \InvalidArgumentException(sprintf('Unknown expense type "%s"', $type)),
             };

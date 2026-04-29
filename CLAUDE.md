@@ -1,13 +1,23 @@
-rk# CLAUDE.md
+# CLAUDE.md
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Stack
 
+**Backend**
 - **PHP 8.5** / **Symfony 8.0** skeleton
 - **FrankenPHP** (built on Caddy) as web server — replaces nginx/apache
-- **Doctrine ORM 3.6** with **PostgreSQL** (default in `.env`) or **MySQL 8** (default in `compose.yaml`)
+- **Doctrine ORM 3.6** with **MySQL 8** (default in `compose.yaml`)
+- **Symfony Messenger** — dual bus CQRS (`command.bus` / `query.bus`)
+- **dompdf/dompdf** — PDF generation for expense export
 - **Docker Compose** for local development; all dev commands run inside containers via `make`
+
+**Frontend** (`frontend/`)
+- **Vue 3** (Composition API + `<script setup>`)
+- **Vite** — dev server proxies `/api` → Symfony :443
+- **Pinia** — state management (`authStore`, `personStore`, `expenseStore`)
+- **Tailwind CSS** — utility-first styling
+- **TypeScript** + **Axios** — typed API client in `frontend/src/api/`
 
 ## Common Commands
 
@@ -32,19 +42,48 @@ make test c='tests/Unit/FooTest.php'         # run a single test file
 
 ## Architecture
 
+DDD + CQRS. **Never put business logic in controllers or infrastructure handlers.**
+
 ```
 src/
-  Kernel.php          # MicroKernelTrait; bundles declared in config/bundles.php
-  Controller/         # HTTP controllers (attribute-based routing)
-  Entity/             # Doctrine ORM entities (attribute-based mapping)
-  Repository/         # Doctrine repositories
+  Auth/               # Bounded context — JWT auth, User entity, registration/login
+  Person/             # Bounded context — Person aggregate (linked to a User)
+  Expense/            # Bounded context — all expense types + PDF/CSV export
+  Billing/            # Bounded context — Stripe subscription, SubscriptionMiddleware
+  Admin/              # Bounded context — admin dashboard, user management
+  SharedKernel/       # CommandBusInterface, QueryBusInterface, base value objects
+  Kernel.php
 config/
-  packages/           # Per-bundle YAML config (doctrine, framework, cache…)
-  routes.yaml         # Loads routes from src/Controller via attribute routing
+  packages/           # Per-bundle YAML config (doctrine, messenger, security…)
   services.yaml       # Autowire + autoconfigure enabled globally
 migrations/           # DoctrineMigrations (namespace DoctrineMigrations)
-public/index.php      # Entry point — Symfony Runtime bootstrap
+frontend/
+  src/
+    api/              # Axios clients (http.ts, expenseApi.ts, personApi.ts, adminApi.ts)
+    stores/           # Pinia stores (authStore, personStore, expenseStore)
+    views/            # Page components (CalendarView, SummaryView, PersonsView…)
+    components/       # Reusable UI components
+    types/index.ts    # Shared TypeScript interfaces
 ```
+
+**Layer rules per bounded context:**
+```
+Domain/          # Entities, Value Objects, Enums, Domain Services, Repository interfaces
+Application/
+  Command/       # CommandHandler (write side) — dispatched via command.bus
+  Query/         # QueryHandler (read side) — dispatched via query.bus
+Infrastructure/
+  Http/          # Symfony controllers (thin — delegate to bus immediately)
+  Persistence/   # Doctrine repository implementations
+```
+
+**Expense STI hierarchy** (Doctrine Single Table Inheritance):
+- `Expense` (base) → `TravelExpense`, `RemoteWorkExpense`, `TollExpense`, `MealExpense`
+- `KilometricAllowanceCalculator` — barème kilométrique 2024 (3–7 CV, voiture/moto, électrique +20%)
+
+**Subscription guard:**
+- `SubscriptionMiddleware` blocks all `/api/*` routes (except `/api/auth/`, `/api/billing/`, `/api/admin/`) when `user.subscriptionStatus !== 'active'` → HTTP 402
+- Frontend `http.ts` interceptor redirects to `/pricing` on 402
 
 **Naming strategy:** Doctrine converts entity class names to snake_case table names automatically.
 
@@ -73,6 +112,35 @@ make sf c='doctrine:migrations:migrate' # apply pending migrations
 ```
 
 Migrations live in `migrations/` with namespace `DoctrineMigrations`.
+
+## Frontend Dev Commands
+
+The frontend is a separate Vite app in `frontend/`. Run outside Docker:
+
+```bash
+cd frontend
+npm install       # install dependencies
+npm run dev       # start Vite dev server (proxies /api → https://localhost)
+npm run build     # production build into frontend/dist/
+npm run typecheck # run tsc --noEmit
+```
+
+## Key API Routes
+
+| Method | Route | Description |
+|--------|-------|-------------|
+| POST | `/api/auth/register` | Register a new user |
+| POST | `/api/auth/login` | Login → JWT token |
+| GET | `/api/auth/me` | Current user profile |
+| GET/POST | `/api/persons` | List / create persons |
+| PUT/DELETE | `/api/persons/{id}` | Update / delete a person |
+| GET/POST | `/api/expenses` | List by period / create expense |
+| PATCH/DELETE | `/api/expenses/{id}` | Update / delete expense |
+| GET | `/api/expenses/summary` | JSON summary by person + year |
+| GET | `/api/expenses/summary/pdf` | PDF export |
+| GET | `/api/expenses/summary/csv` | CSV export (Excel-compatible) |
+| GET | `/api/admin/users` | Admin — paginated user list |
+| GET | `/api/admin/users/export` | Admin — CSV export all users |
 
 <!-- rtk-instructions v2 -->
 # RTK (Rust Token Killer) - Token-Optimized Commands
