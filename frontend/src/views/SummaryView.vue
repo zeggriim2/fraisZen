@@ -103,29 +103,16 @@
         </div>
       </div>
 
-      <!-- Détail des trajets -->
+      <!-- Détail barème kilométrique -->
       <div v-if="summary.travel.trips.length" class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden mb-4">
-        <div class="px-5 py-4 border-b border-gray-100 font-semibold text-gray-900 flex items-center justify-between">
-          <span>Détail des trajets</span>
-          <button @click="showBareme = !showBareme" class="text-xs text-indigo-600 hover:underline">
-            {{ showBareme ? 'Masquer le barème' : 'Voir le détail du barème' }}
-          </button>
+        <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+          <span class="font-semibold text-gray-900">Détail des trajets</span>
+          <router-link :to="`/trips?year=${selectedYear}&personId=${personStore.activePerson?.id}`"
+            class="text-xs font-medium text-indigo-600 hover:text-indigo-800 flex items-center gap-1">
+            Voir tous les trajets <span>→</span>
+          </router-link>
         </div>
-        <div class="divide-y divide-gray-100">
-          <div v-for="(t, i) in summary.travel.trips" :key="i" class="px-5 py-3 flex items-center justify-between text-sm">
-            <div class="flex items-center gap-4">
-              <span class="text-gray-400 text-xs w-24 shrink-0">{{ t.date }}</span>
-              <span class="text-gray-700">{{ t.departure && t.arrival ? `${t.departure} → ${t.arrival}` : t.description ?? '—' }}</span>
-            </div>
-            <div class="flex items-center gap-2 shrink-0 ml-4">
-              <span v-if="t.roundTrip" class="text-xs font-medium bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full">A/R</span>
-              <span class="text-gray-500">{{ t.distanceKm }} km · {{ t.vehiclePower }} CV</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Barème détail -->
-        <div v-if="showBareme" class="px-5 py-4 bg-gray-50 border-t border-gray-100">
+        <div class="px-5 py-4 bg-gray-50">
           <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Barème appliqué</p>
           <div v-for="(b, key) in baremeBreakdown" :key="key" class="mb-3">
             <p class="text-xs font-medium text-gray-700 mb-1">{{ b.label }} — {{ b.totalKm.toFixed(0) }} km cumulés</p>
@@ -206,7 +193,6 @@ const pdfLoading = ref(false)
 const csvLoading = ref(false)
 const summary = ref<ExpenseSummary | null>(null)
 const multiYearData = ref<(ExpenseSummary | null)[]>([])
-const showBareme = ref(false)
 const grossSalary = ref<number>(parseInt(localStorage.getItem('grossSalary') ?? '0') || 0)
 
 watch(grossSalary, v => localStorage.setItem('grossSalary', String(v)))
