@@ -60,6 +60,28 @@ jobs:
       # Uncomment if Doctrine ORM is installed
       # - name: Doctrine Schema Validator
       #   run: docker compose exec -T php bin/console -e test doctrine:schema:validate
+  quality:
+    name: Code Quality
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.5'
+          tools: composer
+      - name: Install dependencies
+        run: composer install --prefer-dist --no-progress
+      - name: PHP CS Fixer
+        run: vendor/bin/php-cs-fixer fix --dry-run --diff --allow-risky=yes --format=txt
+      - name: PHPStan
+        run: vendor/bin/phpstan analyse --memory-limit=512M --error-format=github
+      - name: Psalm
+        run: vendor/bin/psalm --no-progress --output-format=github
+
   lint:
     name: Lint
     runs-on: ubuntu-latest
