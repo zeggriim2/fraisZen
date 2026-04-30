@@ -16,6 +16,7 @@ services:
     volumes:
       - caddy_data:/data
       - caddy_config:/config
+      - receipts_data:/app/var/share/receipts
     ports:
       - name: http
         target: 80
@@ -80,3 +81,4 @@ volumes:
   database_data:
 ###< doctrine/doctrine-bundle ###
   node_modules:
+  receipts_data:

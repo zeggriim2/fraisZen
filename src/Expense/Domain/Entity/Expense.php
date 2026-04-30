@@ -17,6 +17,7 @@ use Doctrine\ORM\Mapping as ORM;
     'remote_work' => RemoteWorkExpense::class,
     'toll'        => TollExpense::class,
     'meal'        => MealExpense::class,
+    'parking'     => ParkingExpense::class,
 ])]
 abstract class Expense
 {

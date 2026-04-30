@@ -48,7 +48,7 @@
       </div>
 
       <!-- Cards -->
-      <div class="grid grid-cols-4 gap-4 mb-8">
+      <div class="grid grid-cols-5 gap-4 mb-8">
         <SummaryCard icon="🚗" title="Trajets" subtitle="Barème kilométrique" :amount="summary.travel.deduction" color="blue">
           <template #details>
             <div class="flex justify-between text-sm"><span class="text-gray-500">Trajets</span><span class="font-medium">{{ summary.travel.trips.length }}</span></div>
@@ -68,6 +68,11 @@
         <SummaryCard icon="🍽️" title="Repas" :subtitle="`Montant réel − ${summary.meal.homeMealValue.toFixed(2)} €`" :amount="summary.meal.deduction" color="orange">
           <template #details>
             <div class="flex justify-between text-sm"><span class="text-gray-500">Repas</span><span class="font-medium">{{ summary.meal.entries }}</span></div>
+          </template>
+        </SummaryCard>
+        <SummaryCard icon="🅿️" title="Parking" subtitle="Montant réel" :amount="summary.parking.deduction" color="rose">
+          <template #details>
+            <div class="flex justify-between text-sm"><span class="text-gray-500">Entrées</span><span class="font-medium">{{ summary.parking.entries }}</span></div>
           </template>
         </SummaryCard>
       </div>
@@ -149,6 +154,7 @@
               <th class="px-3 py-2 text-right text-xs font-semibold text-gray-500">Télétravail</th>
               <th class="px-3 py-2 text-right text-xs font-semibold text-gray-500">Péages</th>
               <th class="px-3 py-2 text-right text-xs font-semibold text-gray-500">Repas</th>
+              <th class="px-3 py-2 text-right text-xs font-semibold text-gray-500">Parking</th>
               <th class="px-5 py-2 text-right text-xs font-semibold text-gray-500">Total</th>
             </tr>
           </thead>
@@ -161,6 +167,7 @@
                 <td class="px-3 py-2.5 text-right text-gray-600">{{ fmt(row.remoteWork.deduction) }}</td>
                 <td class="px-3 py-2.5 text-right text-gray-600">{{ fmt(row.toll.deduction) }}</td>
                 <td class="px-3 py-2.5 text-right text-gray-600">{{ fmt(row.meal?.deduction ?? 0) }}</td>
+                <td class="px-3 py-2.5 text-right text-gray-600">{{ fmt(row.parking?.deduction ?? 0) }}</td>
                 <td class="px-5 py-2.5 text-right font-semibold" :class="row.year === selectedYear ? 'text-indigo-700' : 'text-gray-900'">{{ fmt(row.total) }}</td>
               </template>
               <template v-else>
@@ -318,6 +325,7 @@ const SummaryCard = defineComponent({
       emerald: { bg: 'bg-emerald-100', text: 'text-emerald-600' },
       amber:   { bg: 'bg-amber-100',   text: 'text-amber-600' },
       orange:  { bg: 'bg-orange-100',  text: 'text-orange-600' },
+      rose:    { bg: 'bg-rose-100',    text: 'text-rose-600' },
     }
     const c = colors[props.color ?? 'blue']
     return () => h('div', { class: 'bg-white rounded-2xl border border-gray-200 p-5 shadow-sm' }, [

@@ -19,4 +19,16 @@ export const expenseApi = {
 
   getFiscalConfig: (year: number) =>
     http.get<{ year: number; remoteWorkDailyAllowance: number; homeMealValue: number }>(`/expenses/fiscal-config/${year}`).then(r => r.data),
+
+  uploadReceipt: (id: string, file: File) => {
+    const form = new FormData()
+    form.append('receipt', file)
+    return http.post<{ receiptFilename: string }>(`/expenses/${id}/receipt`, form, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    }).then(r => r.data)
+  },
+  downloadReceipt: (id: string) =>
+    http.get(`/expenses/${id}/receipt`, { responseType: 'blob' }).then(r => r.data as Blob),
+  deleteReceipt: (id: string) =>
+    http.delete(`/expenses/${id}/receipt`),
 }

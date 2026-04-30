@@ -31,6 +31,10 @@ services:
     App\Auth\Domain\Repository\UserRepositoryInterface:
         class: App\Auth\Infrastructure\Persistence\DoctrineUserRepository
 
+    App\Expense\Infrastructure\Http\ReceiptController:
+        arguments:
+            $shareDir: '%kernel.project_dir%/%env(APP_SHARE_DIR)%'
+
     Stripe\StripeClient:
         arguments:
             $config: '%env(STRIPE_SECRET_KEY)%'

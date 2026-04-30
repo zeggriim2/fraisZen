@@ -6,6 +6,7 @@ namespace App\Expense\Application\Query\GetExpensesSummary;
 
 use App\Admin\Domain\Repository\FiscalConfigRepositoryInterface;
 use App\Expense\Domain\Entity\MealExpense;
+use App\Expense\Domain\Entity\ParkingExpense;
 use App\Expense\Domain\Entity\RemoteWorkExpense;
 use App\Expense\Domain\Entity\TollExpense;
 use App\Expense\Domain\Entity\TravelExpense;
@@ -34,6 +35,7 @@ final readonly class GetExpensesSummaryQueryHandler implements QueryHandlerInter
         $remoteWorkDays = 0;
         $tollTotal = 0.0;
         $mealEntries = [];
+        $parkingTotal = 0.0;
 
         foreach ($expenses as $expense) {
             if ($expense instanceof TravelExpense) {
@@ -54,6 +56,8 @@ final readonly class GetExpensesSummaryQueryHandler implements QueryHandlerInter
                 $tollTotal += $expense->amount();
             } elseif ($expense instanceof MealExpense) {
                 $mealEntries[] = $expense->amount();
+            } elseif ($expense instanceof ParkingExpense) {
+                $parkingTotal += $expense->amount();
             }
         }
 
@@ -87,7 +91,11 @@ final readonly class GetExpensesSummaryQueryHandler implements QueryHandlerInter
                 'homeMealValue' => $homeMealValue,
                 'deduction'    => $mealDeduction,
             ],
-            'total'      => round($travelDeduction + $remoteWorkDeduction + $tollTotal + $mealDeduction, 2),
+            'parking'    => [
+                'entries'   => count(array_filter($expenses, fn ($e) => $e instanceof ParkingExpense)),
+                'deduction' => round($parkingTotal, 2),
+            ],
+            'total'      => round($travelDeduction + $remoteWorkDeduction + $tollTotal + $mealDeduction + $parkingTotal, 2),
         ];
     }
 }

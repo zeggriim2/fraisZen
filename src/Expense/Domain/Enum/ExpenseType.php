@@ -10,6 +10,7 @@ enum ExpenseType: string
     case RemoteWork = 'remote_work';
     case Toll = 'toll';
     case Meal = 'meal';
+    case Parking = 'parking';
 
     public function label(): string
     {
@@ -18,6 +19,7 @@ enum ExpenseType: string
             self::RemoteWork => 'Télétravail',
             self::Toll => 'Péage',
             self::Meal => 'Repas',
+            self::Parking => 'Parking',
         };
     }
 }

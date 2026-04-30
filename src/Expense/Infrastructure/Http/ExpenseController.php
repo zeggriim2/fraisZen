@@ -6,6 +6,7 @@ namespace App\Expense\Infrastructure\Http;
 
 use App\Admin\Domain\Repository\FiscalConfigRepositoryInterface;
 use App\Expense\Application\Command\CreateMealExpense\CreateMealExpenseCommand;
+use App\Expense\Application\Command\CreateParkingExpense\CreateParkingExpenseCommand;
 use App\Expense\Application\Command\CreateRemoteWorkExpense\CreateRemoteWorkExpenseCommand;
 use App\Expense\Application\Command\CreateTollExpense\CreateTollExpenseCommand;
 use App\Expense\Application\Command\CreateTravelExpense\CreateTravelExpenseCommand;
@@ -95,6 +96,14 @@ final class ExpenseController extends AbstractController
             );
         }
 
+        $parkingSection = '';
+        if (($data['parking']['entries'] ?? 0) > 0) {
+            $parkingSection = sprintf(
+                '<tr><td>Parking</td><td>%d entrees</td><td>%s</td></tr>',
+                $data['parking']['entries'], $fmt($data['parking']['deduction'])
+            );
+        }
+
         $tripCount      = count($data['travel']['trips']);
         $totalKm        = round($data['travel']['totalKm'], 0);
         $travelDed      = $fmt($data['travel']['deduction']);
@@ -125,6 +134,7 @@ td { padding: 5px 8px; border-bottom: 1px solid #f3f4f6; }
 <tr><td>Teletravail</td><td>{$data['remoteWork']['days']} jours x $dailyAllowance EUR</td><td>$remoteDed</td></tr>
 <tr><td>Peages</td><td>{$data['toll']['entries']} entrees</td><td>$tollDed</td></tr>
 $mealSection
+$parkingSection
 <tr class="total-row"><td colspan="2">Total deductible $year</td><td>$totalDed</td></tr>
 </table>
 HTML;
@@ -197,6 +207,11 @@ HTML;
                 'Repas',
                 $data['meal']['entries'] . ' repas − ' . number_format($data['meal']['homeMealValue'], 2, ',', ' ') . ' €/repas',
                 number_format($data['meal']['deduction'], 2, ',', ' '),
+            ], ';');
+            fputcsv($handle, [
+                'Parking',
+                ($data['parking']['entries'] ?? 0) . ' entrées',
+                number_format($data['parking']['deduction'] ?? 0, 2, ',', ' '),
             ], ';');
             fputcsv($handle, ['TOTAL DÉDUCTIBLE', '', number_format($data['total'], 2, ',', ' ')], ';');
             fputcsv($handle, [], ';');
@@ -281,15 +296,22 @@ HTML;
                     employerTicketContribution: (float) ($data['employerTicketContribution'] ?? 0),
                     withoutReceipt: (bool) ($data['withoutReceipt'] ?? false),
                 ),
+                'parking' => new CreateParkingExpenseCommand(
+                    personId: $data['personId'],
+                    date: $data['date'],
+                    amount: (float) ($data['amount'] ?? 0),
+                    location: $data['location'] ?? null,
+                    description: $data['description'] ?? null,
+                ),
                 default => throw new \InvalidArgumentException(sprintf('Unknown expense type "%s"', $type)),
             };
         } catch (\InvalidArgumentException $e) {
             return $this->json(['error' => $e->getMessage()], Response::HTTP_BAD_REQUEST);
         }
 
-        $this->commandBus->dispatch($command);
+        $id = $this->commandBus->dispatch($command);
 
-        return $this->json(['message' => 'Expense created'], Response::HTTP_CREATED);
+        return $this->json(['id' => $id], Response::HTTP_CREATED);
     }
 
     #[Route('/{id}', methods: [Request::METHOD_PATCH])]

@@ -1,4 +1,4 @@
-export type ExpenseType = 'travel' | 'remote_work' | 'toll' | 'meal'
+export type ExpenseType = 'travel' | 'remote_work' | 'toll' | 'meal' | 'parking'
 export type VehicleType = 'car' | 'motorcycle' | 'moped'
 
 export interface Person {
@@ -52,7 +52,14 @@ export interface MealExpense extends BaseExpense {
   withoutReceipt: boolean
 }
 
-export type Expense = TravelExpense | RemoteWorkExpense | TollExpense | MealExpense
+export interface ParkingExpense extends BaseExpense {
+  type: 'parking'
+  parkingAmount: number
+  location: string | null
+  receiptFilename: string | null
+}
+
+export type Expense = TravelExpense | RemoteWorkExpense | TollExpense | MealExpense | ParkingExpense
 
 export interface ExpenseSummary {
   personId: string
@@ -61,6 +68,7 @@ export interface ExpenseSummary {
   remoteWork: { days: number; dailyAllowance: number; deduction: number }
   toll: { entries: number; deduction: number }
   meal: { entries: number; homeMealValue: number; deduction: number }
+  parking: { entries: number; deduction: number }
   total: number
 }
 
@@ -81,6 +89,7 @@ export type CreateExpenseDto =
   | { type: 'remote_work'; personId: string; date: string; description?: string }
   | { type: 'toll'; personId: string; date: string; amount: number; departure?: string; arrival?: string; description?: string }
   | { type: 'meal'; personId: string; date: string; mealAmount: number; employerTicketContribution?: number; withoutReceipt?: boolean; description?: string }
+  | { type: 'parking'; personId: string; date: string; amount: number; location?: string; description?: string }
 
 export type UpdateExpenseDto = Record<string, unknown>
 

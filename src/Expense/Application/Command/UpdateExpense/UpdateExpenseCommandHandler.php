@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Expense\Application\Command\UpdateExpense;
 
 use App\Expense\Domain\Entity\MealExpense;
+use App\Expense\Domain\Entity\ParkingExpense;
 use App\Expense\Domain\Entity\TollExpense;
 use App\Expense\Domain\Entity\TravelExpense;
 use App\Expense\Domain\Enum\VehicleType;
@@ -49,6 +50,9 @@ final readonly class UpdateExpenseCommandHandler implements CommandHandlerInterf
             if (array_key_exists('mealAmount', $f)) $expense->setMealAmount((float) $f['mealAmount']);
             if (array_key_exists('employerTicketContribution', $f)) $expense->setEmployerTicketContribution((float) $f['employerTicketContribution']);
             if (array_key_exists('withoutReceipt', $f)) $expense->setWithoutReceipt((bool) $f['withoutReceipt']);
+        } elseif ($expense instanceof ParkingExpense) {
+            if (array_key_exists('amount', $f)) $expense->setParkingAmount((float) $f['amount']);
+            if (array_key_exists('location', $f)) $expense->setLocation($f['location'] ?: null);
         }
 
         $this->repository->save($expense);

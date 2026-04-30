@@ -39,6 +39,25 @@
           <InfoRow label="Valeur repas domicile" :value="`− ${(expense as MealExpense).homeMealValue.toFixed(2)} €`" />
           <InfoRow label="Montant déductible" :value="`${expense.amount.toFixed(2)} €`" />
         </template>
+        <template v-else-if="expense.type === 'parking'">
+          <InfoRow label="Lieu" :value="(expense as ParkingExpense).location ?? '—'" />
+          <InfoRow label="Montant" :value="`${(expense as ParkingExpense).parkingAmount.toFixed(2)} €`" />
+          <div class="flex items-center gap-3 py-1">
+            <span class="text-sm text-gray-500 w-32 shrink-0">Justificatif</span>
+            <template v-if="(expense as ParkingExpense).receiptFilename">
+              <button @click="viewReceipt(expense.id)" class="text-sm text-indigo-600 hover:underline flex items-center gap-1">
+                <span>📎</span>{{ (expense as ParkingExpense).receiptFilename }}
+              </button>
+              <button @click="removeReceipt(expense.id)" class="text-xs text-red-400 hover:text-red-600 ml-auto">Supprimer</button>
+            </template>
+            <template v-else>
+              <label class="cursor-pointer text-sm text-indigo-600 hover:text-indigo-800 flex items-center gap-1">
+                <span>📎</span>Attacher un PDF
+                <input type="file" accept=".pdf,application/pdf" class="sr-only" @change="(e) => attachReceiptToExisting(expense.id, e)" />
+              </label>
+            </template>
+          </div>
+        </template>
         <template v-else-if="expense.type === 'remote_work'">
           <InfoRow label="Indemnité" :value="`${expense.amount.toFixed(2)} €`" />
         </template>
@@ -69,7 +88,7 @@
 
         <div v-if="!expense">
           <label class="block text-sm font-medium text-gray-700 mb-2">Type de frais</label>
-          <div class="grid grid-cols-4 gap-2">
+          <div class="grid grid-cols-5 gap-2">
             <button v-for="t in expenseTypes" :key="t.value" @click="form.type = t.value"
               :class="['flex flex-col items-center gap-1.5 p-3 rounded-xl border-2 text-xs font-medium transition-all',
                 form.type === t.value ? t.activeClass : 'border-gray-200 text-gray-600 hover:border-gray-300']">
@@ -184,6 +203,26 @@
           <div><label class="block text-sm font-medium text-gray-700 mb-1.5">Montant (€)</label><input v-model.number="form.amount" type="number" min="0" step="0.01" class="w-full rounded-lg border-gray-300 shadow-sm text-sm" placeholder="0.00" /></div>
         </template>
 
+        <template v-else-if="form.type === 'parking'">
+          <div class="bg-rose-50 border border-rose-100 rounded-xl p-4 text-sm text-rose-700">
+            <p class="font-medium">Frais de parking</p>
+            <p class="mt-1 text-rose-600">Déductibles en complément du barème kilométrique · Justificatif requis</p>
+          </div>
+          <div><label class="block text-sm font-medium text-gray-700 mb-1.5">Lieu (optionnel)</label><input v-model="form.departure" type="text" class="w-full rounded-lg border-gray-300 shadow-sm text-sm" placeholder="ex : Parking Gare de Lyon" /></div>
+          <div><label class="block text-sm font-medium text-gray-700 mb-1.5">Montant (€)</label><input v-model.number="form.amount" type="number" min="0" step="0.01" class="w-full rounded-lg border-gray-300 shadow-sm text-sm" placeholder="0.00" /></div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1.5">Justificatif PDF (optionnel)</label>
+            <label class="flex items-center gap-2 cursor-pointer">
+              <span class="px-3 py-1.5 rounded-lg border border-dashed border-gray-300 bg-gray-50 text-sm text-gray-500 hover:bg-gray-100 flex items-center gap-2">
+                <span>📎</span>
+                {{ parkingReceiptFile ? parkingReceiptFile.name : (expense && (expense as ParkingExpense).receiptFilename ? (expense as ParkingExpense).receiptFilename! : 'Choisir un fichier…') }}
+              </span>
+              <input type="file" accept=".pdf,application/pdf" class="sr-only" @change="onReceiptSelected" />
+            </label>
+            <button v-if="parkingReceiptFile" @click="parkingReceiptFile = null" class="mt-1 text-xs text-red-400 hover:text-red-600">Retirer</button>
+          </div>
+        </template>
+
         <template v-else-if="form.type === 'meal'">
           <!-- Toggle sans justificatif -->
           <label class="flex items-center gap-3 cursor-pointer select-none">
@@ -252,7 +291,7 @@ import { useExpenseStore } from '@/stores/expenseStore'
 import { usePersonStore } from '@/stores/personStore'
 import { useAuthStore } from '@/stores/authStore'
 import { expenseApi } from '@/api/expenseApi'
-import type { Expense, TravelExpense, TollExpense, MealExpense, VehicleType } from '@/types'
+import type { Expense, TravelExpense, TollExpense, MealExpense, ParkingExpense, VehicleType } from '@/types'
 import InfoRow from '@/components/ui/InfoRow.vue'
 import { useRouteDistance } from '@/composables/useRouteDistance'
 import { useFavoriteRoutes } from '@/composables/useFavoriteRoutes'
@@ -331,12 +370,16 @@ function buildForm(source?: Expense | null) {
     const t = source as TollExpense
     return { type: 'toll' as const, vehicleType: 'car' as VehicleType, departure: t.departure ?? '', arrival: t.arrival ?? '', distanceKm: 0, vehiclePower: authStore.user?.defaultFiscalPower ?? 5, amount: t.tollAmount, mealAmount: 0, description: t.description ?? '', roundTrip: false, isElectric: false }
   }
+  if (source?.type === 'parking') {
+    const p = source as ParkingExpense
+    return { type: 'parking' as const, vehicleType: 'car' as VehicleType, departure: p.location ?? '', arrival: '', distanceKm: 0, vehiclePower: authStore.user?.defaultFiscalPower ?? 5, amount: p.parkingAmount, mealAmount: 0, description: p.description ?? '', roundTrip: false, isElectric: false }
+  }
   if (source?.type === 'meal') {
     const m = source as MealExpense
     return { type: 'meal' as const, vehicleType: 'car' as VehicleType, departure: '', arrival: '', distanceKm: 0, vehiclePower: authStore.user?.defaultFiscalPower ?? 5, amount: 0, mealAmount: m.mealAmount, description: m.description ?? '', roundTrip: false, isElectric: false, employerTicketContribution: m.employerTicketContribution, withoutReceipt: m.withoutReceipt, useTicketRestaurant: m.employerTicketContribution > 0 }
   }
   return {
-    type: (source?.type ?? 'travel') as 'travel' | 'remote_work' | 'toll' | 'meal',
+    type: (source?.type ?? 'travel') as 'travel' | 'remote_work' | 'toll' | 'meal' | 'parking',
     vehicleType: 'car' as VehicleType,
     departure: '',
     arrival: '',
@@ -354,6 +397,38 @@ function buildForm(source?: Expense | null) {
 }
 
 const form = ref(buildForm(props.prefill ?? props.expense))
+const parkingReceiptFile = ref<File | null>(null)
+
+function onReceiptSelected(e: Event) {
+  const input = e.target as HTMLInputElement
+  parkingReceiptFile.value = input.files?.[0] ?? null
+}
+
+async function viewReceipt(id: string) {
+  try {
+    const blob = await expenseApi.downloadReceipt(id)
+    const url = URL.createObjectURL(blob)
+    window.open(url, '_blank')
+    setTimeout(() => URL.revokeObjectURL(url), 15000)
+  } catch { error.value = 'Impossible de charger le justificatif.' }
+}
+
+async function attachReceiptToExisting(id: string, e: Event) {
+  const file = (e.target as HTMLInputElement).files?.[0]
+  if (!file) return
+  try {
+    await expenseApi.uploadReceipt(id, file)
+    emit('saved')
+  } catch { error.value = 'Erreur lors de l\'envoi du justificatif.' }
+}
+
+async function removeReceipt(id: string) {
+  if (!confirm('Supprimer le justificatif ?')) return
+  try {
+    await expenseApi.deleteReceipt(id)
+    emit('saved')
+  } catch { error.value = 'Erreur lors de la suppression.' }
+}
 
 const mealRate = ref(5.35)
 const mealRateYear = ref('')
@@ -390,6 +465,7 @@ const expenseTypes = [
   { value: 'remote_work' as const, label: 'Télétravail', icon: '🏠', activeClass: 'border-emerald-500 bg-emerald-50 text-emerald-700' },
   { value: 'toll' as const, label: 'Péage', icon: '🛣️', activeClass: 'border-amber-500 bg-amber-50 text-amber-700' },
   { value: 'meal' as const, label: 'Repas', icon: '🍽️', activeClass: 'border-orange-500 bg-orange-50 text-orange-700' },
+  { value: 'parking' as const, label: 'Parking', icon: '🅿️', activeClass: 'border-rose-500 bg-rose-50 text-rose-700' },
 ]
 
 const vehicleTypes = [
@@ -403,10 +479,10 @@ function vehicleTypeLabel(vt: VehicleType): string {
 }
 
 function badgeClass(type: string) {
-  return ({ travel: 'bg-blue-100 text-blue-700', remote_work: 'bg-emerald-100 text-emerald-700', toll: 'bg-amber-100 text-amber-700', meal: 'bg-orange-100 text-orange-700' } as Record<string, string>)[type] ?? ''
+  return ({ travel: 'bg-blue-100 text-blue-700', remote_work: 'bg-emerald-100 text-emerald-700', toll: 'bg-amber-100 text-amber-700', meal: 'bg-orange-100 text-orange-700', parking: 'bg-rose-100 text-rose-700' } as Record<string, string>)[type] ?? ''
 }
 function expenseIcon(type: string) {
-  return ({ travel: '🚗', remote_work: '🏠', toll: '🛣️', meal: '🍽️' } as Record<string, string>)[type] ?? '📌'
+  return ({ travel: '🚗', remote_work: '🏠', toll: '🛣️', meal: '🍽️', parking: '🅿️' } as Record<string, string>)[type] ?? '📌'
 }
 
 async function save() {
@@ -415,6 +491,7 @@ async function save() {
   if (form.value.type === 'travel' && form.value.distanceKm <= 0) { error.value = 'Distance requise (> 0).'; return }
   if (form.value.type === 'toll' && form.value.amount <= 0) { error.value = 'Montant requis (> 0).'; return }
   if (form.value.type === 'meal' && !form.value.withoutReceipt && form.value.mealAmount <= 0) { error.value = 'Montant requis (> 0).'; return }
+  if (form.value.type === 'parking' && form.value.amount <= 0) { error.value = 'Montant requis (> 0).'; return }
 
   saving.value = true
   try {
@@ -425,6 +502,11 @@ async function save() {
         await expenseStore.update(props.expense.id, { departure: f.departure || null, arrival: f.arrival || null, distanceKm: f.distanceKm, vehiclePower: f.vehicleType !== 'moped' ? f.vehiclePower : null, roundTrip: f.roundTrip, vehicleType: f.vehicleType, isElectric: f.vehicleType === 'car' ? f.isElectric : false, description: f.description || null })
       } else if (f.type === 'toll') {
         await expenseStore.update(props.expense.id, { amount: f.amount, departure: f.departure || null, arrival: f.arrival || null, description: f.description || null })
+      } else if (f.type === 'parking') {
+        await expenseStore.update(props.expense.id, { amount: f.amount, location: f.departure || null, description: f.description || null })
+        if (parkingReceiptFile.value) {
+          await expenseApi.uploadReceipt(props.expense.id, parkingReceiptFile.value)
+        }
       } else if (f.type === 'meal') {
         await expenseStore.update(props.expense.id, { mealAmount: f.withoutReceipt ? 0 : f.mealAmount, employerTicketContribution: f.useTicketRestaurant ? f.employerTicketContribution : 0, withoutReceipt: f.withoutReceipt, description: f.description || null })
       } else {
@@ -439,6 +521,11 @@ async function save() {
         await expenseStore.create({ ...base, type: 'remote_work', description: form.value.description || undefined })
       } else if (form.value.type === 'toll') {
         await expenseStore.create({ ...base, type: 'toll', amount: form.value.amount, departure: form.value.departure || undefined, arrival: form.value.arrival || undefined, description: form.value.description || undefined })
+      } else if (form.value.type === 'parking') {
+        const newId = await expenseStore.create({ ...base, type: 'parking', amount: form.value.amount, location: form.value.departure || undefined, description: form.value.description || undefined })
+        if (parkingReceiptFile.value) {
+          await expenseApi.uploadReceipt(newId, parkingReceiptFile.value)
+        }
       } else {
         await expenseStore.create({ ...base, type: 'meal', mealAmount: form.value.withoutReceipt ? 0 : form.value.mealAmount, employerTicketContribution: form.value.useTicketRestaurant ? form.value.employerTicketContribution : 0, withoutReceipt: form.value.withoutReceipt, description: form.value.description || undefined })
       }

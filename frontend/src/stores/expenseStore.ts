@@ -26,8 +26,9 @@ export const useExpenseStore = defineStore('expense', () => {
     }
   }
 
-  async function create(data: CreateExpenseDto) {
-    await expenseApi.create(data)
+  async function create(data: CreateExpenseDto): Promise<string> {
+    const resp = await expenseApi.create(data)
+    return (resp.data as { id: string }).id
   }
 
   async function update(id: string, data: UpdateExpenseDto) {
