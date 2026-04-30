@@ -12,7 +12,8 @@ SYMFONY  = $(PHP) bin/console
 # Misc
 .DEFAULT_GOAL = help
 .PHONY        : help build up start down logs sh composer vendor sf cc test \
-                frontend-install frontend-dev frontend-build db-setup
+                frontend-install frontend-dev frontend-build db-setup \
+                lint cs-fix phpstan psalm analyse
 
 ## —— 🎵 🐳 The Symfony Docker Makefile 🐳 🎵 ——————————————————————————————————
 help: ## Outputs this help screen
@@ -65,6 +66,21 @@ cc: sf
 db-setup: ## Create DB schema and run migrations (first run)
 	@$(SYMFONY) doctrine:database:create --if-not-exists
 	@$(SYMFONY) doctrine:migrations:migrate --no-interaction
+
+## —— Qualité de code 🔍 ————————————————————————————————————————————————————————
+lint: ## PHP CS Fixer — vérifie le style sans modifier (rapport diff)
+	@$(PHP_CONT) vendor/bin/php-cs-fixer fix --dry-run --diff --allow-risky=yes --format=txt
+
+cs-fix: ## PHP CS Fixer — applique les corrections de style
+	@$(PHP_CONT) vendor/bin/php-cs-fixer fix --allow-risky=yes
+
+phpstan: ## PHPStan — analyse statique (niveau 5)
+	@$(PHP_CONT) vendor/bin/phpstan analyse --memory-limit=512M
+
+psalm: ## Psalm — analyse statique complémentaire
+	@$(PHP_CONT) vendor/bin/psalm --no-progress
+
+analyse: lint phpstan psalm ## Lance tous les contrôles qualité
 
 ## —— Frontend 🎨 ——————————————————————————————————————————————————————————————
 frontend-logs: ## Tail logs du container node (Vite)

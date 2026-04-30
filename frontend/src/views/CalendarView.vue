@@ -90,6 +90,7 @@ import { useAuthStore } from '@/stores/authStore'
 import type { Expense, TravelExpense, TollExpense, MealExpense } from '@/types'
 import ExpenseModal from '@/components/expense/ExpenseModal.vue'
 import CsvImportModal from '@/components/expense/CsvImportModal.vue'
+import {ParkingExpense} from "@/types";
 
 const personStore = usePersonStore()
 const expenseStore = useExpenseStore()
@@ -168,6 +169,7 @@ function label(e: Expense): string {
   if (e.type === 'remote_work') return `${e.amount.toFixed(2)} €`
   if (e.type === 'toll') return `${(e as TollExpense).tollAmount.toFixed(2)} €`
   if (e.type === 'meal') return `${(e as MealExpense).mealAmount.toFixed(2)} €`
+  if (e.type === 'parking') return `${(e as ParkingExpense).parkingAmount.toFixed(2)} €`
   return ''
 }
 function openModal(date: string) { selectedDate.value = date; selectedExpense.value = null; showModal.value = true }
