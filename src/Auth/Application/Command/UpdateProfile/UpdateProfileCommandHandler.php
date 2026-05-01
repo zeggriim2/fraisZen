@@ -13,7 +13,9 @@ use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 #[AsMessageHandler(bus: 'command.bus')]
 final readonly class UpdateProfileCommandHandler implements CommandHandlerInterface
 {
-    public function __construct(private UserRepositoryInterface $repository) {}
+    public function __construct(private UserRepositoryInterface $repository)
+    {
+    }
 
     public function __invoke(UpdateProfileCommand $command): void
     {
@@ -21,7 +23,7 @@ final readonly class UpdateProfileCommandHandler implements CommandHandlerInterf
 
         if ($user->email() !== $command->email) {
             $existing = $this->repository->findByEmail($command->email);
-            if ($existing !== null) {
+            if (null !== $existing) {
                 throw UserAlreadyExistsException::withEmail($command->email);
             }
             $user->setEmail($command->email);

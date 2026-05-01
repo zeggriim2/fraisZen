@@ -30,14 +30,15 @@ use Symfony\Component\Routing\Attribute\Route;
 #[Route('/api/expenses')]
 final class ExpenseController extends AbstractController
 {
-    private const FALLBACK_HOME_MEAL_VALUE    = 5.35;
-    private const FALLBACK_DAILY_ALLOWANCE    = 2.70;
+    private const FALLBACK_HOME_MEAL_VALUE = 5.35;
+    private const FALLBACK_DAILY_ALLOWANCE = 2.70;
 
     public function __construct(
         private readonly CommandBusInterface $commandBus,
         private readonly QueryBusInterface $queryBus,
         private readonly FiscalConfigRepositoryInterface $fiscalConfigRepository,
-    ) {}
+    ) {
+    }
 
     #[Route('/fiscal-config/{year}', methods: [Request::METHOD_GET])]
     public function fiscalConfig(int $year): JsonResponse
@@ -45,17 +46,17 @@ final class ExpenseController extends AbstractController
         $config = $this->fiscalConfigRepository->findByYear($year);
 
         return $this->json([
-            'year'                     => $year,
+            'year' => $year,
             'remoteWorkDailyAllowance' => $config?->remoteWorkDailyAllowance() ?? self::FALLBACK_DAILY_ALLOWANCE,
-            'homeMealValue'            => $config?->homeMealValue() ?? self::FALLBACK_HOME_MEAL_VALUE,
+            'homeMealValue' => $config?->homeMealValue() ?? self::FALLBACK_HOME_MEAL_VALUE,
         ]);
     }
 
     #[Route('', methods: [Request::METHOD_GET])]
     public function list(Request $request): JsonResponse
     {
-        $from     = $request->query->get('from', date('Y-m-01'));
-        $to       = $request->query->get('to', date('Y-m-t'));
+        $from = $request->query->get('from', date('Y-m-01'));
+        $to = $request->query->get('to', date('Y-m-t'));
         $personId = $request->query->get('personId') ?: null;
 
         return $this->json($this->queryBus->ask(new GetExpensesByPeriodQuery($from, $to, $personId)));
@@ -65,7 +66,7 @@ final class ExpenseController extends AbstractController
     public function summaryPdf(Request $request): Response
     {
         $personId = $request->query->get('personId', '');
-        $year     = (int) $request->query->get('year', (int) date('Y'));
+        $year = (int) $request->query->get('year', (int) date('Y'));
 
         if (empty($personId)) {
             return new Response('personId is required', Response::HTTP_BAD_REQUEST);
@@ -73,12 +74,12 @@ final class ExpenseController extends AbstractController
 
         $data = $this->queryBus->ask(new GetExpensesSummaryQuery($personId, $year));
 
-        $fmt = fn (float $v): string => number_format($v, 2, ',', ' ') . ' €';
+        $fmt = fn (float $v): string => number_format($v, 2, ',', ' ').' €';
 
         $tripRows = '';
         foreach ($data['travel']['trips'] as $t) {
             $route = ($t['departure'] && $t['arrival'])
-                ? htmlspecialchars($t['departure'] . ' → ' . $t['arrival'])
+                ? htmlspecialchars($t['departure'].' → '.$t['arrival'])
                 : htmlspecialchars($t['description'] ?? '—');
             $ar = $t['roundTrip'] ? ' (A/R)' : '';
             $tripRows .= sprintf(
@@ -104,13 +105,13 @@ final class ExpenseController extends AbstractController
             );
         }
 
-        $tripCount      = count($data['travel']['trips']);
-        $totalKm        = round($data['travel']['totalKm'], 0);
-        $travelDed      = $fmt($data['travel']['deduction']);
-        $remoteDed      = $fmt($data['remoteWork']['deduction']);
-        $tollDed        = $fmt($data['toll']['deduction']);
-        $totalDed       = $fmt($data['total']);
-        $today          = date('d/m/Y');
+        $tripCount = count($data['travel']['trips']);
+        $totalKm = round($data['travel']['totalKm'], 0);
+        $travelDed = $fmt($data['travel']['deduction']);
+        $remoteDed = $fmt($data['remoteWork']['deduction']);
+        $tollDed = $fmt($data['toll']['deduction']);
+        $totalDed = $fmt($data['total']);
+        $today = date('d/m/Y');
         $dailyAllowance = number_format($data['remoteWork']['dailyAllowance'], 2, ',', ' ');
 
         $html = <<<HTML
@@ -146,7 +147,7 @@ HTML;
             $html .= '</table>';
         }
 
-        $html .= '<p style="font-size:10px;color:#9ca3af;margin-top:20px">Calcule selon le bareme kilometrique officiel ' . $year . '. Document a conserver en cas de controle fiscal.</p></body></html>';
+        $html .= '<p style="font-size:10px;color:#9ca3af;margin-top:20px">Calcule selon le bareme kilometrique officiel '.$year.'. Document a conserver en cas de controle fiscal.</p></body></html>';
 
         $options = new Options();
         $options->set('isRemoteEnabled', false);
@@ -159,7 +160,7 @@ HTML;
             $dompdf->output(),
             Response::HTTP_OK,
             [
-                'Content-Type'        => 'application/pdf',
+                'Content-Type' => 'application/pdf',
                 'Content-Disposition' => sprintf('attachment; filename="frais-reels-%s.pdf"', $year),
             ]
         );
@@ -169,10 +170,10 @@ HTML;
     public function summaryCsv(Request $request): StreamedResponse
     {
         $personId = $request->query->get('personId', '');
-        $year     = (int) $request->query->get('year', (int) date('Y'));
+        $year = (int) $request->query->get('year', (int) date('Y'));
 
         if (empty($personId)) {
-            return new StreamedResponse(fn () => print('personId is required'), Response::HTTP_BAD_REQUEST);
+            return new StreamedResponse(fn () => print ('personId is required'), Response::HTTP_BAD_REQUEST);
         }
 
         $data = $this->queryBus->ask(new GetExpensesSummaryQuery($personId, $year));
@@ -190,27 +191,27 @@ HTML;
             fputcsv($handle, ['Catégorie', 'Détail', 'Déduction (€)'], ';');
             fputcsv($handle, [
                 'Trajets',
-                count($data['travel']['trips']) . ' trajets — ' . round($data['travel']['totalKm']) . ' km',
+                count($data['travel']['trips']).' trajets — '.round($data['travel']['totalKm']).' km',
                 number_format($data['travel']['deduction'], 2, ',', ' '),
             ], ';');
             fputcsv($handle, [
                 'Télétravail',
-                $data['remoteWork']['days'] . ' jours × ' . number_format($data['remoteWork']['dailyAllowance'], 2, ',', ' ') . ' €',
+                $data['remoteWork']['days'].' jours × '.number_format($data['remoteWork']['dailyAllowance'], 2, ',', ' ').' €',
                 number_format($data['remoteWork']['deduction'], 2, ',', ' '),
             ], ';');
             fputcsv($handle, [
                 'Péages',
-                $data['toll']['entries'] . ' entrées',
+                $data['toll']['entries'].' entrées',
                 number_format($data['toll']['deduction'], 2, ',', ' '),
             ], ';');
             fputcsv($handle, [
                 'Repas',
-                $data['meal']['entries'] . ' repas − ' . number_format($data['meal']['homeMealValue'], 2, ',', ' ') . ' €/repas',
+                $data['meal']['entries'].' repas − '.number_format($data['meal']['homeMealValue'], 2, ',', ' ').' €/repas',
                 number_format($data['meal']['deduction'], 2, ',', ' '),
             ], ';');
             fputcsv($handle, [
                 'Parking',
-                ($data['parking']['entries'] ?? 0) . ' entrées',
+                ($data['parking']['entries'] ?? 0).' entrées',
                 number_format($data['parking']['deduction'] ?? 0, 2, ',', ' '),
             ], ';');
             fputcsv($handle, ['TOTAL DÉDUCTIBLE', '', number_format($data['total'], 2, ',', ' ')], ';');
@@ -224,7 +225,7 @@ HTML;
                     fputcsv($handle, [
                         $t['date'],
                         $t['departure'] ?? '',
-                        $t['arrival']   ?? '',
+                        $t['arrival'] ?? '',
                         $t['description'] ?? '',
                         $t['distanceKm'],
                         $t['vehiclePower'] ?? '',
@@ -246,7 +247,7 @@ HTML;
     public function summary(Request $request): JsonResponse
     {
         $personId = $request->query->get('personId', '');
-        $year     = (int) $request->query->get('year', (int) date('Y'));
+        $year = (int) $request->query->get('year', (int) date('Y'));
 
         if (empty($personId)) {
             return $this->json(['error' => 'personId is required'], Response::HTTP_BAD_REQUEST);
@@ -321,6 +322,7 @@ HTML;
 
         try {
             $this->commandBus->dispatch(new UpdateExpenseCommand($id, $fields));
+
             return $this->json(['success' => true]);
         } catch (HandlerFailedException $e) {
             if ($e->getPrevious() instanceof ExpenseNotFoundException) {
@@ -335,6 +337,7 @@ HTML;
     {
         try {
             $this->commandBus->dispatch(new DeleteExpenseCommand($id));
+
             return $this->json(null, Response::HTTP_NO_CONTENT);
         } catch (HandlerFailedException $e) {
             if ($e->getPrevious() instanceof ExpenseNotFoundException) {

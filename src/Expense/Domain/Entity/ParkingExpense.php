@@ -34,21 +34,54 @@ class ParkingExpense extends Expense
         $this->receiptFilename = null;
     }
 
-    public function type(): ExpenseType { return ExpenseType::Parking; }
-    public function amount(): float { return (float) $this->parkingAmount; }
-    public function parkingAmount(): float { return (float) $this->parkingAmount; }
-    public function location(): ?string { return $this->location; }
-    public function receiptFilename(): ?string { return $this->receiptFilename; }
+    public function type(): ExpenseType
+    {
+        return ExpenseType::Parking;
+    }
 
-    public function setParkingAmount(float $amount): void { $this->parkingAmount = $amount; $this->touch(); }
-    public function setLocation(?string $location): void { $this->location = $location; $this->touch(); }
-    public function setReceiptFilename(?string $filename): void { $this->receiptFilename = $filename; $this->touch(); }
+    public function amount(): float
+    {
+        return (float) $this->parkingAmount;
+    }
+
+    public function parkingAmount(): float
+    {
+        return (float) $this->parkingAmount;
+    }
+
+    public function location(): ?string
+    {
+        return $this->location;
+    }
+
+    public function receiptFilename(): ?string
+    {
+        return $this->receiptFilename;
+    }
+
+    public function setParkingAmount(float $amount): void
+    {
+        $this->parkingAmount = $amount;
+        $this->touch();
+    }
+
+    public function setLocation(?string $location): void
+    {
+        $this->location = $location;
+        $this->touch();
+    }
+
+    public function setReceiptFilename(?string $filename): void
+    {
+        $this->receiptFilename = $filename;
+        $this->touch();
+    }
 
     public function toArray(): array
     {
         return array_merge($this->baseArray(), [
-            'parkingAmount'   => $this->parkingAmount(),
-            'location'        => $this->location,
+            'parkingAmount' => $this->parkingAmount(),
+            'location' => $this->location,
             'receiptFilename' => $this->receiptFilename,
         ]);
     }

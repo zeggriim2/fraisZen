@@ -11,12 +11,14 @@ final readonly class MessengerCommandBus implements CommandBusInterface
 {
     public function __construct(
         private MessageBusInterface $commandBus,
-    ) {}
+    ) {
+    }
 
     public function dispatch(object $command): mixed
     {
         $envelope = $this->commandBus->dispatch($command);
         $result = $envelope->last(\Symfony\Component\Messenger\Stamp\HandledStamp::class);
+
         return $result?->getResult();
     }
 }

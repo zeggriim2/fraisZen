@@ -11,14 +11,16 @@ use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 #[AsMessageHandler(bus: 'query.bus')]
 final readonly class GetExpensesByPeriodQueryHandler implements QueryHandlerInterface
 {
-    public function __construct(private ExpenseRepositoryInterface $repository) {}
+    public function __construct(private ExpenseRepositoryInterface $repository)
+    {
+    }
 
     public function __invoke(GetExpensesByPeriodQuery $query): array
     {
         $from = new \DateTimeImmutable($query->from);
-        $to   = new \DateTimeImmutable($query->to);
+        $to = new \DateTimeImmutable($query->to);
 
-        $expenses = $query->personId !== null
+        $expenses = null !== $query->personId
             ? $this->repository->findByPersonAndPeriod($query->personId, $from, $to)
             : $this->repository->findByPeriod($from, $to);
 

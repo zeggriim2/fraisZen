@@ -13,7 +13,9 @@ use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 #[AsMessageHandler(bus: 'command.bus')]
 final readonly class DeletePersonCommandHandler implements CommandHandlerInterface
 {
-    public function __construct(private PersonRepositoryInterface $repository) {}
+    public function __construct(private PersonRepositoryInterface $repository)
+    {
+    }
 
     public function __invoke(DeletePersonCommand $command): void
     {

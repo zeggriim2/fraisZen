@@ -25,7 +25,8 @@ final readonly class GetExpensesSummaryQueryHandler implements QueryHandlerInter
         private ExpenseRepositoryInterface $repository,
         private KilometricAllowanceCalculator $calculator,
         private FiscalConfigRepositoryInterface $fiscalConfigRepository,
-    ) {}
+    ) {
+    }
 
     public function __invoke(GetExpensesSummaryQuery $query): array
     {
@@ -40,15 +41,15 @@ final readonly class GetExpensesSummaryQueryHandler implements QueryHandlerInter
         foreach ($expenses as $expense) {
             if ($expense instanceof TravelExpense) {
                 $trips[] = [
-                    'distanceKm'   => $expense->effectiveDistanceKm(),
+                    'distanceKm' => $expense->effectiveDistanceKm(),
                     'vehiclePower' => $expense->vehiclePower(),
-                    'vehicleType'  => $expense->vehicleType()->value,
-                    'isElectric'   => $expense->isElectric(),
-                    'date'         => $expense->date()->format('Y-m-d'),
-                    'departure'    => $expense->departure(),
-                    'arrival'      => $expense->arrival(),
-                    'description'  => $expense->description(),
-                    'roundTrip'    => $expense->roundTrip(),
+                    'vehicleType' => $expense->vehicleType()->value,
+                    'isElectric' => $expense->isElectric(),
+                    'date' => $expense->date()->format('Y-m-d'),
+                    'departure' => $expense->departure(),
+                    'arrival' => $expense->arrival(),
+                    'description' => $expense->description(),
+                    'roundTrip' => $expense->roundTrip(),
                 ];
             } elseif ($expense instanceof RemoteWorkExpense) {
                 ++$remoteWorkDays;
@@ -61,41 +62,41 @@ final readonly class GetExpensesSummaryQueryHandler implements QueryHandlerInter
             }
         }
 
-        $fiscalConfig    = $this->fiscalConfigRepository->findByYear($query->year);
-        $dailyAllowance  = $fiscalConfig?->remoteWorkDailyAllowance() ?? self::FALLBACK_DAILY_ALLOWANCE;
-        $homeMealValue   = $fiscalConfig?->homeMealValue() ?? self::FALLBACK_HOME_MEAL_VALUE;
+        $fiscalConfig = $this->fiscalConfigRepository->findByYear($query->year);
+        $dailyAllowance = $fiscalConfig?->remoteWorkDailyAllowance() ?? self::FALLBACK_DAILY_ALLOWANCE;
+        $homeMealValue = $fiscalConfig?->homeMealValue() ?? self::FALLBACK_HOME_MEAL_VALUE;
 
-        $travelDeduction     = $this->calculator->calculateAnnualDeduction($trips, $query->year);
+        $travelDeduction = $this->calculator->calculateAnnualDeduction($trips, $query->year);
         $remoteWorkDeduction = round($remoteWorkDays * $dailyAllowance, 2);
-        $mealDeduction       = round(array_sum($mealEntries), 2);
+        $mealDeduction = round(array_sum($mealEntries), 2);
 
         return [
-            'personId'   => $query->personId,
-            'year'       => $query->year,
-            'travel'     => [
-                'trips'     => $trips,
-                'totalKm'   => array_sum(array_column($trips, 'distanceKm')),
+            'personId' => $query->personId,
+            'year' => $query->year,
+            'travel' => [
+                'trips' => $trips,
+                'totalKm' => array_sum(array_column($trips, 'distanceKm')),
                 'deduction' => $travelDeduction,
             ],
             'remoteWork' => [
-                'days'           => $remoteWorkDays,
+                'days' => $remoteWorkDays,
                 'dailyAllowance' => $dailyAllowance,
-                'deduction'      => $remoteWorkDeduction,
+                'deduction' => $remoteWorkDeduction,
             ],
-            'toll'       => [
-                'entries'   => count(array_filter($expenses, fn ($e) => $e instanceof TollExpense)),
+            'toll' => [
+                'entries' => count(array_filter($expenses, fn ($e) => $e instanceof TollExpense)),
                 'deduction' => round($tollTotal, 2),
             ],
-            'meal'       => [
-                'entries'      => count($mealEntries),
+            'meal' => [
+                'entries' => count($mealEntries),
                 'homeMealValue' => $homeMealValue,
-                'deduction'    => $mealDeduction,
+                'deduction' => $mealDeduction,
             ],
-            'parking'    => [
-                'entries'   => count(array_filter($expenses, fn ($e) => $e instanceof ParkingExpense)),
+            'parking' => [
+                'entries' => count(array_filter($expenses, fn ($e) => $e instanceof ParkingExpense)),
                 'deduction' => round($parkingTotal, 2),
             ],
-            'total'      => round($travelDeduction + $remoteWorkDeduction + $tollTotal + $mealDeduction + $parkingTotal, 2),
+            'total' => round($travelDeduction + $remoteWorkDeduction + $tollTotal + $mealDeduction + $parkingTotal, 2),
         ];
     }
 }

@@ -6,5 +6,7 @@ namespace App\Person\Application\Command\DeleteFavoriteRoute;
 
 final readonly class DeleteFavoriteRouteCommand
 {
-    public function __construct(public string $id) {}
+    public function __construct(public string $id)
+    {
+    }
 }

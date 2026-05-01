@@ -11,5 +11,6 @@ final readonly class UpdateProfileCommand
         public string $email,
         public ?int $defaultYear,
         public ?int $defaultFiscalPower,
-    ) {}
+    ) {
+    }
 }

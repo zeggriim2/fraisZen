@@ -51,26 +51,89 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         $this->createdAt = new \DateTimeImmutable();
     }
 
-    public function id(): UserId { return UserId::fromString($this->id); }
-    public function email(): string { return $this->email; }
-    public function stripeCustomerId(): ?string { return $this->stripeCustomerId; }
-    public function subscriptionStatus(): ?string { return $this->subscriptionStatus; }
-    public function createdAt(): \DateTimeImmutable { return $this->createdAt; }
+    public function id(): UserId
+    {
+        return UserId::fromString($this->id);
+    }
 
-    public function defaultYear(): ?int { return $this->defaultYear; }
-    public function defaultFiscalPower(): ?int { return $this->defaultFiscalPower; }
+    public function email(): string
+    {
+        return $this->email;
+    }
 
-    public function setStripeCustomerId(string $id): void { $this->stripeCustomerId = $id; }
-    public function setSubscriptionStatus(string $status): void { $this->subscriptionStatus = $status; }
-    public function setEmail(string $email): void { $this->email = $email; }
-    public function setDefaultYear(?int $year): void { $this->defaultYear = $year; }
-    public function setDefaultFiscalPower(?int $power): void { $this->defaultFiscalPower = $power; }
+    public function stripeCustomerId(): ?string
+    {
+        return $this->stripeCustomerId;
+    }
 
-    public function getUserIdentifier(): string { return $this->email; }
-    public function getRoles(): array { return $this->roles; }
-    public function eraseCredentials(): void {}
-    public function getPassword(): string { return $this->password; }
-    public function setPassword(string $hashedPassword): void { $this->password = $hashedPassword; }
+    public function subscriptionStatus(): ?string
+    {
+        return $this->subscriptionStatus;
+    }
+
+    public function createdAt(): \DateTimeImmutable
+    {
+        return $this->createdAt;
+    }
+
+    public function defaultYear(): ?int
+    {
+        return $this->defaultYear;
+    }
+
+    public function defaultFiscalPower(): ?int
+    {
+        return $this->defaultFiscalPower;
+    }
+
+    public function setStripeCustomerId(string $id): void
+    {
+        $this->stripeCustomerId = $id;
+    }
+
+    public function setSubscriptionStatus(string $status): void
+    {
+        $this->subscriptionStatus = $status;
+    }
+
+    public function setEmail(string $email): void
+    {
+        $this->email = $email;
+    }
+
+    public function setDefaultYear(?int $year): void
+    {
+        $this->defaultYear = $year;
+    }
+
+    public function setDefaultFiscalPower(?int $power): void
+    {
+        $this->defaultFiscalPower = $power;
+    }
+
+    public function getUserIdentifier(): string
+    {
+        return $this->email;
+    }
+
+    public function getRoles(): array
+    {
+        return $this->roles;
+    }
+
+    public function eraseCredentials(): void
+    {
+    }
+
+    public function getPassword(): string
+    {
+        return $this->password;
+    }
+
+    public function setPassword(string $hashedPassword): void
+    {
+        $this->password = $hashedPassword;
+    }
 
     public function toArray(): array
     {

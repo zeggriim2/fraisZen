@@ -13,7 +13,9 @@ use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 #[AsMessageHandler(bus: 'command.bus')]
 final readonly class CreateTollExpenseCommandHandler implements CommandHandlerInterface
 {
-    public function __construct(private ExpenseRepositoryInterface $repository) {}
+    public function __construct(private ExpenseRepositoryInterface $repository)
+    {
+    }
 
     public function __invoke(CreateTollExpenseCommand $command): string
     {
@@ -27,6 +29,7 @@ final readonly class CreateTollExpenseCommandHandler implements CommandHandlerIn
             departure: $command->departure,
             arrival: $command->arrival,
         ));
+
         return $id->value();
     }
 }

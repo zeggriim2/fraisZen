@@ -12,7 +12,8 @@ final readonly class MessengerQueryBus implements QueryBusInterface
 {
     public function __construct(
         private MessageBusInterface $queryBus,
-    ) {}
+    ) {
+    }
 
     public function ask(object $query): mixed
     {

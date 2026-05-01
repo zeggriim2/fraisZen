@@ -10,7 +10,9 @@ use App\Expense\Domain\ValueObject\ExpenseId;
 interface ExpenseRepositoryInterface
 {
     public function save(Expense $expense): void;
+
     public function delete(Expense $expense): void;
+
     public function findById(ExpenseId $id): ?Expense;
 
     /** @return Expense[] */

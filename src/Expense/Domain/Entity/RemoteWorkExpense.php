@@ -20,7 +20,18 @@ class RemoteWorkExpense extends Expense
         $this->dailyAllowance = $dailyAllowance;
     }
 
-    public function type(): ExpenseType { return ExpenseType::RemoteWork; }
-    public function amount(): float { return (float) $this->dailyAllowance; }
-    public function toArray(): array { return $this->baseArray(); }
+    public function type(): ExpenseType
+    {
+        return ExpenseType::RemoteWork;
+    }
+
+    public function amount(): float
+    {
+        return (float) $this->dailyAllowance;
+    }
+
+    public function toArray(): array
+    {
+        return $this->baseArray();
+    }
 }

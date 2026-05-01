@@ -18,11 +18,12 @@ final readonly class RegisterUserCommandHandler implements CommandHandlerInterfa
     public function __construct(
         private UserRepositoryInterface $repository,
         private UserPasswordHasherInterface $hasher,
-    ) {}
+    ) {
+    }
 
     public function __invoke(RegisterUserCommand $command): string
     {
-        if ($this->repository->findByEmail($command->email) !== null) {
+        if (null !== $this->repository->findByEmail($command->email)) {
             throw UserAlreadyExistsException::withEmail($command->email);
         }
 

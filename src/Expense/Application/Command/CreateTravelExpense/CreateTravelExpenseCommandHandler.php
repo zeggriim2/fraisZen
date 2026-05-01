@@ -14,7 +14,9 @@ use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 #[AsMessageHandler(bus: 'command.bus')]
 final readonly class CreateTravelExpenseCommandHandler implements CommandHandlerInterface
 {
-    public function __construct(private ExpenseRepositoryInterface $repository) {}
+    public function __construct(private ExpenseRepositoryInterface $repository)
+    {
+    }
 
     public function __invoke(CreateTravelExpenseCommand $command): string
     {
@@ -32,6 +34,7 @@ final readonly class CreateTravelExpenseCommandHandler implements CommandHandler
             vehicleType: VehicleType::from($command->vehicleType),
             isElectric: $command->isElectric,
         ));
+
         return $id->value();
     }
 }

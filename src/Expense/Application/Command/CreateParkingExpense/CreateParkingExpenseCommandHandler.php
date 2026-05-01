@@ -13,7 +13,9 @@ use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 #[AsMessageHandler(bus: 'command.bus')]
 final readonly class CreateParkingExpenseCommandHandler implements CommandHandlerInterface
 {
-    public function __construct(private ExpenseRepositoryInterface $repository) {}
+    public function __construct(private ExpenseRepositoryInterface $repository)
+    {
+    }
 
     public function __invoke(CreateParkingExpenseCommand $command): string
     {
@@ -26,6 +28,7 @@ final readonly class CreateParkingExpenseCommandHandler implements CommandHandle
             parkingAmount: $command->amount,
             location: $command->location,
         ));
+
         return $id->value();
     }
 }

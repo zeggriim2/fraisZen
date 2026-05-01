@@ -14,5 +14,6 @@ final readonly class CreateMealExpenseCommand
         public float $homeMealValue = 5.35,
         public float $employerTicketContribution = 0.0,
         public bool $withoutReceipt = false,
-    ) {}
+    ) {
+    }
 }

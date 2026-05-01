@@ -55,13 +55,40 @@ class Person
         return PersonId::fromString($this->id);
     }
 
-    public function userId(): string { return $this->userId; }
-    public function firstName(): string { return $this->firstName; }
-    public function lastName(): string { return $this->lastName; }
-    public function email(): ?string { return $this->email; }
-    public function fullName(): string { return $this->firstName . ' ' . $this->lastName; }
-    public function createdAt(): \DateTimeImmutable { return $this->createdAt; }
-    public function isFavorite(): bool { return $this->favorite; }
+    public function userId(): string
+    {
+        return $this->userId;
+    }
+
+    public function firstName(): string
+    {
+        return $this->firstName;
+    }
+
+    public function lastName(): string
+    {
+        return $this->lastName;
+    }
+
+    public function email(): ?string
+    {
+        return $this->email;
+    }
+
+    public function fullName(): string
+    {
+        return $this->firstName.' '.$this->lastName;
+    }
+
+    public function createdAt(): \DateTimeImmutable
+    {
+        return $this->createdAt;
+    }
+
+    public function isFavorite(): bool
+    {
+        return $this->favorite;
+    }
 
     public function setFavorite(bool $favorite): void
     {

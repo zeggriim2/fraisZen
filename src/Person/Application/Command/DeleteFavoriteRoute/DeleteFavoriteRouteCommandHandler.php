@@ -13,7 +13,9 @@ use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 #[AsMessageHandler(bus: 'command.bus')]
 final readonly class DeleteFavoriteRouteCommandHandler implements CommandHandlerInterface
 {
-    public function __construct(private FavoriteRouteRepositoryInterface $repository) {}
+    public function __construct(private FavoriteRouteRepositoryInterface $repository)
+    {
+    }
 
     public function __invoke(DeleteFavoriteRouteCommand $command): void
     {

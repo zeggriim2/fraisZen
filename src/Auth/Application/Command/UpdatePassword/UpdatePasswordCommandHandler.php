@@ -16,7 +16,8 @@ final readonly class UpdatePasswordCommandHandler implements CommandHandlerInter
     public function __construct(
         private UserRepositoryInterface $repository,
         private UserPasswordHasherInterface $hasher,
-    ) {}
+    ) {
+    }
 
     public function __invoke(UpdatePasswordCommand $command): void
     {

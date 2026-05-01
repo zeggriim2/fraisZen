@@ -11,7 +11,9 @@ use Doctrine\ORM\EntityManagerInterface;
 
 final readonly class DoctrineExpenseRepository implements ExpenseRepositoryInterface
 {
-    public function __construct(private EntityManagerInterface $em) {}
+    public function __construct(private EntityManagerInterface $em)
+    {
+    }
 
     public function save(Expense $expense): void
     {

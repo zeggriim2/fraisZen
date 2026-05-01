@@ -56,22 +56,22 @@ final class BaremeKilometriqueProvider
         // Trouver l'année de référence : la plus proche ≤ $year, avec barème non null
         $refYear = null;
         foreach ($knownYears as $y) {
-            if ($y <= $year && self::BAREMES[$y] !== null) {
+            if ($y <= $year && null !== self::BAREMES[$y]) {
                 $refYear = $y;
             }
         }
 
         // Si aucune année connue ≤ $year, utilise la première disponible
-        if ($refYear === null) {
+        if (null === $refYear) {
             foreach ($knownYears as $y) {
-                if (self::BAREMES[$y] !== null) {
+                if (null !== self::BAREMES[$y]) {
                     $refYear = $y;
                     break;
                 }
             }
         }
 
-        /** @var array{car: array, motorcycle: array, moped: array, electricMultiplier: float} */
+        /* @var array{car: array, motorcycle: array, moped: array, electricMultiplier: float} */
         return self::BAREMES[$refYear];
     }
 }

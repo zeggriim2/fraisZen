@@ -12,5 +12,6 @@ final readonly class CreateParkingExpenseCommand
         public float $amount,
         public ?string $location,
         public ?string $description,
-    ) {}
+    ) {
+    }
 }

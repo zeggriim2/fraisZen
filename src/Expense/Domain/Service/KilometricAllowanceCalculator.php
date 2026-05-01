@@ -15,10 +15,10 @@ final class KilometricAllowanceCalculator
 
         $buckets = [];
         foreach ($trips as $trip) {
-            $type     = $trip['vehicleType'] ?? 'car';
-            $power    = (int) ($trip['vehiclePower'] ?? 0);
+            $type = $trip['vehicleType'] ?? 'car';
+            $power = (int) ($trip['vehiclePower'] ?? 0);
             $electric = (bool) ($trip['isElectric'] ?? false);
-            $key      = $type . '|' . $power . '|' . ($electric ? '1' : '0');
+            $key = $type.'|'.$power.'|'.($electric ? '1' : '0');
             if (!isset($buckets[$key])) {
                 $buckets[$key] = ['type' => $type, 'power' => $power, 'electric' => $electric, 'km' => 0.0];
             }
@@ -37,11 +37,11 @@ final class KilometricAllowanceCalculator
     {
         $amount = match ($type) {
             'motorcycle' => $this->forMotorcycle($bareme['motorcycle'], $power, $km),
-            'moped'      => $this->applyTranches($bareme['moped'], $km, 3000, 6000),
-            default      => $this->forCar($bareme['car'], $power, $km),
+            'moped' => $this->applyTranches($bareme['moped'], $km, 3000, 6000),
+            default => $this->forCar($bareme['car'], $power, $km),
         };
 
-        return ($electric && $type === 'car') ? $amount * $bareme['electricMultiplier'] : $amount;
+        return ($electric && 'car' === $type) ? $amount * $bareme['electricMultiplier'] : $amount;
     }
 
     private function forCar(array $carBareme, int $power, float $km): float
@@ -56,7 +56,7 @@ final class KilometricAllowanceCalculator
         $group = match (true) {
             $power <= 2 => 1,
             $power <= 5 => 3,
-            default     => 6,
+            default => 6,
         };
 
         return $this->applyTranches($motoBareme[$group], $km, 3000, 6000);
@@ -67,7 +67,7 @@ final class KilometricAllowanceCalculator
         return match (true) {
             $km <= $tranche1 => $km * $b['rate1'],
             $km <= $tranche2 => ($km * $b['rate2']) + $b['fixed2'],
-            default          => $km * $b['rate3'],
+            default => $km * $b['rate3'],
         };
     }
 

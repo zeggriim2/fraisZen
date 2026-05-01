@@ -9,5 +9,6 @@ final readonly class UpdateExpenseCommand
     public function __construct(
         public string $id,
         public array $fields,
-    ) {}
+    ) {
+    }
 }

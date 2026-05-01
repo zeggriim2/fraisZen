@@ -47,44 +47,117 @@ class TravelExpense extends Expense
         bool $isElectric = false,
     ) {
         parent::__construct($id, $personId, $date, $description);
-        $this->departure    = $departure;
-        $this->arrival      = $arrival;
-        $this->distanceKm   = $distanceKm;
+        $this->departure = $departure;
+        $this->arrival = $arrival;
+        $this->distanceKm = $distanceKm;
         $this->vehiclePower = $vehiclePower;
-        $this->roundTrip    = $roundTrip;
-        $this->vehicleType  = $vehicleType;
-        $this->isElectric   = $isElectric;
+        $this->roundTrip = $roundTrip;
+        $this->vehicleType = $vehicleType;
+        $this->isElectric = $isElectric;
     }
 
-    public function setDeparture(?string $departure): void { $this->departure = $departure; $this->touch(); }
-    public function setArrival(?string $arrival): void { $this->arrival = $arrival; $this->touch(); }
-    public function setDistanceKm(float $km): void { $this->distanceKm = $km; $this->touch(); }
-    public function setVehiclePower(?int $power): void { $this->vehiclePower = $power; $this->touch(); }
-    public function setRoundTrip(bool $rt): void { $this->roundTrip = $rt; $this->touch(); }
-    public function setVehicleType(VehicleType $vt): void { $this->vehicleType = $vt; $this->touch(); }
-    public function setIsElectric(bool $e): void { $this->isElectric = $e; $this->touch(); }
+    public function setDeparture(?string $departure): void
+    {
+        $this->departure = $departure;
+        $this->touch();
+    }
 
-    public function type(): ExpenseType { return ExpenseType::Travel; }
-    public function amount(): float { return 0.0; }
-    public function departure(): ?string { return $this->departure; }
-    public function arrival(): ?string { return $this->arrival; }
-    public function distanceKm(): float { return (float) $this->distanceKm; }
-    public function vehiclePower(): ?int { return $this->vehiclePower; }
-    public function roundTrip(): bool { return $this->roundTrip; }
-    public function vehicleType(): VehicleType { return $this->vehicleType; }
-    public function isElectric(): bool { return $this->isElectric; }
-    public function effectiveDistanceKm(): float { return $this->roundTrip ? $this->distanceKm() * 2 : $this->distanceKm(); }
+    public function setArrival(?string $arrival): void
+    {
+        $this->arrival = $arrival;
+        $this->touch();
+    }
+
+    public function setDistanceKm(float $km): void
+    {
+        $this->distanceKm = $km;
+        $this->touch();
+    }
+
+    public function setVehiclePower(?int $power): void
+    {
+        $this->vehiclePower = $power;
+        $this->touch();
+    }
+
+    public function setRoundTrip(bool $rt): void
+    {
+        $this->roundTrip = $rt;
+        $this->touch();
+    }
+
+    public function setVehicleType(VehicleType $vt): void
+    {
+        $this->vehicleType = $vt;
+        $this->touch();
+    }
+
+    public function setIsElectric(bool $e): void
+    {
+        $this->isElectric = $e;
+        $this->touch();
+    }
+
+    public function type(): ExpenseType
+    {
+        return ExpenseType::Travel;
+    }
+
+    public function amount(): float
+    {
+        return 0.0;
+    }
+
+    public function departure(): ?string
+    {
+        return $this->departure;
+    }
+
+    public function arrival(): ?string
+    {
+        return $this->arrival;
+    }
+
+    public function distanceKm(): float
+    {
+        return (float) $this->distanceKm;
+    }
+
+    public function vehiclePower(): ?int
+    {
+        return $this->vehiclePower;
+    }
+
+    public function roundTrip(): bool
+    {
+        return $this->roundTrip;
+    }
+
+    public function vehicleType(): VehicleType
+    {
+        return $this->vehicleType;
+    }
+
+    public function isElectric(): bool
+    {
+        return $this->isElectric;
+    }
+
+    public function effectiveDistanceKm(): float
+    {
+        return $this->roundTrip ? $this->distanceKm() * 2 : $this->distanceKm();
+    }
 
     public function toArray(): array
     {
         return array_merge($this->baseArray(), [
-            'departure'    => $this->departure,
-            'arrival'      => $this->arrival,
-            'distanceKm'   => $this->distanceKm(),
+            'departure' => $this->departure,
+            'arrival' => $this->arrival,
+            'distanceKm' => $this->distanceKm(),
             'vehiclePower' => $this->vehiclePower,
-            'roundTrip'    => $this->roundTrip,
-            'vehicleType'  => $this->vehicleType->value,
-            'isElectric'   => $this->isElectric,
+            'roundTrip' => $this->roundTrip,
+            'vehicleType' => $this->vehicleType->value,
+            'isElectric' => $this->isElectric,
         ]);
     }
 }

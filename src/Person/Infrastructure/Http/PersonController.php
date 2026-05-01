@@ -26,7 +26,8 @@ final class PersonController extends AbstractController
     public function __construct(
         private readonly CommandBusInterface $commandBus,
         private readonly QueryBusInterface $queryBus,
-    ) {}
+    ) {
+    }
 
     #[Route('', methods: [Request::METHOD_GET])]
     public function list(): JsonResponse
@@ -74,6 +75,7 @@ final class PersonController extends AbstractController
                 email: $data['email'] ?? null,
                 favorite: (bool) ($data['favorite'] ?? false),
             ));
+
             return $this->json($this->queryBus->ask(new GetPersonByIdQuery($id)));
         } catch (HandlerFailedException $e) {
             if ($e->getPrevious() instanceof PersonNotFoundException) {
@@ -88,6 +90,7 @@ final class PersonController extends AbstractController
     {
         try {
             $this->commandBus->dispatch(new DeletePersonCommand($id));
+
             return $this->json(null, Response::HTTP_NO_CONTENT);
         } catch (HandlerFailedException $e) {
             if ($e->getPrevious() instanceof PersonNotFoundException) {
@@ -101,6 +104,7 @@ final class PersonController extends AbstractController
     {
         /** @var User $user */
         $user = $this->getUser();
+
         return $user->id()->value();
     }
 }

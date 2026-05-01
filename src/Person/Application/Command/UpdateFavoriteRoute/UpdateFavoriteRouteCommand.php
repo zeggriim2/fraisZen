@@ -15,5 +15,6 @@ final readonly class UpdateFavoriteRouteCommand
         public ?int $vehiclePower,
         public bool $isElectric,
         public bool $roundTrip,
-    ) {}
+    ) {
+    }
 }

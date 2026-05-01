@@ -10,7 +10,9 @@ use Doctrine\ORM\EntityManagerInterface;
 
 final class DoctrineFiscalConfigRepository implements FiscalConfigRepositoryInterface
 {
-    public function __construct(private readonly EntityManagerInterface $em) {}
+    public function __construct(private readonly EntityManagerInterface $em)
+    {
+    }
 
     public function findByYear(int $year): ?FiscalConfig
     {

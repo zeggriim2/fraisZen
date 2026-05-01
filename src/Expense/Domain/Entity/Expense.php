@@ -13,11 +13,11 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\InheritanceType('SINGLE_TABLE')]
 #[ORM\DiscriminatorColumn(name: 'type', type: 'string')]
 #[ORM\DiscriminatorMap([
-    'travel'      => TravelExpense::class,
+    'travel' => TravelExpense::class,
     'remote_work' => RemoteWorkExpense::class,
-    'toll'        => TollExpense::class,
-    'meal'        => MealExpense::class,
-    'parking'     => ParkingExpense::class,
+    'toll' => TollExpense::class,
+    'meal' => MealExpense::class,
+    'parking' => ParkingExpense::class,
 ])]
 abstract class Expense
 {
@@ -54,10 +54,25 @@ abstract class Expense
         $this->updatedAt = new \DateTimeImmutable();
     }
 
-    public function id(): ExpenseId { return ExpenseId::fromString($this->id); }
-    public function personId(): string { return $this->personId; }
-    public function date(): \DateTimeImmutable { return $this->date; }
-    public function description(): ?string { return $this->description; }
+    public function id(): ExpenseId
+    {
+        return ExpenseId::fromString($this->id);
+    }
+
+    public function personId(): string
+    {
+        return $this->personId;
+    }
+
+    public function date(): \DateTimeImmutable
+    {
+        return $this->date;
+    }
+
+    public function description(): ?string
+    {
+        return $this->description;
+    }
 
     public function setDescription(?string $description): void
     {
@@ -65,22 +80,27 @@ abstract class Expense
         $this->updatedAt = new \DateTimeImmutable();
     }
 
-    protected function touch(): void { $this->updatedAt = new \DateTimeImmutable(); }
+    protected function touch(): void
+    {
+        $this->updatedAt = new \DateTimeImmutable();
+    }
 
     abstract public function type(): ExpenseType;
+
     abstract public function amount(): float;
+
     abstract public function toArray(): array;
 
     protected function baseArray(): array
     {
         return [
-            'id'        => $this->id,
-            'personId'  => $this->personId,
-            'type'      => $this->type()->value,
+            'id' => $this->id,
+            'personId' => $this->personId,
+            'type' => $this->type()->value,
             'typeLabel' => $this->type()->label(),
-            'date'      => $this->date->format('Y-m-d'),
+            'date' => $this->date->format('Y-m-d'),
             'description' => $this->description,
-            'amount'    => $this->amount(),
+            'amount' => $this->amount(),
             'createdAt' => $this->createdAt->format('Y-m-d H:i:s'),
         ];
     }

@@ -65,8 +65,15 @@ class FavoriteRoute
         $this->createdAt = new \DateTimeImmutable();
     }
 
-    public function id(): FavoriteRouteId { return FavoriteRouteId::fromString($this->id); }
-    public function personId(): string { return $this->personId; }
+    public function id(): FavoriteRouteId
+    {
+        return FavoriteRouteId::fromString($this->id);
+    }
+
+    public function personId(): string
+    {
+        return $this->personId;
+    }
 
     public function update(
         string $name,

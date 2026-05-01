@@ -10,5 +10,6 @@ final readonly class UpdatePasswordCommand
         public string $userId,
         public string $currentPassword,
         public string $newPassword,
-    ) {}
+    ) {
+    }
 }

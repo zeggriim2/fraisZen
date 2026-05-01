@@ -21,23 +21,31 @@ final readonly class SubscriptionMiddleware
         '/api/admin/',
     ];
 
-    public function __construct(private TokenStorageInterface $tokenStorage) {}
+    public function __construct(private TokenStorageInterface $tokenStorage)
+    {
+    }
 
     public function onKernelRequest(RequestEvent $event): void
     {
-        if (!$event->isMainRequest()) return;
+        if (!$event->isMainRequest()) {
+            return;
+        }
 
         $path = $event->getRequest()->getPathInfo();
         foreach (self::EXEMPT_PREFIXES as $prefix) {
-            if (str_starts_with($path, $prefix)) return;
+            if (str_starts_with($path, $prefix)) {
+                return;
+            }
         }
 
         $token = $this->tokenStorage->getToken();
-        $user  = $token?->getUser();
+        $user = $token?->getUser();
 
-        if (!$user instanceof User) return;
+        if (!$user instanceof User) {
+            return;
+        }
 
-        if ($user->subscriptionStatus() !== 'active') {
+        if ('active' !== $user->subscriptionStatus()) {
             $event->setResponse(new JsonResponse(
                 ['error' => 'Abonnement requis.', 'code' => 'subscription_required'],
                 Response::HTTP_PAYMENT_REQUIRED,

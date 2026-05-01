@@ -9,5 +9,6 @@ final readonly class GetExpensesSummaryQuery
     public function __construct(
         public string $personId,
         public int $year,
-    ) {}
+    ) {
+    }
 }

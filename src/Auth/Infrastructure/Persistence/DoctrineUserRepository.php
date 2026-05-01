@@ -11,7 +11,9 @@ use Doctrine\ORM\EntityManagerInterface;
 
 final readonly class DoctrineUserRepository implements UserRepositoryInterface
 {
-    public function __construct(private EntityManagerInterface $em) {}
+    public function __construct(private EntityManagerInterface $em)
+    {
+    }
 
     public function save(User $user): void
     {
@@ -53,7 +55,7 @@ final readonly class DoctrineUserRepository implements UserRepositoryInterface
         return $this->em->createQueryBuilder()
             ->select('u')->from(User::class, 'u')
             ->where('u.email LIKE :search')
-            ->setParameter('search', '%' . $search . '%')
+            ->setParameter('search', '%'.$search.'%')
             ->orderBy('u.createdAt', 'DESC')
             ->getQuery()->getResult();
     }

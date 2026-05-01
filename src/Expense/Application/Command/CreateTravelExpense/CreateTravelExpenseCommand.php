@@ -17,5 +17,6 @@ final readonly class CreateTravelExpenseCommand
         public bool $roundTrip = false,
         public string $vehicleType = 'car',
         public bool $isElectric = false,
-    ) {}
+    ) {
+    }
 }

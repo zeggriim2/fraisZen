@@ -10,7 +10,6 @@ use App\Person\Application\Command\DeleteFavoriteRoute\DeleteFavoriteRouteComman
 use App\Person\Application\Command\UpdateFavoriteRoute\UpdateFavoriteRouteCommand;
 use App\Person\Application\Query\GetFavoriteRoutesByPerson\GetFavoriteRoutesByPersonQuery;
 use App\Person\Domain\Exception\FavoriteRouteNotFoundException;
-use App\Person\Domain\Exception\PersonNotFoundException;
 use App\Person\Domain\Repository\PersonRepositoryInterface;
 use App\Person\Domain\ValueObject\PersonId;
 use App\SharedKernel\Application\Bus\CommandBusInterface;
@@ -29,7 +28,8 @@ final class FavoriteRouteController extends AbstractController
         private readonly CommandBusInterface $commandBus,
         private readonly QueryBusInterface $queryBus,
         private readonly PersonRepositoryInterface $personRepository,
-    ) {}
+    ) {
+    }
 
     #[Route('', methods: [Request::METHOD_GET])]
     public function list(string $personId): JsonResponse
@@ -37,6 +37,7 @@ final class FavoriteRouteController extends AbstractController
         if (!$this->personBelongsToUser($personId)) {
             return $this->json(['error' => 'Not found.'], Response::HTTP_NOT_FOUND);
         }
+
         return $this->json($this->queryBus->ask(new GetFavoriteRoutesByPersonQuery($personId)));
     }
 
@@ -60,6 +61,7 @@ final class FavoriteRouteController extends AbstractController
 
         $routes = $this->queryBus->ask(new GetFavoriteRoutesByPersonQuery($personId));
         $created = array_values(array_filter($routes, fn ($r) => $r['id'] === $id))[0] ?? [];
+
         return $this->json($created, Response::HTTP_CREATED);
     }
 
@@ -83,6 +85,7 @@ final class FavoriteRouteController extends AbstractController
             ));
             $routes = $this->queryBus->ask(new GetFavoriteRoutesByPersonQuery($personId));
             $updated = array_values(array_filter($routes, fn ($r) => $r['id'] === $id))[0] ?? [];
+
             return $this->json($updated);
         } catch (HandlerFailedException $e) {
             if ($e->getPrevious() instanceof FavoriteRouteNotFoundException) {
@@ -100,6 +103,7 @@ final class FavoriteRouteController extends AbstractController
         }
         try {
             $this->commandBus->dispatch(new DeleteFavoriteRouteCommand($id));
+
             return $this->json(null, Response::HTTP_NO_CONTENT);
         } catch (HandlerFailedException $e) {
             if ($e->getPrevious() instanceof FavoriteRouteNotFoundException) {
@@ -114,6 +118,7 @@ final class FavoriteRouteController extends AbstractController
         /** @var User $user */
         $user = $this->getUser();
         $person = $this->personRepository->findById(PersonId::fromString($personId));
-        return $person !== null && $person->userId() === $user->id()->value();
+
+        return null !== $person && $person->userId() === $user->id()->value();
     }
 }

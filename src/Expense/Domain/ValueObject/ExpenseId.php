@@ -6,4 +6,6 @@ namespace App\Expense\Domain\ValueObject;
 
 use App\SharedKernel\Domain\ValueObject\UuidId;
 
-final class ExpenseId extends UuidId {}
+final class ExpenseId extends UuidId
+{
+}

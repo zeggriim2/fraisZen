@@ -6,5 +6,7 @@ namespace App\Expense\Application\Command\DeleteExpense;
 
 final readonly class DeleteExpenseCommand
 {
-    public function __construct(public string $id) {}
+    public function __construct(public string $id)
+    {
+    }
 }

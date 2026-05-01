@@ -12,5 +12,6 @@ final readonly class CreatePersonCommand
         public string $lastName,
         public ?string $email = null,
         public bool $favorite = false,
-    ) {}
+    ) {
+    }
 }

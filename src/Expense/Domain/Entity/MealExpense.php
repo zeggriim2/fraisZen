@@ -40,7 +40,10 @@ class MealExpense extends Expense
         $this->withoutReceipt = $withoutReceipt;
     }
 
-    public function type(): ExpenseType { return ExpenseType::Meal; }
+    public function type(): ExpenseType
+    {
+        return ExpenseType::Meal;
+    }
 
     public function amount(): float
     {
@@ -51,22 +54,51 @@ class MealExpense extends Expense
         return max(0.0, (float) $this->mealAmount - (float) $this->homeMealValue - (float) $this->employerTicketContribution);
     }
 
-    public function mealAmount(): float { return (float) $this->mealAmount; }
-    public function homeMealValue(): float { return (float) $this->homeMealValue; }
-    public function employerTicketContribution(): float { return (float) $this->employerTicketContribution; }
-    public function withoutReceipt(): bool { return $this->withoutReceipt; }
+    public function mealAmount(): float
+    {
+        return (float) $this->mealAmount;
+    }
 
-    public function setMealAmount(float $amount): void { $this->mealAmount = $amount; $this->touch(); }
-    public function setEmployerTicketContribution(float $amount): void { $this->employerTicketContribution = $amount; $this->touch(); }
-    public function setWithoutReceipt(bool $v): void { $this->withoutReceipt = $v; $this->touch(); }
+    public function homeMealValue(): float
+    {
+        return (float) $this->homeMealValue;
+    }
+
+    public function employerTicketContribution(): float
+    {
+        return (float) $this->employerTicketContribution;
+    }
+
+    public function withoutReceipt(): bool
+    {
+        return $this->withoutReceipt;
+    }
+
+    public function setMealAmount(float $amount): void
+    {
+        $this->mealAmount = $amount;
+        $this->touch();
+    }
+
+    public function setEmployerTicketContribution(float $amount): void
+    {
+        $this->employerTicketContribution = $amount;
+        $this->touch();
+    }
+
+    public function setWithoutReceipt(bool $v): void
+    {
+        $this->withoutReceipt = $v;
+        $this->touch();
+    }
 
     public function toArray(): array
     {
         return array_merge($this->baseArray(), [
-            'mealAmount'                 => $this->mealAmount(),
-            'homeMealValue'              => $this->homeMealValue(),
+            'mealAmount' => $this->mealAmount(),
+            'homeMealValue' => $this->homeMealValue(),
             'employerTicketContribution' => $this->employerTicketContribution(),
-            'withoutReceipt'             => $this->withoutReceipt(),
+            'withoutReceipt' => $this->withoutReceipt(),
         ]);
     }
 }

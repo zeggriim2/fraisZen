@@ -11,7 +11,9 @@ use Doctrine\ORM\EntityManagerInterface;
 
 final readonly class DoctrineFavoriteRouteRepository implements FavoriteRouteRepositoryInterface
 {
-    public function __construct(private EntityManagerInterface $em) {}
+    public function __construct(private EntityManagerInterface $em)
+    {
+    }
 
     public function save(FavoriteRoute $route): void
     {

@@ -17,13 +17,14 @@ final readonly class CreateRemoteWorkExpenseCommandHandler implements CommandHan
     public function __construct(
         private ExpenseRepositoryInterface $repository,
         private FiscalConfigRepositoryInterface $fiscalConfigRepository,
-    ) {}
+    ) {
+    }
 
     public function __invoke(CreateRemoteWorkExpenseCommand $command): string
     {
-        $year   = (int) (new \DateTimeImmutable($command->date))->format('Y');
+        $year = (int) (new \DateTimeImmutable($command->date))->format('Y');
         $config = $this->fiscalConfigRepository->findByYear($year);
-        $rate   = $config?->remoteWorkDailyAllowance() ?? $command->dailyAllowance;
+        $rate = $config?->remoteWorkDailyAllowance() ?? $command->dailyAllowance;
 
         $id = ExpenseId::generate();
         $this->repository->save(new RemoteWorkExpense(
@@ -33,6 +34,7 @@ final readonly class CreateRemoteWorkExpenseCommandHandler implements CommandHan
             description: $command->description,
             dailyAllowance: $rate,
         ));
+
         return $id->value();
     }
 }

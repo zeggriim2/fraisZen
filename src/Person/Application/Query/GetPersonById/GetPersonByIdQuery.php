@@ -6,5 +6,7 @@ namespace App\Person\Application\Query\GetPersonById;
 
 final readonly class GetPersonByIdQuery
 {
-    public function __construct(public string $id) {}
+    public function __construct(public string $id)
+    {
+    }
 }

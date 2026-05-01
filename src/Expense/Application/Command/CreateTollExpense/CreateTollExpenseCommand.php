@@ -13,5 +13,6 @@ final readonly class CreateTollExpenseCommand
         public ?string $departure = null,
         public ?string $arrival = null,
         public ?string $description = null,
-    ) {}
+    ) {
+    }
 }

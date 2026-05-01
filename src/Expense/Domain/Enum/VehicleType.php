@@ -6,7 +6,7 @@ namespace App\Expense\Domain\Enum;
 
 enum VehicleType: string
 {
-    case Car        = 'car';
+    case Car = 'car';
     case Motorcycle = 'motorcycle';
-    case Moped      = 'moped';
+    case Moped = 'moped';
 }

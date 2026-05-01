@@ -13,7 +13,9 @@ use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 #[AsMessageHandler(bus: 'command.bus')]
 final readonly class UpdateFavoriteRouteCommandHandler implements CommandHandlerInterface
 {
-    public function __construct(private FavoriteRouteRepositoryInterface $repository) {}
+    public function __construct(private FavoriteRouteRepositoryInterface $repository)
+    {
+    }
 
     public function __invoke(UpdateFavoriteRouteCommand $command): void
     {

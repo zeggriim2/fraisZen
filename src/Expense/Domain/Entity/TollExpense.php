@@ -35,21 +35,50 @@ class TollExpense extends Expense
         $this->arrival = $arrival;
     }
 
-    public function setTollAmount(float $amount): void { $this->tollAmount = $amount; $this->touch(); }
-    public function setDeparture(?string $departure): void { $this->departure = $departure; $this->touch(); }
-    public function setArrival(?string $arrival): void { $this->arrival = $arrival; $this->touch(); }
+    public function setTollAmount(float $amount): void
+    {
+        $this->tollAmount = $amount;
+        $this->touch();
+    }
 
-    public function type(): ExpenseType { return ExpenseType::Toll; }
-    public function amount(): float { return (float) $this->tollAmount; }
-    public function departure(): ?string { return $this->departure; }
-    public function arrival(): ?string { return $this->arrival; }
+    public function setDeparture(?string $departure): void
+    {
+        $this->departure = $departure;
+        $this->touch();
+    }
+
+    public function setArrival(?string $arrival): void
+    {
+        $this->arrival = $arrival;
+        $this->touch();
+    }
+
+    public function type(): ExpenseType
+    {
+        return ExpenseType::Toll;
+    }
+
+    public function amount(): float
+    {
+        return (float) $this->tollAmount;
+    }
+
+    public function departure(): ?string
+    {
+        return $this->departure;
+    }
+
+    public function arrival(): ?string
+    {
+        return $this->arrival;
+    }
 
     public function toArray(): array
     {
         return array_merge($this->baseArray(), [
             'tollAmount' => $this->amount(),
-            'departure'  => $this->departure,
-            'arrival'    => $this->arrival,
+            'departure' => $this->departure,
+            'arrival' => $this->arrival,
         ]);
     }
 }

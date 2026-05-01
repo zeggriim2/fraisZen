@@ -6,5 +6,7 @@ namespace App\Person\Application\Query\GetAllPersons;
 
 final readonly class GetAllPersonsQuery
 {
-    public function __construct(public string $userId) {}
+    public function __construct(public string $userId)
+    {
+    }
 }

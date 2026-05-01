@@ -21,7 +21,9 @@ use Symfony\Component\Routing\Attribute\Route;
 #[Route('/api/auth')]
 final class AuthController extends AbstractController
 {
-    public function __construct(private readonly CommandBusInterface $commandBus) {}
+    public function __construct(private readonly CommandBusInterface $commandBus)
+    {
+    }
 
     #[Route('/login', name: 'api_login', methods: [Request::METHOD_POST])]
     public function login(): never

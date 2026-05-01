@@ -19,13 +19,14 @@ final readonly class CreateMealExpenseCommandHandler implements CommandHandlerIn
     public function __construct(
         private ExpenseRepositoryInterface $repository,
         private FiscalConfigRepositoryInterface $fiscalConfigRepository,
-    ) {}
+    ) {
+    }
 
     public function __invoke(CreateMealExpenseCommand $command): string
     {
-        $year   = (int) (new \DateTimeImmutable($command->date))->format('Y');
+        $year = (int) (new \DateTimeImmutable($command->date))->format('Y');
         $config = $this->fiscalConfigRepository->findByYear($year);
-        $rate   = $config?->homeMealValue() ?? self::FALLBACK_HOME_MEAL_VALUE;
+        $rate = $config?->homeMealValue() ?? self::FALLBACK_HOME_MEAL_VALUE;
 
         $id = ExpenseId::generate();
         $this->repository->save(new MealExpense(
@@ -38,6 +39,7 @@ final readonly class CreateMealExpenseCommandHandler implements CommandHandlerIn
             employerTicketContribution: $command->employerTicketContribution,
             withoutReceipt: $command->withoutReceipt,
         ));
+
         return $id->value();
     }
 }

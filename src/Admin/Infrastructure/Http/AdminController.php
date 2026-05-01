@@ -32,16 +32,17 @@ final class AdminController extends AbstractController
         private readonly FiscalConfigRepositoryInterface $fiscalConfigRepository,
         private readonly StripeClient $stripe,
         private readonly JWTEncoderInterface $jwtEncoder,
-    ) {}
+    ) {
+    }
 
     #[Route('/stats', methods: [Request::METHOD_GET])]
     public function stats(): JsonResponse
     {
         $totalUsers = $this->userRepository->count();
-        $allUsers   = $this->userRepository->findAll();
+        $allUsers = $this->userRepository->findAll();
 
-        $activeUsers    = count(array_filter($allUsers, fn (User $u) => $u->subscriptionStatus() === 'active'));
-        $inactiveUsers  = $totalUsers - $activeUsers;
+        $activeUsers = count(array_filter($allUsers, fn (User $u) => 'active' === $u->subscriptionStatus()));
+        $inactiveUsers = $totalUsers - $activeUsers;
 
         $mrr = 0.0;
         $arr = 0.0;
@@ -52,9 +53,9 @@ final class AdminController extends AbstractController
                 foreach ($sub->items->data as $item) {
                     $price = $item->price;
                     $amount = $price->unit_amount / 100;
-                    if ($price->recurring->interval === 'month') {
+                    if ('month' === $price->recurring->interval) {
                         $mrr += $amount * $item->quantity;
-                    } elseif ($price->recurring->interval === 'year') {
+                    } elseif ('year' === $price->recurring->interval) {
                         $mrr += ($amount / 12) * $item->quantity;
                     }
                 }
@@ -65,11 +66,11 @@ final class AdminController extends AbstractController
         }
 
         return $this->json([
-            'totalUsers'   => $totalUsers,
-            'activeUsers'  => $activeUsers,
+            'totalUsers' => $totalUsers,
+            'activeUsers' => $activeUsers,
             'inactiveUsers' => $inactiveUsers,
-            'mrr'          => round($mrr, 2),
-            'arr'          => round($arr, 2),
+            'mrr' => round($mrr, 2),
+            'arr' => round($arr, 2),
         ]);
     }
 
@@ -78,30 +79,31 @@ final class AdminController extends AbstractController
     {
         $search = $request->query->get('search', '');
         $status = $request->query->get('status', '');
-        $page   = max(1, (int) $request->query->get('page', 1));
-        $limit  = 20;
+        $page = max(1, (int) $request->query->get('page', 1));
+        $limit = 20;
 
         $users = $search
             ? $this->userRepository->findByEmailLike($search)
             : $this->userRepository->findAll();
 
-        if ($status !== '') {
+        if ('' !== $status) {
             $users = array_values(array_filter($users, fn (User $u) => $u->subscriptionStatus() === $status));
         }
 
-        $total  = count($users);
+        $total = count($users);
         $offset = ($page - 1) * $limit;
-        $paged  = array_slice($users, $offset, $limit);
+        $paged = array_slice($users, $offset, $limit);
 
         $items = array_map(function (User $u) {
             $persons = $this->personRepository->findAllByUserId($u->id()->value());
+
             return array_merge($u->toArray(), ['personCount' => count($persons)]);
         }, $paged);
 
         return $this->json([
             'items' => $items,
             'total' => $total,
-            'page'  => $page,
+            'page' => $page,
             'pages' => (int) ceil($total / $limit),
         ]);
     }
@@ -130,7 +132,7 @@ final class AdminController extends AbstractController
         });
 
         $response->headers->set('Content-Type', 'text/csv; charset=UTF-8');
-        $response->headers->set('Content-Disposition', 'attachment; filename="users-' . date('Y-m-d') . '.csv"');
+        $response->headers->set('Content-Disposition', 'attachment; filename="users-'.date('Y-m-d').'.csv"');
 
         return $response;
     }
@@ -164,7 +166,7 @@ final class AdminController extends AbstractController
             return $this->json(['error' => 'User not found'], Response::HTTP_NOT_FOUND);
         }
 
-        $data   = json_decode($request->getContent(), true) ?? [];
+        $data = json_decode($request->getContent(), true) ?? [];
         $status = $data['status'] ?? '';
 
         if (!in_array($status, ['active', 'canceled', 'inactive'], true)) {
@@ -200,7 +202,7 @@ final class AdminController extends AbstractController
 
         $token = $this->jwtEncoder->encode([
             'username' => $user->getUserIdentifier(),
-            'roles'    => $user->getRoles(),
+            'roles' => $user->getRoles(),
         ]);
 
         return $this->json(['token' => $token]);
@@ -228,21 +230,23 @@ final class AdminController extends AbstractController
     #[Route('/fiscal-config/{year}', methods: [Request::METHOD_PUT])]
     public function upsertFiscalConfig(int $year, Request $request): JsonResponse
     {
-        $data          = json_decode($request->getContent(), true) ?? [];
-        $allowance     = $data['remoteWorkDailyAllowance'] ?? null;
+        $data = json_decode($request->getContent(), true) ?? [];
+        $allowance = $data['remoteWorkDailyAllowance'] ?? null;
         $homeMealValue = $data['homeMealValue'] ?? null;
 
         if (!is_numeric($allowance) || $allowance <= 0) {
             return $this->json(['error' => 'Invalid remoteWorkDailyAllowance'], Response::HTTP_BAD_REQUEST);
         }
-        if ($homeMealValue !== null && (!is_numeric($homeMealValue) || $homeMealValue <= 0)) {
+        if (null !== $homeMealValue && (!is_numeric($homeMealValue) || $homeMealValue <= 0)) {
             return $this->json(['error' => 'Invalid homeMealValue'], Response::HTTP_BAD_REQUEST);
         }
 
         $config = $this->fiscalConfigRepository->findByYear($year);
         if ($config) {
             $config->setRemoteWorkDailyAllowance((float) $allowance);
-            if ($homeMealValue !== null) $config->setHomeMealValue((float) $homeMealValue);
+            if (null !== $homeMealValue) {
+                $config->setHomeMealValue((float) $homeMealValue);
+            }
         } else {
             $config = new FiscalConfig($year, (float) $allowance, $homeMealValue ? (float) $homeMealValue : 5.35);
         }

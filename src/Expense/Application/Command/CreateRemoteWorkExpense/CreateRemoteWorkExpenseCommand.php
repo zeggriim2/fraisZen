@@ -11,5 +11,6 @@ final readonly class CreateRemoteWorkExpenseCommand
         public string $date,
         public ?string $description = null,
         public float $dailyAllowance = 2.70,
-    ) {}
+    ) {
+    }
 }

@@ -13,7 +13,9 @@ use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 #[AsMessageHandler(bus: 'query.bus')]
 final readonly class GetPersonByIdQueryHandler implements QueryHandlerInterface
 {
-    public function __construct(private PersonRepositoryInterface $repository) {}
+    public function __construct(private PersonRepositoryInterface $repository)
+    {
+    }
 
     public function __invoke(GetPersonByIdQuery $query): array
     {

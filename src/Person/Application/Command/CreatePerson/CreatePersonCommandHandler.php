@@ -13,12 +13,15 @@ use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 #[AsMessageHandler(bus: 'command.bus')]
 final readonly class CreatePersonCommandHandler implements CommandHandlerInterface
 {
-    public function __construct(private PersonRepositoryInterface $repository) {}
+    public function __construct(private PersonRepositoryInterface $repository)
+    {
+    }
 
     public function __invoke(CreatePersonCommand $command): string
     {
         $id = PersonId::generate();
         $this->repository->save(new Person($id, $command->userId, $command->firstName, $command->lastName, $command->email, $command->favorite));
+
         return $id->value();
     }
 }

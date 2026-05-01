@@ -13,7 +13,9 @@ use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 #[AsMessageHandler(bus: 'command.bus')]
 final readonly class CreateFavoriteRouteCommandHandler implements CommandHandlerInterface
 {
-    public function __construct(private FavoriteRouteRepositoryInterface $repository) {}
+    public function __construct(private FavoriteRouteRepositoryInterface $repository)
+    {
+    }
 
     public function __invoke(CreateFavoriteRouteCommand $command): string
     {
@@ -29,6 +31,7 @@ final readonly class CreateFavoriteRouteCommandHandler implements CommandHandler
             $command->isElectric,
             $command->roundTrip,
         ));
+
         return $id->value();
     }
 }

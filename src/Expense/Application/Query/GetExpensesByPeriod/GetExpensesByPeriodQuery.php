@@ -10,5 +10,6 @@ final readonly class GetExpensesByPeriodQuery
         public string $from,
         public string $to,
         public ?string $personId = null,
-    ) {}
+    ) {
+    }
 }

@@ -11,7 +11,9 @@ use Doctrine\ORM\EntityManagerInterface;
 
 final readonly class DoctrinePersonRepository implements PersonRepositoryInterface
 {
-    public function __construct(private EntityManagerInterface $em) {}
+    public function __construct(private EntityManagerInterface $em)
+    {
+    }
 
     public function save(Person $person): void
     {

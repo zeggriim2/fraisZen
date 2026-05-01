@@ -24,7 +24,7 @@ final class ReceiptController extends AbstractController
         private readonly ExpenseRepositoryInterface $repository,
         string $shareDir,
     ) {
-        $this->receiptsDir = rtrim($shareDir, '/') . '/receipts';
+        $this->receiptsDir = rtrim($shareDir, '/').'/receipts';
     }
 
     #[Route('', methods: [Request::METHOD_POST])]
@@ -51,7 +51,7 @@ final class ReceiptController extends AbstractController
             mkdir($this->receiptsDir, 0755, true);
         }
 
-        $file->move($this->receiptsDir, $id . '.pdf');
+        $file->move($this->receiptsDir, $id.'.pdf');
         $expense->setReceiptFilename($file->getClientOriginalName());
         $this->repository->save($expense);
 
@@ -63,18 +63,18 @@ final class ReceiptController extends AbstractController
     {
         $expense = $this->repository->findById(ExpenseId::fromString($id));
 
-        if (!$expense instanceof ParkingExpense || $expense->receiptFilename() === null) {
+        if (!$expense instanceof ParkingExpense || null === $expense->receiptFilename()) {
             return $this->json(['error' => 'No receipt found'], Response::HTTP_NOT_FOUND);
         }
 
-        $path = $this->receiptsDir . '/' . $id . '.pdf';
+        $path = $this->receiptsDir.'/'.$id.'.pdf';
         if (!file_exists($path)) {
             return $this->json(['error' => 'File not found on disk'], Response::HTTP_NOT_FOUND);
         }
 
         return new BinaryFileResponse($path, Response::HTTP_OK, [
-            'Content-Type'        => 'application/pdf',
-            'Content-Disposition' => 'inline; filename="' . addslashes($expense->receiptFilename()) . '"',
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="'.addslashes($expense->receiptFilename()).'"',
         ]);
     }
 
@@ -87,7 +87,7 @@ final class ReceiptController extends AbstractController
             return $this->json(['error' => 'Not a parking expense'], Response::HTTP_UNPROCESSABLE_ENTITY);
         }
 
-        $path = $this->receiptsDir . '/' . $id . '.pdf';
+        $path = $this->receiptsDir.'/'.$id.'.pdf';
         if (file_exists($path)) {
             unlink($path);
         }

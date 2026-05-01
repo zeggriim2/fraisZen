@@ -27,19 +27,37 @@ class FiscalConfig
         $this->homeMealValue = $homeMealValue;
     }
 
-    public function year(): int { return $this->year; }
-    public function remoteWorkDailyAllowance(): float { return (float) $this->remoteWorkDailyAllowance; }
-    public function homeMealValue(): float { return (float) $this->homeMealValue; }
+    public function year(): int
+    {
+        return $this->year;
+    }
 
-    public function setRemoteWorkDailyAllowance(float $amount): void { $this->remoteWorkDailyAllowance = $amount; }
-    public function setHomeMealValue(float $amount): void { $this->homeMealValue = $amount; }
+    public function remoteWorkDailyAllowance(): float
+    {
+        return (float) $this->remoteWorkDailyAllowance;
+    }
+
+    public function homeMealValue(): float
+    {
+        return (float) $this->homeMealValue;
+    }
+
+    public function setRemoteWorkDailyAllowance(float $amount): void
+    {
+        $this->remoteWorkDailyAllowance = $amount;
+    }
+
+    public function setHomeMealValue(float $amount): void
+    {
+        $this->homeMealValue = $amount;
+    }
 
     public function toArray(): array
     {
         return [
-            'year'                     => $this->year,
+            'year' => $this->year,
             'remoteWorkDailyAllowance' => $this->remoteWorkDailyAllowance(),
-            'homeMealValue'            => $this->homeMealValue(),
+            'homeMealValue' => $this->homeMealValue(),
         ];
     }
 }
