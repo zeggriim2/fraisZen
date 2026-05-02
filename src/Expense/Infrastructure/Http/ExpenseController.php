@@ -12,13 +12,13 @@ use App\Expense\Application\Command\CreateTollExpense\CreateTollExpenseCommand;
 use App\Expense\Application\Command\CreateTravelExpense\CreateTravelExpenseCommand;
 use App\Expense\Application\Command\DeleteExpense\DeleteExpenseCommand;
 use App\Expense\Application\Command\UpdateExpense\UpdateExpenseCommand;
+use App\Expense\Application\Export\SummaryCsvExporterInterface;
+use App\Expense\Application\Export\SummaryPdfExporterInterface;
 use App\Expense\Application\Query\GetExpensesByPeriod\GetExpensesByPeriodQuery;
 use App\Expense\Application\Query\GetExpensesSummary\GetExpensesSummaryQuery;
 use App\Expense\Domain\Exception\ExpenseNotFoundException;
 use App\SharedKernel\Application\Bus\CommandBusInterface;
 use App\SharedKernel\Application\Bus\QueryBusInterface;
-use Dompdf\Dompdf;
-use Dompdf\Options;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -26,7 +26,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Symfony\Component\Messenger\Exception\HandlerFailedException;
 use Symfony\Component\Routing\Attribute\Route;
-use Webmozart\Assert\Assert;
+use Symfony\Component\Routing\Requirement\Requirement;
 
 #[Route('/api/expenses')]
 final class ExpenseController extends AbstractController
@@ -38,10 +38,12 @@ final class ExpenseController extends AbstractController
         private readonly CommandBusInterface $commandBus,
         private readonly QueryBusInterface $queryBus,
         private readonly FiscalConfigRepositoryInterface $fiscalConfigRepository,
+        private readonly SummaryPdfExporterInterface $pdfExporter,
+        private readonly SummaryCsvExporterInterface $csvExporter,
     ) {
     }
 
-    #[Route('/fiscal-config/{year}', methods: [Request::METHOD_GET])]
+    #[Route('/fiscal-config/{year}', requirements: ['year' => '\d{4}'], methods: [Request::METHOD_GET])]
     public function fiscalConfig(int $year): JsonResponse
     {
         $config = $this->fiscalConfigRepository->findByYear($year);
@@ -75,96 +77,7 @@ final class ExpenseController extends AbstractController
 
         $data = $this->queryBus->ask(new GetExpensesSummaryQuery($personId, $year));
 
-        $fmt = fn (float $v): string => number_format($v, 2, ',', ' ').' €';
-
-        $tripRows = '';
-        foreach ($data['travel']['trips'] as $t) {
-            $route = ($t['departure'] && $t['arrival'])
-                ? htmlspecialchars($t['departure'].' → '.$t['arrival'])
-                : htmlspecialchars($t['description'] ?? '—');
-            $ar = $t['roundTrip'] ? ' (A/R)' : '';
-            $tripRows .= sprintf(
-                '<tr><td>%s</td><td>%s%s</td><td>%s km</td><td>%s CV</td></tr>',
-                $t['date'], $route, $ar, $t['distanceKm'], $t['vehiclePower'] ?? '—'
-            );
-        }
-
-        $mealSection = '';
-        if (($data['meal']['entries'] ?? 0) > 0) {
-            $homeMealFmt = number_format($data['meal']['homeMealValue'], 2, ',', ' ');
-            $mealSection = sprintf(
-                '<tr><td>Repas professionnels</td><td>%d repas − %s EUR/repas</td><td>%s</td></tr>',
-                $data['meal']['entries'], $homeMealFmt, $fmt($data['meal']['deduction'])
-            );
-        }
-
-        $parkingSection = '';
-        if (($data['parking']['entries'] ?? 0) > 0) {
-            $parkingSection = sprintf(
-                '<tr><td>Parking</td><td>%d entrees</td><td>%s</td></tr>',
-                $data['parking']['entries'], $fmt($data['parking']['deduction'])
-            );
-        }
-
-        $tripCount = count($data['travel']['trips']);
-        $totalKm = round($data['travel']['totalKm'], 0);
-        $travelDed = $fmt($data['travel']['deduction']);
-        $remoteDed = $fmt($data['remoteWork']['deduction']);
-        $tollDed = $fmt($data['toll']['deduction']);
-        $totalDed = $fmt($data['total']);
-        $today = date('d/m/Y');
-        $dailyAllowance = number_format($data['remoteWork']['dailyAllowance'], 2, ',', ' ');
-
-        $html = <<<HTML
-<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8">
-<style>
-body { font-family: DejaVu Sans, sans-serif; font-size: 12px; color: #111; margin: 30px; }
-h1 { font-size: 20px; color: #4f46e5; margin-bottom: 4px; }
-.sub { color: #6b7280; font-size: 12px; margin-bottom: 24px; }
-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-th { background: #f3f4f6; text-align: left; padding: 6px 8px; font-size: 11px; }
-td { padding: 5px 8px; border-bottom: 1px solid #f3f4f6; }
-.total-row td { font-weight: bold; background: #eef2ff; font-size: 14px; }
-.section-title { font-size: 13px; font-weight: bold; color: #374151; margin: 16px 0 6px; }
-</style></head><body>
-<h1>Recapitulatif Frais Reels - $year</h1>
-<div class="sub">Genere le $today - Annee $year</div>
-<p class="section-title">Deductions par categorie</p>
-<table>
-<tr><th>Categorie</th><th>Detail</th><th>Deduction</th></tr>
-<tr><td>Trajets</td><td>$tripCount trajets - $totalKm km</td><td>$travelDed</td></tr>
-<tr><td>Teletravail</td><td>{$data['remoteWork']['days']} jours x $dailyAllowance EUR</td><td>$remoteDed</td></tr>
-<tr><td>Peages</td><td>{$data['toll']['entries']} entrees</td><td>$tollDed</td></tr>
-$mealSection
-$parkingSection
-<tr class="total-row"><td colspan="2">Total deductible $year</td><td>$totalDed</td></tr>
-</table>
-HTML;
-
-        if (!empty($tripRows)) {
-            $html .= '<p class="section-title">Detail des trajets</p>';
-            $html .= '<table><tr><th>Date</th><th>Trajet</th><th>Distance</th><th>Puissance</th></tr>';
-            $html .= $tripRows;
-            $html .= '</table>';
-        }
-
-        $html .= '<p style="font-size:10px;color:#9ca3af;margin-top:20px">Calcule selon le bareme kilometrique officiel '.$year.'. Document a conserver en cas de controle fiscal.</p></body></html>';
-
-        $options = new Options();
-        $options->set('isRemoteEnabled', false);
-        $dompdf = new Dompdf($options);
-        $dompdf->loadHtml($html);
-        $dompdf->setPaper('A4', 'portrait');
-        $dompdf->render();
-
-        return new Response(
-            $dompdf->output(),
-            Response::HTTP_OK,
-            [
-                'Content-Type' => 'application/pdf',
-                'Content-Disposition' => sprintf('attachment; filename="frais-reels-%s.pdf"', $year),
-            ]
-        );
+        return $this->pdfExporter->export($data, $year);
     }
 
     #[Route('/summary/csv', methods: [Request::METHOD_GET])]
@@ -179,70 +92,7 @@ HTML;
 
         $data = $this->queryBus->ask(new GetExpensesSummaryQuery($personId, $year));
 
-        $response = new StreamedResponse(function () use ($data, $year) {
-            $handle = fopen('php://output', 'w');
-            Assert::resource($handle);
-            // BOM UTF-8 pour compatibilité Excel
-            fwrite($handle, "\xEF\xBB\xBF");
-
-            // En-tête
-            fputcsv($handle, ["Récapitulatif frais réels - $year"], ';');
-            fputcsv($handle, [], ';');
-
-            // Totaux par catégorie
-            fputcsv($handle, ['Catégorie', 'Détail', 'Déduction (€)'], ';');
-            fputcsv($handle, [
-                'Trajets',
-                count($data['travel']['trips']).' trajets — '.(int) round($data['travel']['totalKm']).' km',
-                number_format($data['travel']['deduction'], 2, ',', ' '),
-            ], ';');
-            fputcsv($handle, [
-                'Télétravail',
-                $data['remoteWork']['days'].' jours × '.number_format($data['remoteWork']['dailyAllowance'], 2, ',', ' ').' €',
-                number_format($data['remoteWork']['deduction'], 2, ',', ' '),
-            ], ';');
-            fputcsv($handle, [
-                'Péages',
-                $data['toll']['entries'].' entrées',
-                number_format($data['toll']['deduction'], 2, ',', ' '),
-            ], ';');
-            fputcsv($handle, [
-                'Repas',
-                $data['meal']['entries'].' repas − '.number_format($data['meal']['homeMealValue'], 2, ',', ' ').' €/repas',
-                number_format($data['meal']['deduction'], 2, ',', ' '),
-            ], ';');
-            fputcsv($handle, [
-                'Parking',
-                ($data['parking']['entries'] ?? 0).' entrées',
-                number_format($data['parking']['deduction'] ?? 0, 2, ',', ' '),
-            ], ';');
-            fputcsv($handle, ['TOTAL DÉDUCTIBLE', '', number_format($data['total'], 2, ',', ' ')], ';');
-            fputcsv($handle, [], ';');
-
-            // Détail des trajets
-            if (!empty($data['travel']['trips'])) {
-                fputcsv($handle, ['Détail des trajets'], ';');
-                fputcsv($handle, ['Date', 'Départ', 'Arrivée', 'Description', 'Distance (km)', 'Puissance (CV)', 'A/R'], ';');
-                foreach ($data['travel']['trips'] as $t) {
-                    fputcsv($handle, [
-                        $t['date'],
-                        $t['departure'] ?? '',
-                        $t['arrival'] ?? '',
-                        $t['description'] ?? '',
-                        $t['distanceKm'],
-                        $t['vehiclePower'] ?? '',
-                        $t['roundTrip'] ? 'Oui' : 'Non',
-                    ], ';');
-                }
-            }
-
-            fclose($handle);
-        });
-
-        $response->headers->set('Content-Type', 'text/csv; charset=UTF-8');
-        $response->headers->set('Content-Disposition', sprintf('attachment; filename="frais-reels-%s.csv"', $year));
-
-        return $response;
+        return $this->csvExporter->export($data, $year);
     }
 
     #[Route('/summary', methods: [Request::METHOD_GET])]
@@ -317,7 +167,7 @@ HTML;
         return $this->json(['id' => $id], Response::HTTP_CREATED);
     }
 
-    #[Route('/{id}', methods: [Request::METHOD_PATCH])]
+    #[Route('/{id}', requirements: ['id' => Requirement::UUID_V4], methods: [Request::METHOD_PATCH])]
     public function update(string $id, Request $request): JsonResponse
     {
         $fields = json_decode($request->getContent(), true) ?? [];
@@ -334,7 +184,7 @@ HTML;
         }
     }
 
-    #[Route('/{id}', methods: [Request::METHOD_DELETE])]
+    #[Route('/{id}', requirements: ['id' => Requirement::UUID_V4], methods: [Request::METHOD_DELETE])]
     public function delete(string $id): JsonResponse
     {
         try {

@@ -19,6 +19,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Messenger\Exception\HandlerFailedException;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Routing\Requirement\Requirement;
 
 #[Route('/api/persons')]
 final class PersonController extends AbstractController
@@ -35,7 +36,7 @@ final class PersonController extends AbstractController
         return $this->json($this->queryBus->ask(new GetAllPersonsQuery($this->userId())));
     }
 
-    #[Route('/{id}', methods: [Request::METHOD_GET])]
+    #[Route('/{id}', requirements: ['id' => Requirement::UUID_V4], methods: [Request::METHOD_GET])]
     public function show(string $id): JsonResponse
     {
         try {
@@ -63,7 +64,7 @@ final class PersonController extends AbstractController
         return $this->json($this->queryBus->ask(new GetPersonByIdQuery($id)), Response::HTTP_CREATED);
     }
 
-    #[Route('/{id}', methods: [Request::METHOD_PUT])]
+    #[Route('/{id}', requirements: ['id' => Requirement::UUID_V4], methods: [Request::METHOD_PUT])]
     public function update(string $id, Request $request): JsonResponse
     {
         $data = json_decode($request->getContent(), true) ?? [];
@@ -85,7 +86,7 @@ final class PersonController extends AbstractController
         }
     }
 
-    #[Route('/{id}', methods: ['DELETE'])]
+    #[Route('/{id}', requirements: ['id' => Requirement::UUID_V4], methods: ['DELETE'])]
     public function delete(string $id): JsonResponse
     {
         try {

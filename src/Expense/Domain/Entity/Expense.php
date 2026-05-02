@@ -6,6 +6,7 @@ namespace App\Expense\Domain\Entity;
 
 use App\Expense\Domain\Enum\ExpenseType;
 use App\Expense\Domain\ValueObject\ExpenseId;
+use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity]
@@ -22,22 +23,22 @@ use Doctrine\ORM\Mapping as ORM;
 abstract class Expense
 {
     #[ORM\Id]
-    #[ORM\Column(type: 'string', length: 36)]
+    #[ORM\Column(type: Types::STRING, length: 36)]
     protected string $id;
 
-    #[ORM\Column(type: 'string', length: 36)]
+    #[ORM\Column(type: Types::STRING, length: 36)]
     protected string $personId;
 
-    #[ORM\Column(type: 'date_immutable')]
+    #[ORM\Column(type: Types::DATETIME_IMMUTABLE)]
     protected \DateTimeImmutable $date;
 
-    #[ORM\Column(type: 'string', length: 255, nullable: true)]
+    #[ORM\Column(type: Types::STRING, length: 255, nullable: true)]
     protected ?string $description;
 
-    #[ORM\Column(type: 'datetime_immutable')]
+    #[ORM\Column(type: Types::DATETIME_IMMUTABLE)]
     protected \DateTimeImmutable $createdAt;
 
-    #[ORM\Column(type: 'datetime_immutable')]
+    #[ORM\Column(type: Types::DATETIME_IMMUTABLE)]
     protected \DateTimeImmutable $updatedAt;
 
     public function __construct(

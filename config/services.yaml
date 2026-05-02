@@ -45,6 +45,21 @@ services:
             $priceIdMonthly: '%env(STRIPE_PRICE_ID_MONTHLY)%'
             $priceIdYearly: '%env(STRIPE_PRICE_ID_YEARLY)%'
 
+    # Admin stats provider (Stripe MRR/ARR)
+    App\Admin\Application\Stats\AdminStatsProviderInterface:
+        alias: App\Admin\Infrastructure\Stats\StripeAdminStatsProvider
+
+    # Expense export services
+    App\Expense\Application\Export\SummaryPdfExporterInterface:
+        alias: App\Expense\Infrastructure\Export\DompdfSummaryPdfExporter
+
+    App\Expense\Application\Export\SummaryCsvExporterInterface:
+        alias: App\Expense\Infrastructure\Export\StreamedSummaryCsvExporter
+
+    # Admin fiscal config repository
+    App\Admin\Domain\Repository\FiscalConfigRepositoryInterface:
+        class: App\Admin\Infrastructure\Persistence\DoctrineFiscalConfigRepository
+
     # Tag command & query handlers to their respective buses
     _instanceof:
         App\SharedKernel\Application\Bus\CommandHandlerInterface:

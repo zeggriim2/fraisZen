@@ -6,18 +6,19 @@ namespace App\Expense\Domain\Entity;
 
 use App\Expense\Domain\Enum\ExpenseType;
 use App\Expense\Domain\ValueObject\ExpenseId;
+use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity]
 class ParkingExpense extends Expense
 {
-    #[ORM\Column(name: 'parking_amount', type: 'decimal', precision: 10, scale: 2, nullable: true)]
+    #[ORM\Column(name: 'parking_amount', type: Types::DECIMAL, precision: 10, scale: 2, nullable: true)]
     private ?string $parkingAmount = '0.00';
 
-    #[ORM\Column(name: 'parking_location', type: 'string', length: 255, nullable: true)]
+    #[ORM\Column(name: 'parking_location', type: Types::STRING, length: 255, nullable: true)]
     private ?string $location = null;
 
-    #[ORM\Column(name: 'receipt_filename', type: 'string', length: 255, nullable: true)]
+    #[ORM\Column(name: 'receipt_filename', type: Types::STRING, length: 255, nullable: true)]
     private ?string $receiptFilename = null;
 
     public function __construct(

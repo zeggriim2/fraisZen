@@ -5,8 +5,7 @@ declare(strict_types=1);
 namespace App\Billing\Infrastructure\Http;
 
 use App\Auth\Domain\Entity\User;
-use App\Auth\Domain\Repository\UserRepositoryInterface;
-use App\Auth\Domain\ValueObject\UserId;
+use App\Billing\Application\Webhook\StripeWebhookHandler;
 use Stripe\Checkout\Session;
 use Stripe\Exception\SignatureVerificationException;
 use Stripe\Invoice;
@@ -24,7 +23,7 @@ final class BillingController extends AbstractController
 {
     public function __construct(
         private readonly StripeClient $stripe,
-        private readonly UserRepositoryInterface $userRepository,
+        private readonly StripeWebhookHandler $webhookHandler,
         private readonly string $webhookSecret,
         private readonly string $priceIdMonthly,
         private readonly string $priceIdYearly,
@@ -99,57 +98,13 @@ final class BillingController extends AbstractController
 
         $object = $event->data->object;
         if ('checkout.session.completed' === $event->type && $object instanceof Session) {
-            $this->onCheckoutCompleted($object);
+            $this->webhookHandler->onCheckoutCompleted($object);
         } elseif ('invoice.payment_failed' === $event->type && $object instanceof Invoice) {
-            $this->onPaymentFailed($object);
+            $this->webhookHandler->onPaymentFailed($object);
         } elseif ('customer.subscription.deleted' === $event->type && $object instanceof Subscription) {
-            $this->onSubscriptionDeleted($object);
+            $this->webhookHandler->onSubscriptionDeleted($object);
         }
 
         return new Response('', Response::HTTP_OK);
-    }
-
-    private function onCheckoutCompleted(Session $session): void
-    {
-        $userId = $session->metadata->user_id ?? null;
-        if (!$userId) {
-            return;
-        }
-
-        $user = $this->userRepository->findById(UserId::fromString($userId));
-        if (!$user) {
-            return;
-        }
-
-        if (is_string($session->customer)) {
-            $user->setStripeCustomerId($session->customer);
-        }
-        $user->setSubscriptionStatus('active');
-        $this->userRepository->save($user);
-    }
-
-    private function onPaymentFailed(Invoice $invoice): void
-    {
-        if (is_string($invoice->customer)) {
-            $this->updateStatusByCustomer($invoice->customer, 'past_due');
-        }
-    }
-
-    private function onSubscriptionDeleted(Subscription $subscription): void
-    {
-        if (is_string($subscription->customer)) {
-            $this->updateStatusByCustomer($subscription->customer, 'canceled');
-        }
-    }
-
-    private function updateStatusByCustomer(string $customerId, string $status): void
-    {
-        $user = $this->userRepository->findByStripeCustomerId($customerId);
-        if (!$user) {
-            return;
-        }
-
-        $user->setSubscriptionStatus($status);
-        $this->userRepository->save($user);
     }
 }

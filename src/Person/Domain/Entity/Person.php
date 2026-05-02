@@ -108,6 +108,7 @@ class Person
     {
         return [
             'id' => $this->id,
+            'userId' => $this->userId,
             'firstName' => $this->firstName,
             'lastName' => $this->lastName,
             'fullName' => $this->fullName(),

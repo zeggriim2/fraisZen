@@ -9,9 +9,8 @@ use App\Person\Application\Command\CreateFavoriteRoute\CreateFavoriteRouteComman
 use App\Person\Application\Command\DeleteFavoriteRoute\DeleteFavoriteRouteCommand;
 use App\Person\Application\Command\UpdateFavoriteRoute\UpdateFavoriteRouteCommand;
 use App\Person\Application\Query\GetFavoriteRoutesByPerson\GetFavoriteRoutesByPersonQuery;
+use App\Person\Application\Query\GetPersonById\GetPersonByIdQuery;
 use App\Person\Domain\Exception\FavoriteRouteNotFoundException;
-use App\Person\Domain\Repository\PersonRepositoryInterface;
-use App\Person\Domain\ValueObject\PersonId;
 use App\SharedKernel\Application\Bus\CommandBusInterface;
 use App\SharedKernel\Application\Bus\QueryBusInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -20,14 +19,14 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Messenger\Exception\HandlerFailedException;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Routing\Requirement\Requirement;
 
-#[Route('/api/persons/{personId}/favorite-routes')]
+#[Route('/api/persons/{personId}/favorite-routes', requirements: ['personId' => Requirement::UUID_V4])]
 final class FavoriteRouteController extends AbstractController
 {
     public function __construct(
         private readonly CommandBusInterface $commandBus,
         private readonly QueryBusInterface $queryBus,
-        private readonly PersonRepositoryInterface $personRepository,
     ) {
     }
 
@@ -65,7 +64,7 @@ final class FavoriteRouteController extends AbstractController
         return $this->json($created, Response::HTTP_CREATED);
     }
 
-    #[Route('/{id}', methods: [Request::METHOD_PUT])]
+    #[Route('/{id}', requirements: ['id' => Requirement::UUID_V4], methods: [Request::METHOD_PUT])]
     public function update(string $personId, string $id, Request $request): JsonResponse
     {
         if (!$this->personBelongsToUser($personId)) {
@@ -95,7 +94,7 @@ final class FavoriteRouteController extends AbstractController
         }
     }
 
-    #[Route('/{id}', methods: ['DELETE'])]
+    #[Route('/{id}', requirements: ['id' => Requirement::UUID_V4], methods: ['DELETE'])]
     public function delete(string $personId, string $id): JsonResponse
     {
         if (!$this->personBelongsToUser($personId)) {
@@ -115,10 +114,15 @@ final class FavoriteRouteController extends AbstractController
 
     private function personBelongsToUser(string $personId): bool
     {
+        try {
+            $person = $this->queryBus->ask(new GetPersonByIdQuery($personId));
+        } catch (\Throwable) {
+            return false;
+        }
+
         /** @var User $user */
         $user = $this->getUser();
-        $person = $this->personRepository->findById(PersonId::fromString($personId));
 
-        return null !== $person && $person->userId() === $user->id()->value();
+        return ($person['userId'] ?? null) === $user->id()->value();
     }
 }

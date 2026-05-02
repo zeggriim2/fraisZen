@@ -14,8 +14,9 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Routing\Requirement\Requirement;
 
-#[Route('/api/expenses/{id}/receipt')]
+#[Route('/api/expenses/{id}/receipt', requirements: ['id' => Requirement::UUID_V4])]
 final class ReceiptController extends AbstractController
 {
     private string $receiptsDir;

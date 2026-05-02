@@ -29,6 +29,9 @@
                 <directory name="src/Expense/Infrastructure/Persistence" />
                 <directory name="src/Person/Infrastructure/Persistence" />
                 <directory name="src/SharedKernel/Infrastructure" />
+                <directory name="src/Admin/Infrastructure/Stats" />
+                <directory name="src/Expense/Infrastructure/Export" />
+                <directory name="src/Billing/Application/Webhook" />
                 <directory name="src/Auth/Application" />
                 <directory name="src/Expense/Application" />
                 <directory name="src/Person/Application" />
@@ -41,6 +44,7 @@
             </errorLevel>
         </MissingOverrideAttribute>
         <!-- Getters d'entités/VO : utilisés via toArray(), sérialisation Doctrine -->
+        <!-- Constructeurs de services Application/Infrastructure : appelés par le DI Symfony -->
         <PossiblyUnusedMethod>
             <errorLevel type="suppress">
                 <directory name="src/SharedKernel/Domain/ValueObject" />
@@ -48,6 +52,9 @@
                 <directory name="src/Auth/Domain" />
                 <directory name="src/Expense/Domain" />
                 <directory name="src/Person/Domain" />
+                <directory name="src/Admin/Infrastructure/Stats" />
+                <directory name="src/Billing/Application/Webhook" />
+                <directory name="src/Expense/Infrastructure/Export" />
             </errorLevel>
         </PossiblyUnusedMethod>
         <!-- Propriétés mappées Doctrine : persistées en DB même si non lues en PHP -->

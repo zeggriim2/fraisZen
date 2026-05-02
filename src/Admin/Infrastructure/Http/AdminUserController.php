@@ -4,15 +4,12 @@ declare(strict_types=1);
 
 namespace App\Admin\Infrastructure\Http;
 
-use App\Admin\Domain\Entity\FiscalConfig;
-use App\Admin\Domain\Repository\FiscalConfigRepositoryInterface;
 use App\Auth\Domain\Entity\User;
 use App\Auth\Domain\Repository\UserRepositoryInterface;
 use App\Auth\Domain\ValueObject\UserId;
 use App\Expense\Domain\Repository\ExpenseRepositoryInterface;
 use App\Person\Domain\Repository\PersonRepositoryInterface;
 use Lexik\Bundle\JWTAuthenticationBundle\Encoder\JWTEncoderInterface;
-use Stripe\StripeClient;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -21,62 +18,22 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Webmozart\Assert\Assert;
+use Symfony\Component\Routing\Requirement\Requirement;
 
 #[Route('/api/admin')]
 #[IsGranted('ROLE_ADMIN')]
-final class AdminController extends AbstractController
+final class AdminUserController extends AbstractController
 {
     public function __construct(
         private readonly UserRepositoryInterface $userRepository,
         private readonly PersonRepositoryInterface $personRepository,
         private readonly ExpenseRepositoryInterface $expenseRepository,
-        private readonly FiscalConfigRepositoryInterface $fiscalConfigRepository,
-        private readonly StripeClient $stripe,
         private readonly JWTEncoderInterface $jwtEncoder,
     ) {
     }
 
-    #[Route('/stats', methods: [Request::METHOD_GET])]
-    public function stats(): JsonResponse
-    {
-        $totalUsers = $this->userRepository->count();
-        $allUsers = $this->userRepository->findAll();
-
-        $activeUsers = count(array_filter($allUsers, fn (User $u) => 'active' === $u->subscriptionStatus()));
-        $inactiveUsers = $totalUsers - $activeUsers;
-
-        $mrr = 0.0;
-        $arr = 0.0;
-
-        try {
-            $subscriptions = $this->stripe->subscriptions->all(['status' => 'active', 'limit' => 100]);
-            foreach ($subscriptions->data as $sub) {
-                foreach ($sub->items->data as $item) {
-                    $price = $item->price;
-                    $amount = (float) ($price->unit_amount ?? 0) / 100.0;
-                    if (null !== $price->recurring && 'month' === $price->recurring->interval) {
-                        $mrr += $amount * (float) ($item->quantity ?? 1);
-                    } elseif (null !== $price->recurring && 'year' === $price->recurring->interval) {
-                        $mrr += ($amount / 12.0) * (float) ($item->quantity ?? 1);
-                    }
-                }
-            }
-            $arr = $mrr * 12.0;
-        } catch (\Throwable) {
-            // Stripe not configured or unreachable — return zeros
-        }
-
-        return $this->json([
-            'totalUsers' => $totalUsers,
-            'activeUsers' => $activeUsers,
-            'inactiveUsers' => $inactiveUsers,
-            'mrr' => round($mrr, 2),
-            'arr' => round($arr, 2),
-        ]);
-    }
-
     #[Route('/users', methods: [Request::METHOD_GET])]
-    public function users(Request $request): JsonResponse
+    public function list(Request $request): JsonResponse
     {
         $search = $request->query->get('search', '');
         $status = $request->query->get('status', '');
@@ -139,8 +96,8 @@ final class AdminController extends AbstractController
         return $response;
     }
 
-    #[Route('/users/{id}', methods: [Request::METHOD_GET])]
-    public function userDetail(string $id): JsonResponse
+    #[Route('/users/{id}', requirements: ['id' => Requirement::UUID_V4], methods: [Request::METHOD_GET])]
+    public function detail(string $id): JsonResponse
     {
         $user = $this->userRepository->findById(UserId::fromString($id));
         if (!$user) {
@@ -160,7 +117,7 @@ final class AdminController extends AbstractController
         ]));
     }
 
-    #[Route('/users/{id}/subscription', methods: [Request::METHOD_PATCH])]
+    #[Route('/users/{id}/subscription', requirements: ['id' => Requirement::UUID_V4], methods: [Request::METHOD_PATCH])]
     public function updateSubscription(string $id, Request $request): JsonResponse
     {
         $user = $this->userRepository->findById(UserId::fromString($id));
@@ -181,8 +138,8 @@ final class AdminController extends AbstractController
         return $this->json(['success' => true]);
     }
 
-    #[Route('/users/{id}', methods: [Request::METHOD_DELETE])]
-    public function deleteUser(string $id): JsonResponse
+    #[Route('/users/{id}', requirements: ['id' => Requirement::UUID_V4], methods: [Request::METHOD_DELETE])]
+    public function delete(string $id): JsonResponse
     {
         $user = $this->userRepository->findById(UserId::fromString($id));
         if (!$user) {
@@ -194,7 +151,7 @@ final class AdminController extends AbstractController
         return $this->json(null, Response::HTTP_NO_CONTENT);
     }
 
-    #[Route('/users/{id}/impersonate', methods: [Request::METHOD_POST])]
+    #[Route('/users/{id}/impersonate', requirements: ['id' => Requirement::UUID_V4], methods: [Request::METHOD_POST])]
     public function impersonate(string $id): JsonResponse
     {
         $user = $this->userRepository->findById(UserId::fromString($id));
@@ -208,53 +165,5 @@ final class AdminController extends AbstractController
         ]);
 
         return $this->json(['token' => $token]);
-    }
-
-    #[Route('/fiscal-config', methods: [Request::METHOD_GET])]
-    public function listFiscalConfigs(): JsonResponse
-    {
-        $configs = $this->fiscalConfigRepository->findAll();
-
-        return $this->json(array_map(fn (FiscalConfig $c) => $c->toArray(), $configs));
-    }
-
-    #[Route('/fiscal-config/{year}', methods: [Request::METHOD_GET])]
-    public function getFiscalConfig(int $year): JsonResponse
-    {
-        $config = $this->fiscalConfigRepository->findByYear($year);
-        if (!$config) {
-            return $this->json(['error' => 'No config for this year'], Response::HTTP_NOT_FOUND);
-        }
-
-        return $this->json($config->toArray());
-    }
-
-    #[Route('/fiscal-config/{year}', methods: [Request::METHOD_PUT])]
-    public function upsertFiscalConfig(int $year, Request $request): JsonResponse
-    {
-        $data = json_decode($request->getContent(), true) ?? [];
-        $allowance = $data['remoteWorkDailyAllowance'] ?? null;
-        $homeMealValue = $data['homeMealValue'] ?? null;
-
-        if (!is_numeric($allowance) || $allowance <= 0) {
-            return $this->json(['error' => 'Invalid remoteWorkDailyAllowance'], Response::HTTP_BAD_REQUEST);
-        }
-        if (null !== $homeMealValue && (!is_numeric($homeMealValue) || $homeMealValue <= 0)) {
-            return $this->json(['error' => 'Invalid homeMealValue'], Response::HTTP_BAD_REQUEST);
-        }
-
-        $config = $this->fiscalConfigRepository->findByYear($year);
-        if ($config) {
-            $config->setRemoteWorkDailyAllowance((float) $allowance);
-            if (null !== $homeMealValue) {
-                $config->setHomeMealValue((float) $homeMealValue);
-            }
-        } else {
-            $config = new FiscalConfig($year, (string) (float) $allowance, $homeMealValue ? (string) (float) $homeMealValue : '5.35');
-        }
-
-        $this->fiscalConfigRepository->save($config);
-
-        return $this->json($config->toArray());
     }
 }
