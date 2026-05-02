@@ -28,7 +28,8 @@
         "symfony/serializer": "^8.0",
         "symfony/uid": "^8.0",
         "symfony/validator": "^8.0",
-        "symfony/yaml": "8.0.*"
+        "symfony/yaml": "8.0.*",
+        "webmozart/assert": "^2.3"
     },
     "config": {
         "allow-plugins": {

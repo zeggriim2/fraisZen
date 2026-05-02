@@ -6,6 +6,7 @@ namespace App\SharedKernel\Domain\ValueObject;
 
 use Symfony\Component\Uid\Uuid;
 
+/** @phpstan-consistent-constructor */
 abstract class UuidId
 {
     private readonly string $value;

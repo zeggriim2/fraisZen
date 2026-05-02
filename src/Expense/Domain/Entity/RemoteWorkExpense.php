@@ -12,12 +12,12 @@ use Doctrine\ORM\Mapping as ORM;
 class RemoteWorkExpense extends Expense
 {
     #[ORM\Column(type: 'decimal', precision: 5, scale: 2)]
-    private float $dailyAllowance;
+    private string $dailyAllowance;
 
     public function __construct(ExpenseId $id, string $personId, \DateTimeImmutable $date, ?string $description, float $dailyAllowance = 2.70)
     {
         parent::__construct($id, $personId, $date, $description);
-        $this->dailyAllowance = $dailyAllowance;
+        $this->dailyAllowance = (string) $dailyAllowance;
     }
 
     public function type(): ExpenseType
@@ -30,6 +30,7 @@ class RemoteWorkExpense extends Expense
         return (float) $this->dailyAllowance;
     }
 
+    /** @return array<string, mixed> */
     public function toArray(): array
     {
         return $this->baseArray();

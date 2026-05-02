@@ -15,6 +15,7 @@ final readonly class GetFavoriteRoutesByPersonQueryHandler implements QueryHandl
     {
     }
 
+    /** @return array<int, array<string, mixed>> */
     public function __invoke(GetFavoriteRoutesByPersonQuery $query): array
     {
         return array_map(fn ($r) => $r->toArray(), $this->repository->findByPersonId($query->personId));

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Admin\Domain\Entity;
 
+use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity]
@@ -11,16 +12,16 @@ use Doctrine\ORM\Mapping as ORM;
 class FiscalConfig
 {
     #[ORM\Id]
-    #[ORM\Column(type: 'integer')]
+    #[ORM\Column(type: Types::INTEGER)]
     private int $year;
 
-    #[ORM\Column(type: 'decimal', precision: 5, scale: 2)]
-    private float $remoteWorkDailyAllowance;
+    #[ORM\Column(type: Types::DECIMAL, precision: 5, scale: 2)]
+    private string $remoteWorkDailyAllowance;
 
-    #[ORM\Column(type: 'decimal', precision: 5, scale: 2)]
-    private float $homeMealValue;
+    #[ORM\Column(type: Types::DECIMAL, precision: 5, scale: 2)]
+    private string $homeMealValue;
 
-    public function __construct(int $year, float $remoteWorkDailyAllowance, float $homeMealValue = 5.35)
+    public function __construct(int $year, string $remoteWorkDailyAllowance, string $homeMealValue = '5.35')
     {
         $this->year = $year;
         $this->remoteWorkDailyAllowance = $remoteWorkDailyAllowance;
@@ -44,14 +45,15 @@ class FiscalConfig
 
     public function setRemoteWorkDailyAllowance(float $amount): void
     {
-        $this->remoteWorkDailyAllowance = $amount;
+        $this->remoteWorkDailyAllowance = (string) $amount;
     }
 
     public function setHomeMealValue(float $amount): void
     {
-        $this->homeMealValue = $amount;
+        $this->homeMealValue = (string) $amount;
     }
 
+    /** @return array{year: int, remoteWorkDailyAllowance: float, homeMealValue: float} */
     public function toArray(): array
     {
         return [

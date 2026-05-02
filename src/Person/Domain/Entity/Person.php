@@ -103,6 +103,7 @@ class Person
         $this->favorite = $favorite;
     }
 
+    /** @return array<string, mixed> */
     public function toArray(): array
     {
         return [

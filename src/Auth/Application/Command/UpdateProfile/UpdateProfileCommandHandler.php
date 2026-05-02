@@ -9,6 +9,7 @@ use App\Auth\Domain\Repository\UserRepositoryInterface;
 use App\Auth\Domain\ValueObject\UserId;
 use App\SharedKernel\Application\Bus\CommandHandlerInterface;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
+use Webmozart\Assert\Assert;
 
 #[AsMessageHandler(bus: 'command.bus')]
 final readonly class UpdateProfileCommandHandler implements CommandHandlerInterface
@@ -20,6 +21,7 @@ final readonly class UpdateProfileCommandHandler implements CommandHandlerInterf
     public function __invoke(UpdateProfileCommand $command): void
     {
         $user = $this->repository->findById(UserId::fromString($command->userId));
+        Assert::notNull($user);
 
         if ($user->email() !== $command->email) {
             $existing = $this->repository->findByEmail($command->email);

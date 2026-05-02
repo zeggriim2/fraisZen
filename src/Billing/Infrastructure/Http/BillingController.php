@@ -97,12 +97,14 @@ final class BillingController extends AbstractController
             return new Response('Invalid signature', Response::HTTP_BAD_REQUEST);
         }
 
-        match ($event->type) {
-            'checkout.session.completed' => $this->onCheckoutCompleted($event->data->object),
-            'invoice.payment_failed' => $this->onPaymentFailed($event->data->object),
-            'customer.subscription.deleted' => $this->onSubscriptionDeleted($event->data->object),
-            default => null,
-        };
+        $object = $event->data->object;
+        if ('checkout.session.completed' === $event->type && $object instanceof Session) {
+            $this->onCheckoutCompleted($object);
+        } elseif ('invoice.payment_failed' === $event->type && $object instanceof Invoice) {
+            $this->onPaymentFailed($object);
+        } elseif ('customer.subscription.deleted' === $event->type && $object instanceof Subscription) {
+            $this->onSubscriptionDeleted($object);
+        }
 
         return new Response('', Response::HTTP_OK);
     }
@@ -119,19 +121,25 @@ final class BillingController extends AbstractController
             return;
         }
 
-        $user->setStripeCustomerId($session->customer);
+        if (is_string($session->customer)) {
+            $user->setStripeCustomerId($session->customer);
+        }
         $user->setSubscriptionStatus('active');
         $this->userRepository->save($user);
     }
 
     private function onPaymentFailed(Invoice $invoice): void
     {
-        $this->updateStatusByCustomer($invoice->customer, 'past_due');
+        if (is_string($invoice->customer)) {
+            $this->updateStatusByCustomer($invoice->customer, 'past_due');
+        }
     }
 
     private function onSubscriptionDeleted(Subscription $subscription): void
     {
-        $this->updateStatusByCustomer($subscription->customer, 'canceled');
+        if (is_string($subscription->customer)) {
+            $this->updateStatusByCustomer($subscription->customer, 'canceled');
+        }
     }
 
     private function updateStatusByCustomer(string $customerId, string $status): void

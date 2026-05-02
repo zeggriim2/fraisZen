@@ -15,6 +15,7 @@ final readonly class GetAllPersonsQueryHandler implements QueryHandlerInterface
     {
     }
 
+    /** @return array<int, array<string, mixed>> */
     public function __invoke(GetAllPersonsQuery $query): array
     {
         return array_map(fn ($p) => $p->toArray(), $this->repository->findAllByUserId($query->userId));

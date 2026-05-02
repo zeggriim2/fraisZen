@@ -15,6 +15,7 @@ final readonly class GetExpensesByPeriodQueryHandler implements QueryHandlerInte
     {
     }
 
+    /** @return array<int, array<string, mixed>> */
     public function __invoke(GetExpensesByPeriodQuery $query): array
     {
         $from = new \DateTimeImmutable($query->from);

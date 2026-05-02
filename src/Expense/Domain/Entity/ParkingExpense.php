@@ -12,7 +12,7 @@ use Doctrine\ORM\Mapping as ORM;
 class ParkingExpense extends Expense
 {
     #[ORM\Column(name: 'parking_amount', type: 'decimal', precision: 10, scale: 2, nullable: true)]
-    private float $parkingAmount = 0.0;
+    private ?string $parkingAmount = '0.00';
 
     #[ORM\Column(name: 'parking_location', type: 'string', length: 255, nullable: true)]
     private ?string $location = null;
@@ -29,7 +29,7 @@ class ParkingExpense extends Expense
         ?string $location = null,
     ) {
         parent::__construct($id, $personId, $date, $description);
-        $this->parkingAmount = $parkingAmount;
+        $this->parkingAmount = (string) $parkingAmount;
         $this->location = $location;
         $this->receiptFilename = null;
     }
@@ -41,12 +41,12 @@ class ParkingExpense extends Expense
 
     public function amount(): float
     {
-        return (float) $this->parkingAmount;
+        return (float) ($this->parkingAmount ?? '0');
     }
 
     public function parkingAmount(): float
     {
-        return (float) $this->parkingAmount;
+        return (float) ($this->parkingAmount ?? '0');
     }
 
     public function location(): ?string
@@ -61,7 +61,7 @@ class ParkingExpense extends Expense
 
     public function setParkingAmount(float $amount): void
     {
-        $this->parkingAmount = $amount;
+        $this->parkingAmount = (string) $amount;
         $this->touch();
     }
 
@@ -77,6 +77,7 @@ class ParkingExpense extends Expense
         $this->touch();
     }
 
+    /** @return array<string, mixed> */
     public function toArray(): array
     {
         return array_merge($this->baseArray(), [

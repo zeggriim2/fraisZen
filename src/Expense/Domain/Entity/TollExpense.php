@@ -12,7 +12,7 @@ use Doctrine\ORM\Mapping as ORM;
 class TollExpense extends Expense
 {
     #[ORM\Column(type: 'decimal', precision: 10, scale: 2)]
-    private float $tollAmount;
+    private string $tollAmount;
 
     #[ORM\Column(type: 'string', length: 255, nullable: true)]
     private ?string $departure;
@@ -30,14 +30,14 @@ class TollExpense extends Expense
         ?string $arrival,
     ) {
         parent::__construct($id, $personId, $date, $description);
-        $this->tollAmount = $tollAmount;
+        $this->tollAmount = (string) $tollAmount;
         $this->departure = $departure;
         $this->arrival = $arrival;
     }
 
     public function setTollAmount(float $amount): void
     {
-        $this->tollAmount = $amount;
+        $this->tollAmount = (string) $amount;
         $this->touch();
     }
 
@@ -73,6 +73,7 @@ class TollExpense extends Expense
         return $this->arrival;
     }
 
+    /** @return array<string, mixed> */
     public function toArray(): array
     {
         return array_merge($this->baseArray(), [

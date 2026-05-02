@@ -9,6 +9,7 @@ use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
+use Webmozart\Assert\Assert;
 
 #[ORM\Entity]
 #[ORM\Table(name: '`user`')]
@@ -24,6 +25,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(type: Types::STRING, length: 255)]
     private string $password;
 
+    /** @var array<string> */
     #[ORM\Column(type: Types::JSON)]
     private array $roles = [];
 
@@ -111,11 +113,15 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         $this->defaultFiscalPower = $power;
     }
 
+    /** @return non-empty-string */
     public function getUserIdentifier(): string
     {
+        Assert::stringNotEmpty($this->email);
+
         return $this->email;
     }
 
+    /** @return array<string> */
     public function getRoles(): array
     {
         return $this->roles;
@@ -135,6 +141,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         $this->password = $hashedPassword;
     }
 
+    /** @return array<string, mixed> */
     public function toArray(): array
     {
         return [

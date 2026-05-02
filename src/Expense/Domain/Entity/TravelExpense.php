@@ -19,7 +19,7 @@ class TravelExpense extends Expense
     private ?string $arrival;
 
     #[ORM\Column(type: 'decimal', precision: 8, scale: 2)]
-    private float $distanceKm;
+    private string $distanceKm;
 
     #[ORM\Column(type: 'smallint', nullable: true)]
     private ?int $vehiclePower;
@@ -49,7 +49,7 @@ class TravelExpense extends Expense
         parent::__construct($id, $personId, $date, $description);
         $this->departure = $departure;
         $this->arrival = $arrival;
-        $this->distanceKm = $distanceKm;
+        $this->distanceKm = (string) $distanceKm;
         $this->vehiclePower = $vehiclePower;
         $this->roundTrip = $roundTrip;
         $this->vehicleType = $vehicleType;
@@ -70,7 +70,7 @@ class TravelExpense extends Expense
 
     public function setDistanceKm(float $km): void
     {
-        $this->distanceKm = $km;
+        $this->distanceKm = (string) $km;
         $this->touch();
     }
 
@@ -148,6 +148,7 @@ class TravelExpense extends Expense
         return $this->roundTrip ? $this->distanceKm() * 2 : $this->distanceKm();
     }
 
+    /** @return array<string, mixed> */
     public function toArray(): array
     {
         return array_merge($this->baseArray(), [

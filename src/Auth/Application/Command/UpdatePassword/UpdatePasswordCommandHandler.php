@@ -9,6 +9,7 @@ use App\Auth\Domain\ValueObject\UserId;
 use App\SharedKernel\Application\Bus\CommandHandlerInterface;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
+use Webmozart\Assert\Assert;
 
 #[AsMessageHandler(bus: 'command.bus')]
 final readonly class UpdatePasswordCommandHandler implements CommandHandlerInterface
@@ -22,6 +23,7 @@ final readonly class UpdatePasswordCommandHandler implements CommandHandlerInter
     public function __invoke(UpdatePasswordCommand $command): void
     {
         $user = $this->repository->findById(UserId::fromString($command->userId));
+        Assert::notNull($user);
 
         if (!$this->hasher->isPasswordValid($user, $command->currentPassword)) {
             throw new \DomainException('Mot de passe actuel incorrect.');

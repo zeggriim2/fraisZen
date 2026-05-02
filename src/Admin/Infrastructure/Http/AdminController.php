@@ -14,6 +14,7 @@ use App\Person\Domain\Repository\PersonRepositoryInterface;
 use Lexik\Bundle\JWTAuthenticationBundle\Encoder\JWTEncoderInterface;
 use Stripe\StripeClient;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Webmozart\Assert\Assert;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -53,9 +54,9 @@ final class AdminController extends AbstractController
                 foreach ($sub->items->data as $item) {
                     $price = $item->price;
                     $amount = $price->unit_amount / 100;
-                    if ('month' === $price->recurring->interval) {
+                    if (null !== $price->recurring && 'month' === $price->recurring->interval) {
                         $mrr += $amount * $item->quantity;
-                    } elseif ('year' === $price->recurring->interval) {
+                    } elseif (null !== $price->recurring && 'year' === $price->recurring->interval) {
                         $mrr += ($amount / 12) * $item->quantity;
                     }
                 }
@@ -115,6 +116,7 @@ final class AdminController extends AbstractController
 
         $response = new StreamedResponse(function () use ($users) {
             $handle = fopen('php://output', 'w');
+            Assert::resource($handle);
             fputcsv($handle, ['ID', 'Email', 'Statut', 'Inscription', 'Nb personnes']);
 
             foreach ($users as $user) {
@@ -248,7 +250,7 @@ final class AdminController extends AbstractController
                 $config->setHomeMealValue((float) $homeMealValue);
             }
         } else {
-            $config = new FiscalConfig($year, (float) $allowance, $homeMealValue ? (float) $homeMealValue : 5.35);
+            $config = new FiscalConfig($year, (string) (float) $allowance, $homeMealValue ? (string) (float) $homeMealValue : '5.35');
         }
 
         $this->fiscalConfigRepository->save($config);

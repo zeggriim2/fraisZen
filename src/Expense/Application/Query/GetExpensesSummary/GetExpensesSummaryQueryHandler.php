@@ -28,6 +28,7 @@ final readonly class GetExpensesSummaryQueryHandler implements QueryHandlerInter
     ) {
     }
 
+    /** @return array<string, mixed> */
     public function __invoke(GetExpensesSummaryQuery $query): array
     {
         $expenses = $this->repository->findByPersonAndYear($query->personId, $query->year);

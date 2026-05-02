@@ -16,7 +16,9 @@ namespace App\Expense\Domain\Service;
  */
 final class BaremeKilometriqueProvider
 {
-    /** @var array<int, array{car: array, motorcycle: array, moped: array, electricMultiplier: float}> */
+    /**
+     * @var array<int, array{car: array<int, array{rate1: float, rate2: float, fixed2: int, rate3: float}>, motorcycle: array<int, array{rate1: float, rate2: float, fixed2: int, rate3: float}>, moped: array{rate1: float, rate2: float, fixed2: int, rate3: float}, electricMultiplier: float}|null>
+     */
     private const BAREMES = [
         // Arrêté du 27 mars 2023 — inchangé pour 2023, 2024 et 2025
         2023 => [
@@ -46,7 +48,7 @@ final class BaremeKilometriqueProvider
      * Si l'année n'a pas de barème propre (null), utilise le plus récent connu.
      * Si l'année est supérieure à toutes les années connues, utilise le dernier barème.
      *
-     * @return array{car: array, motorcycle: array, moped: array, electricMultiplier: float}
+     * @return array{car: array<int, array{rate1: float, rate2: float, fixed2: int, rate3: float}>, motorcycle: array<int, array{rate1: float, rate2: float, fixed2: int, rate3: float}>, moped: array{rate1: float, rate2: float, fixed2: int, rate3: float}, electricMultiplier: float}
      */
     public static function forYear(int $year): array
     {
@@ -71,7 +73,9 @@ final class BaremeKilometriqueProvider
             }
         }
 
-        /* @var array{car: array, motorcycle: array, moped: array, electricMultiplier: float} */
-        return self::BAREMES[$refYear];
+        /** @var array{car: array<int, array{rate1: float, rate2: float, fixed2: int, rate3: float}>, motorcycle: array<int, array{rate1: float, rate2: float, fixed2: int, rate3: float}>, moped: array{rate1: float, rate2: float, fixed2: int, rate3: float}, electricMultiplier: float} $barème */
+        $barème = self::BAREMES[$refYear ?? array_key_first($knownYears)];
+
+        return $barème;
     }
 }

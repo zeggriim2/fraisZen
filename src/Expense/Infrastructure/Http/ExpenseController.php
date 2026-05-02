@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Expense\Infrastructure\Http;
 
 use App\Admin\Domain\Repository\FiscalConfigRepositoryInterface;
+use Webmozart\Assert\Assert;
 use App\Expense\Application\Command\CreateMealExpense\CreateMealExpenseCommand;
 use App\Expense\Application\Command\CreateParkingExpense\CreateParkingExpenseCommand;
 use App\Expense\Application\Command\CreateRemoteWorkExpense\CreateRemoteWorkExpenseCommand;
@@ -180,6 +181,7 @@ HTML;
 
         $response = new StreamedResponse(function () use ($data, $year) {
             $handle = fopen('php://output', 'w');
+            Assert::resource($handle);
             // BOM UTF-8 pour compatibilité Excel
             fwrite($handle, "\xEF\xBB\xBF");
 

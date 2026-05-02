@@ -89,8 +89,10 @@ abstract class Expense
 
     abstract public function amount(): float;
 
+    /** @return array<string, mixed> */
     abstract public function toArray(): array;
 
+    /** @return array<string, mixed> */
     protected function baseArray(): array
     {
         return [

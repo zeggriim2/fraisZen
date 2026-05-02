@@ -17,6 +17,7 @@ final readonly class GetPersonByIdQueryHandler implements QueryHandlerInterface
     {
     }
 
+    /** @return array<string, mixed> */
     public function __invoke(GetPersonByIdQuery $query): array
     {
         $person = $this->repository->findById(PersonId::fromString($query->id))

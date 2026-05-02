@@ -33,6 +33,9 @@ final class KilometricAllowanceCalculator
         return round($total, 2);
     }
 
+    /**
+     * @param array{car: array<int, array{rate1: float, rate2: float, fixed2: int, rate3: float}>, motorcycle: array<int, array{rate1: float, rate2: float, fixed2: int, rate3: float}>, moped: array{rate1: float, rate2: float, fixed2: int, rate3: float}, electricMultiplier: float} $bareme
+     */
     private function calculateBucket(array $bareme, string $type, int $power, float $km, bool $electric): float
     {
         $amount = match ($type) {
@@ -44,6 +47,9 @@ final class KilometricAllowanceCalculator
         return ($electric && 'car' === $type) ? $amount * $bareme['electricMultiplier'] : $amount;
     }
 
+    /**
+     * @param array<int, array{rate1: float, rate2: float, fixed2: int, rate3: float}> $carBareme
+     */
     private function forCar(array $carBareme, int $power, float $km): float
     {
         $cv = min(max($power, 3), 7);
@@ -51,6 +57,9 @@ final class KilometricAllowanceCalculator
         return $this->applyTranches($carBareme[$cv], $km, 5000, 20000);
     }
 
+    /**
+     * @param array<int, array{rate1: float, rate2: float, fixed2: int, rate3: float}> $motoBareme
+     */
     private function forMotorcycle(array $motoBareme, int $power, float $km): float
     {
         $group = match (true) {
@@ -62,6 +71,9 @@ final class KilometricAllowanceCalculator
         return $this->applyTranches($motoBareme[$group], $km, 3000, 6000);
     }
 
+    /**
+     * @param array{rate1: float, rate2: float, fixed2: int, rate3: float} $b
+     */
     private function applyTranches(array $b, float $km, int $tranche1, int $tranche2): float
     {
         return match (true) {

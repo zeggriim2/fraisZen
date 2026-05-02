@@ -12,13 +12,13 @@ use Doctrine\ORM\Mapping as ORM;
 class MealExpense extends Expense
 {
     #[ORM\Column(type: 'decimal', precision: 10, scale: 2)]
-    private float $mealAmount;
+    private string $mealAmount;
 
     #[ORM\Column(type: 'decimal', precision: 5, scale: 2)]
-    private float $homeMealValue;
+    private string $homeMealValue;
 
     #[ORM\Column(type: 'decimal', precision: 5, scale: 2)]
-    private float $employerTicketContribution;
+    private string $employerTicketContribution;
 
     #[ORM\Column(type: 'boolean')]
     private bool $withoutReceipt;
@@ -34,9 +34,9 @@ class MealExpense extends Expense
         bool $withoutReceipt = false,
     ) {
         parent::__construct($id, $personId, $date, $description);
-        $this->mealAmount = $mealAmount;
-        $this->homeMealValue = $homeMealValue;
-        $this->employerTicketContribution = $employerTicketContribution;
+        $this->mealAmount = (string) $mealAmount;
+        $this->homeMealValue = (string) $homeMealValue;
+        $this->employerTicketContribution = (string) $employerTicketContribution;
         $this->withoutReceipt = $withoutReceipt;
     }
 
@@ -76,13 +76,13 @@ class MealExpense extends Expense
 
     public function setMealAmount(float $amount): void
     {
-        $this->mealAmount = $amount;
+        $this->mealAmount = (string) $amount;
         $this->touch();
     }
 
     public function setEmployerTicketContribution(float $amount): void
     {
-        $this->employerTicketContribution = $amount;
+        $this->employerTicketContribution = (string) $amount;
         $this->touch();
     }
 
@@ -92,6 +92,7 @@ class MealExpense extends Expense
         $this->touch();
     }
 
+    /** @return array<string, mixed> */
     public function toArray(): array
     {
         return array_merge($this->baseArray(), [
