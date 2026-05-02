@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Expense\Infrastructure\Http;
 
 use App\Admin\Domain\Repository\FiscalConfigRepositoryInterface;
-use Webmozart\Assert\Assert;
 use App\Expense\Application\Command\CreateMealExpense\CreateMealExpenseCommand;
 use App\Expense\Application\Command\CreateParkingExpense\CreateParkingExpenseCommand;
 use App\Expense\Application\Command\CreateRemoteWorkExpense\CreateRemoteWorkExpenseCommand;
@@ -27,6 +26,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Symfony\Component\Messenger\Exception\HandlerFailedException;
 use Symfony\Component\Routing\Attribute\Route;
+use Webmozart\Assert\Assert;
 
 #[Route('/api/expenses')]
 final class ExpenseController extends AbstractController
@@ -193,7 +193,7 @@ HTML;
             fputcsv($handle, ['Catégorie', 'Détail', 'Déduction (€)'], ';');
             fputcsv($handle, [
                 'Trajets',
-                count($data['travel']['trips']).' trajets — '.round($data['travel']['totalKm']).' km',
+                count($data['travel']['trips']).' trajets — '.(int) round($data['travel']['totalKm']).' km',
                 number_format($data['travel']['deduction'], 2, ',', ' '),
             ], ';');
             fputcsv($handle, [

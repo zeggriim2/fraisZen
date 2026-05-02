@@ -57,7 +57,7 @@ class FiscalConfig
     public function toArray(): array
     {
         return [
-            'year' => $this->year,
+            'year' => $this->year(),
             'remoteWorkDailyAllowance' => $this->remoteWorkDailyAllowance(),
             'homeMealValue' => $this->homeMealValue(),
         ];

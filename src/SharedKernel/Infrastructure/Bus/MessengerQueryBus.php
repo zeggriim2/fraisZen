@@ -15,6 +15,7 @@ final readonly class MessengerQueryBus implements QueryBusInterface
     ) {
     }
 
+    #[\Override]
     public function ask(object $query): mixed
     {
         $envelope = $this->queryBus->dispatch($query);

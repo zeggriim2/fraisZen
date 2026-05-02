@@ -97,7 +97,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted } from 'vue'
+import { computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { usePersonStore } from '@/stores/personStore'
 import { useAuthStore } from '@/stores/authStore'
@@ -142,7 +142,15 @@ onMounted(async () => {
 
   if (authStore.isAuthenticated) {
     await authStore.fetchMe()
-    personStore.fetchAll()
+    await personStore.fetchAll()
+  }
+})
+
+// Charge les personnes lors d'une connexion depuis la page login
+// (App.vue ne remonte pas après navigation, donc onMounted ne se re-déclenche pas)
+watch(() => authStore.isAuthenticated, async (isAuth) => {
+  if (isAuth) {
+    await personStore.fetchAll()
   }
 })
 </script>

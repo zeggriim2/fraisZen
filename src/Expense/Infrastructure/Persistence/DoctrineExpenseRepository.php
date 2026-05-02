@@ -7,6 +7,7 @@ namespace App\Expense\Infrastructure\Persistence;
 use App\Expense\Domain\Entity\Expense;
 use App\Expense\Domain\Repository\ExpenseRepositoryInterface;
 use App\Expense\Domain\ValueObject\ExpenseId;
+use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\EntityManagerInterface;
 
 final readonly class DoctrineExpenseRepository implements ExpenseRepositoryInterface
@@ -41,8 +42,8 @@ final readonly class DoctrineExpenseRepository implements ExpenseRepositoryInter
             ->andWhere('e.date <= :to')
             ->orderBy('e.date', 'ASC')
             ->setParameter('personId', $personId)
-            ->setParameter('from', $from)
-            ->setParameter('to', $to)
+            ->setParameter('from', $from, Types::DATETIME_IMMUTABLE)
+            ->setParameter('to', $to, Types::DATETIME_IMMUTABLE)
             ->getQuery()->getResult();
     }
 
@@ -62,8 +63,8 @@ final readonly class DoctrineExpenseRepository implements ExpenseRepositoryInter
             ->where('e.date >= :from')
             ->andWhere('e.date <= :to')
             ->orderBy('e.date', 'ASC')
-            ->setParameter('from', $from)
-            ->setParameter('to', $to)
+            ->setParameter('from', $from, Types::DATETIME_IMMUTABLE)
+            ->setParameter('to', $to, Types::DATETIME_IMMUTABLE)
             ->getQuery()->getResult();
     }
 

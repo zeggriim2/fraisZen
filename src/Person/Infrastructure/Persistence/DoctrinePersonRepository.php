@@ -15,23 +15,27 @@ final readonly class DoctrinePersonRepository implements PersonRepositoryInterfa
     {
     }
 
+    #[\Override]
     public function save(Person $person): void
     {
         $this->em->persist($person);
         $this->em->flush();
     }
 
+    #[\Override]
     public function delete(Person $person): void
     {
         $this->em->remove($person);
         $this->em->flush();
     }
 
+    #[\Override]
     public function findById(PersonId $id): ?Person
     {
         return $this->em->find(Person::class, $id->value());
     }
 
+    #[\Override]
     public function findAllByUserId(string $userId): array
     {
         return $this->em->createQueryBuilder()

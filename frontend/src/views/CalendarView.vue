@@ -99,6 +99,10 @@ const authStore = useAuthStore()
 const today = new Date()
 const year = ref(authStore.user?.defaultYear ?? today.getFullYear())
 const month = ref(today.getMonth())
+
+watch(() => authStore.user, (u) => {
+  if (u?.defaultYear != null) year.value = u.defaultYear
+}, { immediate: true })
 const monthNames = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre']
 const years = Array.from({ length: 8 }, (_, i) => today.getFullYear() - 5 + i)
 const showModal = ref(false)

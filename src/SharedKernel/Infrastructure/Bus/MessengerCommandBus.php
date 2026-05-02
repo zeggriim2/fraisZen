@@ -14,6 +14,7 @@ final readonly class MessengerCommandBus implements CommandBusInterface
     ) {
     }
 
+    #[\Override]
     public function dispatch(object $command): mixed
     {
         $envelope = $this->commandBus->dispatch($command);

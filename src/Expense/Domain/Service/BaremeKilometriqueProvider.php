@@ -74,6 +74,7 @@ final class BaremeKilometriqueProvider
         }
 
         /** @var array{car: array<int, array{rate1: float, rate2: float, fixed2: int, rate3: float}>, motorcycle: array<int, array{rate1: float, rate2: float, fixed2: int, rate3: float}>, moped: array{rate1: float, rate2: float, fixed2: int, rate3: float}, electricMultiplier: float} $barème */
+        /** @psalm-suppress InvalidArrayOffset */
         $barème = self::BAREMES[$refYear ?? array_key_first($knownYears)];
 
         return $barème;

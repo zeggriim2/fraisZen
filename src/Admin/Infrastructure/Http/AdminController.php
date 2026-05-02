@@ -14,13 +14,13 @@ use App\Person\Domain\Repository\PersonRepositoryInterface;
 use Lexik\Bundle\JWTAuthenticationBundle\Encoder\JWTEncoderInterface;
 use Stripe\StripeClient;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Webmozart\Assert\Assert;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
+use Webmozart\Assert\Assert;
 
 #[Route('/api/admin')]
 #[IsGranted('ROLE_ADMIN')]
@@ -53,15 +53,15 @@ final class AdminController extends AbstractController
             foreach ($subscriptions->data as $sub) {
                 foreach ($sub->items->data as $item) {
                     $price = $item->price;
-                    $amount = $price->unit_amount / 100;
+                    $amount = (float) ($price->unit_amount ?? 0) / 100.0;
                     if (null !== $price->recurring && 'month' === $price->recurring->interval) {
-                        $mrr += $amount * $item->quantity;
+                        $mrr += $amount * (float) ($item->quantity ?? 1);
                     } elseif (null !== $price->recurring && 'year' === $price->recurring->interval) {
-                        $mrr += ($amount / 12) * $item->quantity;
+                        $mrr += ($amount / 12.0) * (float) ($item->quantity ?? 1);
                     }
                 }
             }
-            $arr = $mrr * 12;
+            $arr = $mrr * 12.0;
         } catch (\Throwable) {
             // Stripe not configured or unreachable — return zeros
         }
@@ -110,7 +110,7 @@ final class AdminController extends AbstractController
     }
 
     #[Route('/users/export', methods: [Request::METHOD_GET])]
-    public function exportCsv(Request $request): StreamedResponse
+    public function exportCsv(): StreamedResponse
     {
         $users = $this->userRepository->findAll();
 

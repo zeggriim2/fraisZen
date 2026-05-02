@@ -13,4 +13,57 @@
     <plugins>
         <pluginClass class="Psalm\SymfonyPsalmPlugin\Plugin" />
     </plugins>
+    <issueHandlers>
+        <!-- Controllers: chargés via les attributs Symfony Route -->
+        <!-- Repositories Doctrine: autowirés via le DI Symfony -->
+        <!-- Bus/Handlers CQRS: enregistrés via #[AsMessageHandler] -->
+        <UnusedClass>
+            <errorLevel type="suppress">
+                <directory name="src/Admin/Infrastructure/Http" />
+                <directory name="src/Auth/Infrastructure/Http" />
+                <directory name="src/Billing/Infrastructure/Http" />
+                <directory name="src/Expense/Infrastructure/Http" />
+                <directory name="src/Person/Infrastructure/Http" />
+                <directory name="src/Admin/Infrastructure/Persistence" />
+                <directory name="src/Auth/Infrastructure/Persistence" />
+                <directory name="src/Expense/Infrastructure/Persistence" />
+                <directory name="src/Person/Infrastructure/Persistence" />
+                <directory name="src/SharedKernel/Infrastructure" />
+                <directory name="src/Auth/Application" />
+                <directory name="src/Expense/Application" />
+                <directory name="src/Person/Application" />
+            </errorLevel>
+        </UnusedClass>
+        <!-- Attribut PHP 8.3+ : verbeux sans valeur ajoutée dans le code applicatif -->
+        <MissingOverrideAttribute>
+            <errorLevel type="suppress">
+                <directory name="src" />
+            </errorLevel>
+        </MissingOverrideAttribute>
+        <!-- Getters d'entités/VO : utilisés via toArray(), sérialisation Doctrine -->
+        <PossiblyUnusedMethod>
+            <errorLevel type="suppress">
+                <directory name="src/SharedKernel/Domain/ValueObject" />
+                <directory name="src/Admin/Domain" />
+                <directory name="src/Auth/Domain" />
+                <directory name="src/Expense/Domain" />
+                <directory name="src/Person/Domain" />
+            </errorLevel>
+        </PossiblyUnusedMethod>
+        <!-- Propriétés mappées Doctrine : persistées en DB même si non lues en PHP -->
+        <PossiblyUnusedProperty>
+            <errorLevel type="suppress">
+                <directory name="src/Admin/Domain/Entity" />
+                <directory name="src/Auth/Domain/Entity" />
+                <directory name="src/Expense/Domain/Entity" />
+                <directory name="src/Person/Domain/Entity" />
+            </errorLevel>
+        </PossiblyUnusedProperty>
+        <!-- Stubs Stripe SDK trop stricts sur les types nullable -->
+        <InvalidArgument>
+            <errorLevel type="suppress">
+                <directory name="src/Billing/Infrastructure/Http" />
+            </errorLevel>
+        </InvalidArgument>
+    </issueHandlers>
 </psalm>

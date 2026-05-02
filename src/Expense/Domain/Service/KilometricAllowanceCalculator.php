@@ -7,7 +7,7 @@ namespace App\Expense\Domain\Service;
 final class KilometricAllowanceCalculator
 {
     /**
-     * @param array<array{distanceKm: float, vehiclePower: int|null, vehicleType?: string, isElectric?: bool}> $trips
+     * @param array<array-key, array{distanceKm: float, vehiclePower: int|null, vehicleType?: string, isElectric?: bool, ...}> $trips
      */
     public function calculateAnnualDeduction(array $trips, int $year): float
     {
@@ -78,7 +78,7 @@ final class KilometricAllowanceCalculator
     {
         return match (true) {
             $km <= $tranche1 => $km * $b['rate1'],
-            $km <= $tranche2 => ($km * $b['rate2']) + $b['fixed2'],
+            $km <= $tranche2 => ($km * $b['rate2']) + (float) $b['fixed2'],
             default => $km * $b['rate3'],
         };
     }

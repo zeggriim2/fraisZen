@@ -68,7 +68,7 @@ final readonly class GetExpensesSummaryQueryHandler implements QueryHandlerInter
         $homeMealValue = $fiscalConfig?->homeMealValue() ?? self::FALLBACK_HOME_MEAL_VALUE;
 
         $travelDeduction = $this->calculator->calculateAnnualDeduction($trips, $query->year);
-        $remoteWorkDeduction = round($remoteWorkDays * $dailyAllowance, 2);
+        $remoteWorkDeduction = round((float) $remoteWorkDays * $dailyAllowance, 2);
         $mealDeduction = round(array_sum($mealEntries), 2);
 
         return [

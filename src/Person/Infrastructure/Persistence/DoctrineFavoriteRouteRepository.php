@@ -15,23 +15,27 @@ final readonly class DoctrineFavoriteRouteRepository implements FavoriteRouteRep
     {
     }
 
+    #[\Override]
     public function save(FavoriteRoute $route): void
     {
         $this->em->persist($route);
         $this->em->flush();
     }
 
+    #[\Override]
     public function delete(FavoriteRoute $route): void
     {
         $this->em->remove($route);
         $this->em->flush();
     }
 
+    #[\Override]
     public function findById(FavoriteRouteId $id): ?FavoriteRoute
     {
         return $this->em->find(FavoriteRoute::class, $id->value());
     }
 
+    #[\Override]
     public function findByPersonId(string $personId): array
     {
         return $this->em->createQueryBuilder()

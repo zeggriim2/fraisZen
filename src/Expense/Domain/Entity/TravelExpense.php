@@ -145,7 +145,7 @@ class TravelExpense extends Expense
 
     public function effectiveDistanceKm(): float
     {
-        return $this->roundTrip ? $this->distanceKm() * 2 : $this->distanceKm();
+        return $this->roundTrip ? $this->distanceKm() * 2.0 : $this->distanceKm();
     }
 
     /** @return array<string, mixed> */
