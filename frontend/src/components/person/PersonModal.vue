@@ -156,7 +156,7 @@
                   <p class="text-xs font-medium text-gray-800 truncate">{{ route.name }}</p>
                   <p class="text-xs text-gray-500 truncate">{{ route.departure }} → {{ route.arrival }}</p>
                 </div>
-                <span class="text-xs text-gray-400 shrink-0">{{ vehicleIcon(route.vehicleType) }}</span>
+                <span class="text-xs text-gray-400 shrink-0">{{ vehicleIcon(route.vehicleType, route.isElectric) }}</span>
                 <button @click="startEdit(route)" class="p-0.5 text-gray-300 hover:text-blue-500 shrink-0" title="Modifier">
                   <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                 </button>
@@ -226,7 +226,8 @@ const vehicleTypes = [
   { value: 'moped' as VehicleType, label: 'Cyclomoteur', icon: '🛵' },
 ]
 
-function vehicleIcon(type: string): string {
+function vehicleIcon(type: string, isElectric = false): string {
+  if (type === 'car' && isElectric) return '⚡'
   return ({ car: '🚗', motorcycle: '🏍️', moped: '🛵' } as Record<string, string>)[type] ?? '🚗'
 }
 

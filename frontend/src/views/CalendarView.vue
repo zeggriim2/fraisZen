@@ -69,7 +69,7 @@
             <div v-for="e in cell.expenses" :key="e.id"
               @click.stop="openDetail(e)"
               :class="['flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-medium truncate', badgeClass(e.type)]">
-              <span>{{ expenseIcon(e.type) }}</span>
+              <span>{{ expenseIcon(e) }}</span>
               <span class="truncate">{{ label(e) }}</span>
             </div>
           </div>
@@ -165,8 +165,9 @@ function badgeClass(type: string) {
           parking: 'bg-red-100 text-red-700'
       } as Record<string,string>)[type] ?? ''
 }
-function expenseIcon(type: string) {
-  return ({ travel: '🚗', remote_work: '🏠', toll: '🛣️', meal: '🍽️' } as Record<string,string>)[type] ?? '📌'
+function expenseIcon(e: Expense) {
+  if (e.type === 'travel' && (e as TravelExpense).isElectric) return '⚡'
+  return ({ travel: '🚗', remote_work: '🏠', toll: '🛣️', meal: '🍽️', parking: '🅿️' } as Record<string,string>)[e.type] ?? '📌'
 }
 function label(e: Expense): string {
   if (e.type === 'travel') { const t = e as TravelExpense; return t.arrival ? `→ ${t.arrival}` : `${t.distanceKm} km` }
