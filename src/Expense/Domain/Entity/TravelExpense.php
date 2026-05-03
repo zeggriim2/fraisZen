@@ -7,30 +7,31 @@ namespace App\Expense\Domain\Entity;
 use App\Expense\Domain\Enum\ExpenseType;
 use App\Expense\Domain\Enum\VehicleType;
 use App\Expense\Domain\ValueObject\ExpenseId;
+use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity]
 class TravelExpense extends Expense
 {
-    #[ORM\Column(type: 'string', length: 255, nullable: true)]
+    #[ORM\Column(type: Types::STRING, length: 255, nullable: true)]
     private ?string $departure;
 
-    #[ORM\Column(type: 'string', length: 255, nullable: true)]
+    #[ORM\Column(type: Types::STRING, length: 255, nullable: true)]
     private ?string $arrival;
 
-    #[ORM\Column(type: 'decimal', precision: 8, scale: 2)]
+    #[ORM\Column(type: Types::DECIMAL, precision: 8, scale: 2)]
     private string $distanceKm;
 
-    #[ORM\Column(type: 'smallint', nullable: true)]
+    #[ORM\Column(type: Types::SMALLINT, nullable: true)]
     private ?int $vehiclePower;
 
-    #[ORM\Column(type: 'boolean', options: ['default' => false])]
+    #[ORM\Column(type: Types::BOOLEAN, options: ['default' => false])]
     private bool $roundTrip;
 
-    #[ORM\Column(type: 'string', length: 20, enumType: VehicleType::class, options: ['default' => 'car'])]
+    #[ORM\Column(type: Types::STRING, length: 20, enumType: VehicleType::class, options: ['default' => 'car'])]
     private VehicleType $vehicleType;
 
-    #[ORM\Column(type: 'boolean', options: ['default' => false])]
+    #[ORM\Column(type: Types::BOOLEAN, options: ['default' => false])]
     private bool $isElectric;
 
     public function __construct(
@@ -105,6 +106,7 @@ class TravelExpense extends Expense
 
     public function amount(): float
     {
+        // Barème kilométrique dépend du cumul annuel — calculer via KilometricAllowanceCalculator.
         return 0.0;
     }
 
