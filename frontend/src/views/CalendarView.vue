@@ -58,13 +58,20 @@
           @click="cell.date && openModal(cell.date)"
           :class="['min-h-28 p-2 border-b border-r border-gray-100 transition-colors cursor-pointer',
             !cell.inMonth && 'bg-gray-50/50 opacity-40',
+            cell.isHoliday && cell.inMonth && 'bg-amber-50',
             cell.isToday && 'bg-indigo-50/40',
-            cell.inMonth && 'hover:bg-gray-50']"
+            cell.inMonth && !cell.isHoliday && 'hover:bg-gray-50',
+            cell.inMonth && cell.isHoliday && 'hover:bg-amber-100']"
         >
-          <span :class="['inline-flex items-center justify-center w-7 h-7 rounded-full text-sm font-medium mb-1',
-            cell.isToday ? 'bg-indigo-600 text-white' : 'text-gray-700']">
-            {{ cell.day }}
-          </span>
+          <div class="flex items-center justify-between mb-1">
+            <span :class="['inline-flex items-center justify-center w-7 h-7 rounded-full text-sm font-medium',
+              cell.isToday ? 'bg-indigo-600 text-white' : 'text-gray-700']">
+              {{ cell.day }}
+            </span>
+            <span v-if="cell.isHoliday && cell.inMonth" class="text-xs text-amber-600 font-medium truncate ml-1 max-w-[70%]" :title="cell.holidayName ?? ''">
+              {{ cell.holidayName }}
+            </span>
+          </div>
           <div class="space-y-0.5">
             <div v-for="e in cell.expenses" :key="e.id"
               @click.stop="openDetail(e)"
@@ -91,6 +98,7 @@ import type { Expense, TravelExpense, TollExpense, MealExpense } from '@/types'
 import ExpenseModal from '@/components/expense/ExpenseModal.vue'
 import CsvImportModal from '@/components/expense/CsvImportModal.vue'
 import {ParkingExpense} from "@/types";
+import { getPublicHolidays } from '@/api/expenseApi'
 
 const personStore = usePersonStore()
 const expenseStore = useExpenseStore()
@@ -99,6 +107,16 @@ const authStore = useAuthStore()
 const today = new Date()
 const year = ref(authStore.user?.defaultYear ?? today.getFullYear())
 const month = ref(today.getMonth())
+
+const publicHolidays = ref<Record<string, string>>({})
+
+async function loadHolidays() {
+  try {
+    publicHolidays.value = await getPublicHolidays(year.value)
+  } catch {
+    publicHolidays.value = {}
+  }
+}
 
 watch(() => authStore.user, (u) => {
   if (u?.defaultYear != null) year.value = u.defaultYear
@@ -128,16 +146,16 @@ const cells = computed(() => {
   for (let i = 0; i < offset; i++) {
     const d = new Date(year.value, month.value, 1 - (offset - i))
     const dateStr = toDateStr(d)
-    result.push({ date: dateStr, day: d.getDate(), inMonth: false, isToday: false, expenses: [] as Expense[] })
+    result.push({ date: dateStr, day: d.getDate(), inMonth: false, isToday: false, isHoliday: false, holidayName: null, expenses: [] as Expense[] })
   }
   for (let d = 1; d <= last.getDate(); d++) {
     const dateStr = toDateStr(new Date(year.value, month.value, d))
-    result.push({ date: dateStr, day: d, inMonth: true, isToday: dateStr === todayStr, expenses: expenseStore.expenses.filter(e => e.date === dateStr) })
+    result.push({ date: dateStr, day: d, inMonth: true, isToday: dateStr === todayStr, isHoliday: !!publicHolidays.value[dateStr], holidayName: publicHolidays.value[dateStr] ?? null, expenses: expenseStore.expenses.filter(e => e.date === dateStr) })
   }
   const total = Math.ceil(result.length / 7) * 7
   for (let n = 1; result.length < total; n++) {
     const d = new Date(year.value, month.value + 1, n)
-    result.push({ date: toDateStr(d), day: d.getDate(), inMonth: false, isToday: false, expenses: [] as Expense[] })
+    result.push({ date: toDateStr(d), day: d.getDate(), inMonth: false, isToday: false, isHoliday: false, holidayName: null, expenses: [] as Expense[] })
   }
   return result
 })
@@ -194,6 +212,7 @@ function prevMonth() { if (month.value === 0) { month.value = 11; year.value-- }
 function nextMonth() { if (month.value === 11) { month.value = 0; year.value++ } else month.value++ }
 function goToday() { month.value = today.getMonth(); year.value = today.getFullYear() }
 
+watch(year, loadHolidays, { immediate: true })
 watch([month, year, () => personStore.activePerson], load)
 onMounted(load)
 </script>
