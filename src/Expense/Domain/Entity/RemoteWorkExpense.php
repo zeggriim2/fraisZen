@@ -6,12 +6,13 @@ namespace App\Expense\Domain\Entity;
 
 use App\Expense\Domain\Enum\ExpenseType;
 use App\Expense\Domain\ValueObject\ExpenseId;
+use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity]
 class RemoteWorkExpense extends Expense
 {
-    #[ORM\Column(type: 'decimal', precision: 5, scale: 2)]
+    #[ORM\Column(type: Types::DECIMAL, precision: 5, scale: 2)]
     private string $dailyAllowance;
 
     public function __construct(ExpenseId $id, string $personId, \DateTimeImmutable $date, ?string $description, float $dailyAllowance = 2.70)
