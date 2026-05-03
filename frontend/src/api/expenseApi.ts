@@ -32,3 +32,7 @@ export const expenseApi = {
   deleteReceipt: (id: string) =>
     http.delete(`/expenses/${id}/receipt`),
 }
+
+export function getPublicHolidays(year: number): Promise<Record<string, string>> {
+  return http.get<Record<string, string>>(`/public-holidays/${year}`).then(r => r.data)
+}
