@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Person\Domain\Entity;
 
 use App\Person\Domain\ValueObject\PersonId;
+use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity]
@@ -12,25 +13,25 @@ use Doctrine\ORM\Mapping as ORM;
 class Person
 {
     #[ORM\Id]
-    #[ORM\Column(type: 'string', length: 36)]
+    #[ORM\Column(type: Types::STRING, length: 36)]
     private string $id;
 
-    #[ORM\Column(type: 'string', length: 100)]
+    #[ORM\Column(type: Types::STRING, length: 100)]
     private string $firstName;
 
-    #[ORM\Column(type: 'string', length: 100)]
+    #[ORM\Column(type: Types::STRING, length: 100)]
     private string $lastName;
 
-    #[ORM\Column(type: 'string', length: 255, nullable: true)]
+    #[ORM\Column(type: Types::STRING, length: 255, nullable: true)]
     private ?string $email;
 
-    #[ORM\Column(type: 'string', length: 36)]
+    #[ORM\Column(type: Types::STRING, length: 36)]
     private string $userId;
 
-    #[ORM\Column(type: 'datetime_immutable')]
+    #[ORM\Column(type: Types::DATETIME_IMMUTABLE)]
     private \DateTimeImmutable $createdAt;
 
-    #[ORM\Column(type: 'boolean', options: ['default' => false])]
+    #[ORM\Column(type: Types::BOOLEAN, options: ['default' => false])]
     private bool $favorite = false;
 
     public function __construct(
@@ -41,6 +42,13 @@ class Person
         ?string $email = null,
         bool $favorite = false,
     ) {
+        if ('' === trim($firstName)) {
+            throw new \InvalidArgumentException('First name cannot be empty.');
+        }
+        if ('' === trim($lastName)) {
+            throw new \InvalidArgumentException('Last name cannot be empty.');
+        }
+
         $this->id = $id->value();
         $this->userId = $userId;
         $this->firstName = $firstName;
@@ -97,6 +105,13 @@ class Person
 
     public function update(string $firstName, string $lastName, ?string $email, bool $favorite = false): void
     {
+        if ('' === trim($firstName)) {
+            throw new \InvalidArgumentException('First name cannot be empty.');
+        }
+        if ('' === trim($lastName)) {
+            throw new \InvalidArgumentException('Last name cannot be empty.');
+        }
+
         $this->firstName = $firstName;
         $this->lastName = $lastName;
         $this->email = $email;

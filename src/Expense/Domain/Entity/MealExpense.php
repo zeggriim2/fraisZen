@@ -33,6 +33,16 @@ class MealExpense extends Expense
         float $employerTicketContribution = 0.0,
         bool $withoutReceipt = false,
     ) {
+        if ($mealAmount < 0.0) {
+            throw new \InvalidArgumentException('Meal amount cannot be negative.');
+        }
+        if ($homeMealValue <= 0.0) {
+            throw new \InvalidArgumentException('Home meal value must be greater than zero.');
+        }
+        if ($employerTicketContribution < 0.0) {
+            throw new \InvalidArgumentException('Employer ticket contribution cannot be negative.');
+        }
+
         parent::__construct($id, $personId, $date, $description);
         $this->mealAmount = (string) $mealAmount;
         $this->homeMealValue = (string) $homeMealValue;
@@ -76,12 +86,20 @@ class MealExpense extends Expense
 
     public function setMealAmount(float $amount): void
     {
+        if ($amount < 0.0) {
+            throw new \InvalidArgumentException('Meal amount cannot be negative.');
+        }
+
         $this->mealAmount = (string) $amount;
         $this->touch();
     }
 
     public function setEmployerTicketContribution(float $amount): void
     {
+        if ($amount < 0.0) {
+            throw new \InvalidArgumentException('Employer ticket contribution cannot be negative.');
+        }
+
         $this->employerTicketContribution = (string) $amount;
         $this->touch();
     }

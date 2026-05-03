@@ -47,6 +47,10 @@ class TravelExpense extends Expense
         VehicleType $vehicleType = VehicleType::Car,
         bool $isElectric = false,
     ) {
+        if ($distanceKm <= 0.0) {
+            throw new \InvalidArgumentException('Distance must be greater than zero.');
+        }
+
         parent::__construct($id, $personId, $date, $description);
         $this->departure = $departure;
         $this->arrival = $arrival;
@@ -71,6 +75,10 @@ class TravelExpense extends Expense
 
     public function setDistanceKm(float $km): void
     {
+        if ($km <= 0.0) {
+            throw new \InvalidArgumentException('Distance must be greater than zero.');
+        }
+
         $this->distanceKm = (string) $km;
         $this->touch();
     }

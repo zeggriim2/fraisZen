@@ -6,18 +6,19 @@ namespace App\Expense\Domain\Entity;
 
 use App\Expense\Domain\Enum\ExpenseType;
 use App\Expense\Domain\ValueObject\ExpenseId;
+use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity]
 class TollExpense extends Expense
 {
-    #[ORM\Column(type: 'decimal', precision: 10, scale: 2)]
+    #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 2)]
     private string $tollAmount;
 
-    #[ORM\Column(type: 'string', length: 255, nullable: true)]
+    #[ORM\Column(type: Types::STRING, length: 255, nullable: true)]
     private ?string $departure;
 
-    #[ORM\Column(type: 'string', length: 255, nullable: true)]
+    #[ORM\Column(type: Types::STRING, length: 255, nullable: true)]
     private ?string $arrival;
 
     public function __construct(
@@ -29,6 +30,10 @@ class TollExpense extends Expense
         ?string $departure,
         ?string $arrival,
     ) {
+        if ($tollAmount < 0.0) {
+            throw new \InvalidArgumentException('Toll amount cannot be negative.');
+        }
+
         parent::__construct($id, $personId, $date, $description);
         $this->tollAmount = (string) $tollAmount;
         $this->departure = $departure;
@@ -37,6 +42,10 @@ class TollExpense extends Expense
 
     public function setTollAmount(float $amount): void
     {
+        if ($amount < 0.0) {
+            throw new \InvalidArgumentException('Toll amount cannot be negative.');
+        }
+
         $this->tollAmount = (string) $amount;
         $this->touch();
     }

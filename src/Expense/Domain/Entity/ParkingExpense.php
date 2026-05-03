@@ -29,6 +29,10 @@ class ParkingExpense extends Expense
         float $parkingAmount,
         ?string $location = null,
     ) {
+        if ($parkingAmount < 0.0) {
+            throw new \InvalidArgumentException('Parking amount cannot be negative.');
+        }
+
         parent::__construct($id, $personId, $date, $description);
         $this->parkingAmount = (string) $parkingAmount;
         $this->location = $location;
@@ -62,6 +66,10 @@ class ParkingExpense extends Expense
 
     public function setParkingAmount(float $amount): void
     {
+        if ($amount < 0.0) {
+            throw new \InvalidArgumentException('Parking amount cannot be negative.');
+        }
+
         $this->parkingAmount = (string) $amount;
         $this->touch();
     }
