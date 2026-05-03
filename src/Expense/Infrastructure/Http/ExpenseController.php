@@ -28,7 +28,7 @@ use Symfony\Component\Messenger\Exception\HandlerFailedException;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Routing\Requirement\Requirement;
 
-#[Route('/api/expenses')]
+#[Route('/api/expenses', name: 'expense_')]
 final class ExpenseController extends AbstractController
 {
     private const FALLBACK_HOME_MEAL_VALUE = 5.35;
@@ -43,7 +43,7 @@ final class ExpenseController extends AbstractController
     ) {
     }
 
-    #[Route('/fiscal-config/{year}', requirements: ['year' => '\d{4}'], methods: [Request::METHOD_GET])]
+    #[Route('/fiscal-config/{year}', name: 'fiscalconfig', requirements: ['year' => '\d{4}'], methods: [Request::METHOD_GET])]
     public function fiscalConfig(int $year): JsonResponse
     {
         $config = $this->fiscalConfigRepository->findByYear($year);
@@ -55,7 +55,7 @@ final class ExpenseController extends AbstractController
         ]);
     }
 
-    #[Route('', methods: [Request::METHOD_GET])]
+    #[Route('', name: 'list', methods: [Request::METHOD_GET])]
     public function list(Request $request): JsonResponse
     {
         $from = $request->query->get('from', date('Y-m-01'));
@@ -65,7 +65,7 @@ final class ExpenseController extends AbstractController
         return $this->json($this->queryBus->ask(new GetExpensesByPeriodQuery($from, $to, $personId)));
     }
 
-    #[Route('/summary/pdf', methods: [Request::METHOD_GET])]
+    #[Route('/summary/pdf', name: 'summaryPdf', methods: [Request::METHOD_GET])]
     public function summaryPdf(Request $request): Response
     {
         $personId = $request->query->get('personId', '');
@@ -80,7 +80,7 @@ final class ExpenseController extends AbstractController
         return $this->pdfExporter->export($data, $year);
     }
 
-    #[Route('/summary/csv', methods: [Request::METHOD_GET])]
+    #[Route('/summary/csv', name: 'summaryCsv', methods: [Request::METHOD_GET])]
     public function summaryCsv(Request $request): StreamedResponse
     {
         $personId = $request->query->get('personId', '');
@@ -95,7 +95,7 @@ final class ExpenseController extends AbstractController
         return $this->csvExporter->export($data, $year);
     }
 
-    #[Route('/summary', methods: [Request::METHOD_GET])]
+    #[Route('/summary', name: 'summary', methods: [Request::METHOD_GET])]
     public function summary(Request $request): JsonResponse
     {
         $personId = $request->query->get('personId', '');
@@ -108,7 +108,7 @@ final class ExpenseController extends AbstractController
         return $this->json($this->queryBus->ask(new GetExpensesSummaryQuery($personId, $year)));
     }
 
-    #[Route('', methods: [Request::METHOD_POST])]
+    #[Route('', name: 'create', methods: [Request::METHOD_POST])]
     public function create(Request $request): JsonResponse
     {
         $data = json_decode($request->getContent(), true) ?? [];
@@ -167,7 +167,7 @@ final class ExpenseController extends AbstractController
         return $this->json(['id' => $id], Response::HTTP_CREATED);
     }
 
-    #[Route('/{id}', requirements: ['id' => Requirement::UUID_V4], methods: [Request::METHOD_PATCH])]
+    #[Route('/{id}', name: 'update', requirements: ['id' => Requirement::UUID_V4], methods: [Request::METHOD_PATCH])]
     public function update(string $id, Request $request): JsonResponse
     {
         $fields = json_decode($request->getContent(), true) ?? [];
@@ -184,7 +184,7 @@ final class ExpenseController extends AbstractController
         }
     }
 
-    #[Route('/{id}', requirements: ['id' => Requirement::UUID_V4], methods: [Request::METHOD_DELETE])]
+    #[Route('/{id}', name: 'delete', requirements: ['id' => Requirement::UUID_V4], methods: [Request::METHOD_DELETE])]
     public function delete(string $id): JsonResponse
     {
         try {

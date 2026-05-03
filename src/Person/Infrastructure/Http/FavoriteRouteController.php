@@ -21,7 +21,7 @@ use Symfony\Component\Messenger\Exception\HandlerFailedException;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Routing\Requirement\Requirement;
 
-#[Route('/api/persons/{personId}/favorite-routes', requirements: ['personId' => Requirement::UUID_V4])]
+#[Route('/api/persons/{personId}/favorite-routes', name: 'favoriteRoute_', requirements: ['personId' => Requirement::UUID_V4])]
 final class FavoriteRouteController extends AbstractController
 {
     public function __construct(
@@ -30,7 +30,7 @@ final class FavoriteRouteController extends AbstractController
     ) {
     }
 
-    #[Route('', methods: [Request::METHOD_GET])]
+    #[Route('', name: 'list', methods: [Request::METHOD_GET])]
     public function list(string $personId): JsonResponse
     {
         if (!$this->personBelongsToUser($personId)) {
@@ -40,7 +40,7 @@ final class FavoriteRouteController extends AbstractController
         return $this->json($this->queryBus->ask(new GetFavoriteRoutesByPersonQuery($personId)));
     }
 
-    #[Route('', methods: [Request::METHOD_POST])]
+    #[Route('', name: 'create', methods: [Request::METHOD_POST])]
     public function create(string $personId, Request $request): JsonResponse
     {
         if (!$this->personBelongsToUser($personId)) {
@@ -64,7 +64,7 @@ final class FavoriteRouteController extends AbstractController
         return $this->json($created, Response::HTTP_CREATED);
     }
 
-    #[Route('/{id}', requirements: ['id' => Requirement::UUID_V4], methods: [Request::METHOD_PUT])]
+    #[Route('/{id}', name: 'update', requirements: ['id' => Requirement::UUID_V4], methods: [Request::METHOD_PUT])]
     public function update(string $personId, string $id, Request $request): JsonResponse
     {
         if (!$this->personBelongsToUser($personId)) {
@@ -94,7 +94,7 @@ final class FavoriteRouteController extends AbstractController
         }
     }
 
-    #[Route('/{id}', requirements: ['id' => Requirement::UUID_V4], methods: ['DELETE'])]
+    #[Route('/{id}', name: 'delete', requirements: ['id' => Requirement::UUID_V4], methods: ['DELETE'])]
     public function delete(string $personId, string $id): JsonResponse
     {
         if (!$this->personBelongsToUser($personId)) {

@@ -32,7 +32,7 @@ final class AuthController extends AbstractController
         throw new \LogicException('Should not be reached.');
     }
 
-    #[Route('/register', methods: [Request::METHOD_POST])]
+    #[Route('/register', name: 'api_register', methods: [Request::METHOD_POST])]
     public function register(Request $request): JsonResponse
     {
         $data = json_decode($request->getContent(), true) ?? [];

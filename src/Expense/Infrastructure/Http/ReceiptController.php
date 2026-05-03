@@ -16,7 +16,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Routing\Requirement\Requirement;
 
-#[Route('/api/expenses/{id}/receipt', requirements: ['id' => Requirement::UUID_V4])]
+#[Route('/api/expenses/{id}/receipt', name: 'receipt_', requirements: ['id' => Requirement::UUID_V4])]
 final class ReceiptController extends AbstractController
 {
     private string $receiptsDir;
@@ -28,7 +28,7 @@ final class ReceiptController extends AbstractController
         $this->receiptsDir = rtrim($shareDir, '/').'/receipts';
     }
 
-    #[Route('', methods: [Request::METHOD_POST])]
+    #[Route('', name: 'upload', methods: [Request::METHOD_POST])]
     public function upload(string $id, Request $request): JsonResponse
     {
         $expense = $this->repository->findById(ExpenseId::fromString($id));
@@ -49,7 +49,9 @@ final class ReceiptController extends AbstractController
         }
 
         if (!is_dir($this->receiptsDir)) {
-            mkdir($this->receiptsDir, 0755, true);
+            if (!mkdir($concurrentDirectory = $this->receiptsDir, 0755, true) && !is_dir($concurrentDirectory)) {
+                throw new \RuntimeException(sprintf('Directory "%s" was not created', $concurrentDirectory));
+            }
         }
 
         $file->move($this->receiptsDir, $id.'.pdf');
@@ -59,7 +61,7 @@ final class ReceiptController extends AbstractController
         return $this->json(['receiptFilename' => $expense->receiptFilename()]);
     }
 
-    #[Route('', methods: [Request::METHOD_GET])]
+    #[Route('', name: 'download', methods: [Request::METHOD_GET])]
     public function download(string $id): Response
     {
         $expense = $this->repository->findById(ExpenseId::fromString($id));
@@ -79,7 +81,7 @@ final class ReceiptController extends AbstractController
         ]);
     }
 
-    #[Route('', methods: [Request::METHOD_DELETE])]
+    #[Route('', name: 'delete', methods: [Request::METHOD_DELETE])]
     public function delete(string $id): JsonResponse
     {
         $expense = $this->repository->findById(ExpenseId::fromString($id));

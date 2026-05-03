@@ -21,7 +21,7 @@ use Symfony\Component\Messenger\Exception\HandlerFailedException;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Routing\Requirement\Requirement;
 
-#[Route('/api/persons')]
+#[Route('/api/persons', name: 'person_')]
 final class PersonController extends AbstractController
 {
     public function __construct(
@@ -30,13 +30,13 @@ final class PersonController extends AbstractController
     ) {
     }
 
-    #[Route('', methods: [Request::METHOD_GET])]
+    #[Route('', name: 'list', methods: [Request::METHOD_GET])]
     public function list(): JsonResponse
     {
         return $this->json($this->queryBus->ask(new GetAllPersonsQuery($this->userId())));
     }
 
-    #[Route('/{id}', requirements: ['id' => Requirement::UUID_V4], methods: [Request::METHOD_GET])]
+    #[Route('/{id}', name: 'show', requirements: ['id' => Requirement::UUID_V4], methods: [Request::METHOD_GET])]
     public function show(string $id): JsonResponse
     {
         try {
@@ -49,7 +49,7 @@ final class PersonController extends AbstractController
         }
     }
 
-    #[Route('', methods: [Request::METHOD_POST])]
+    #[Route('', name: 'create', methods: [Request::METHOD_POST])]
     public function create(Request $request): JsonResponse
     {
         $data = json_decode($request->getContent(), true) ?? [];
@@ -64,7 +64,7 @@ final class PersonController extends AbstractController
         return $this->json($this->queryBus->ask(new GetPersonByIdQuery($id)), Response::HTTP_CREATED);
     }
 
-    #[Route('/{id}', requirements: ['id' => Requirement::UUID_V4], methods: [Request::METHOD_PUT])]
+    #[Route('/{id}', name: 'update', requirements: ['id' => Requirement::UUID_V4], methods: [Request::METHOD_PUT])]
     public function update(string $id, Request $request): JsonResponse
     {
         $data = json_decode($request->getContent(), true) ?? [];
@@ -86,7 +86,7 @@ final class PersonController extends AbstractController
         }
     }
 
-    #[Route('/{id}', requirements: ['id' => Requirement::UUID_V4], methods: ['DELETE'])]
+    #[Route('/{id}', name: 'delete', requirements: ['id' => Requirement::UUID_V4], methods: ['DELETE'])]
     public function delete(string $id): JsonResponse
     {
         try {

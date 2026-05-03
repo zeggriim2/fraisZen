@@ -18,7 +18,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 
-#[Route('/api/billing')]
+#[Route('/api/billing', name: 'billing')]
 final class BillingController extends AbstractController
 {
     public function __construct(
@@ -30,7 +30,7 @@ final class BillingController extends AbstractController
     ) {
     }
 
-    #[Route('/checkout', methods: [Request::METHOD_POST])]
+    #[Route('/checkout', name: 'checkout', methods: [Request::METHOD_POST])]
     public function checkout(Request $request): JsonResponse
     {
         /** @var User $user */
@@ -63,7 +63,7 @@ final class BillingController extends AbstractController
         return $this->json(['url' => $session->url]);
     }
 
-    #[Route('/portal', methods: [Request::METHOD_POST])]
+    #[Route('/portal', name: 'portail', methods: [Request::METHOD_POST])]
     public function portal(Request $request): JsonResponse
     {
         /** @var User $user */
@@ -83,7 +83,7 @@ final class BillingController extends AbstractController
         return $this->json(['url' => $session->url]);
     }
 
-    #[Route('/webhook', methods: [Request::METHOD_POST])]
+    #[Route('/webhook', name: 'Webhook', methods: [Request::METHOD_POST])]
     public function webhook(Request $request): Response
     {
         try {
