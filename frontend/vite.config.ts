@@ -10,6 +10,7 @@ export default defineConfig({
   server: {
     port: 5173,
     host: '0.0.0.0',
+    allowedHosts: ['node'],
     proxy: {
       '/api': {
         // En Docker : API_TARGET=http://php (réseau interne)
