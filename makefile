@@ -40,9 +40,9 @@ sh: ## Connect to the FrankenPHP container
 bash: ## Connect to the FrankenPHP container via bash so up and down arrows go to previous commands
 	@$(PHP_CONT) bash
 
-test: ## Start tests with phpunit, pass the parameter "c=" to add options to phpunit, example: make test c="--group e2e --stop-on-failure"
+test: ## Start tests with Pest, pass the parameter "c=" to add options, example: make test c="--filter calculator"
 	@$(eval c ?=)
-	@$(DOCKER_COMP) exec -e APP_ENV=test php bin/phpunit $(c)
+	@$(DOCKER_COMP) exec -e APP_ENV=test php vendor/bin/pest $(c)
 
 
 ## —— Composer 🧙 ——————————————————————————————————————————————————————————————
