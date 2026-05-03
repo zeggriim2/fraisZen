@@ -44,6 +44,13 @@ test: ## Start tests with Pest, pass the parameter "c=" to add options, example:
 	@$(eval c ?=)
 	@$(DOCKER_COMP) exec -e APP_ENV=test php vendor/bin/pest $(c)
 
+test-browser: ## Run browser tests (Playwright), pass c= for options
+	@$(eval c ?=)
+	@$(DOCKER_COMP) exec php vendor/bin/pest tests/Browser/ $(c)
+
+playwright-install: ## Install Playwright browsers inside the PHP container
+	@$(DOCKER_COMP) exec php bash -c "npm install playwright@latest && npx playwright install chromium --with-deps"
+
 
 ## —— Composer 🧙 ——————————————————————————————————————————————————————————————
 composer: ## Run composer, pass the parameter "c=" to run a given command, example: make composer c='req symfony/orm-pack'
