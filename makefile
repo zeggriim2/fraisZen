@@ -12,7 +12,7 @@ SYMFONY  = $(PHP) bin/console
 # Misc
 .DEFAULT_GOAL = help
 .PHONY        : help build up start down logs sh composer vendor sf cc test \
-                frontend-install frontend-dev frontend-build db-setup \
+                coverage frontend-install frontend-dev frontend-build db-setup \
                 lint cs-fix phpstan psalm analyse
 
 ## —— 🎵 🐳 The Symfony Docker Makefile 🐳 🎵 ——————————————————————————————————
@@ -43,6 +43,11 @@ bash: ## Connect to the FrankenPHP container via bash so up and down arrows go t
 test: ## Start tests with Pest, pass the parameter "c=" to add options, example: make test c="--filter calculator"
 	@$(eval c ?=)
 	@$(DOCKER_COMP) exec -e APP_ENV=test php vendor/bin/pest $(c)
+
+coverage: ## Generate HTML coverage report and open it in the browser
+	@$(DOCKER_COMP) exec -e APP_ENV=test -e XDEBUG_MODE=coverage php vendor/bin/pest --coverage --coverage-html=var/coverage
+	@docker cp fraisreelimpot-php-1:/app/var/coverage var/
+	@open var/coverage/index.html
 
 test-browser: ## Run browser tests (Playwright), pass c= for options
 	@$(eval c ?=)
