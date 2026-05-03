@@ -1,0 +1,3 @@
+api_person:
+    resource: '../../../src/Person/Infrastructure/Http/'
+    type: attribute

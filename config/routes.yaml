@@ -3,18 +3,17 @@
 controllers:
     resource: routing.controllers
 
-person_api:
-    resource: '../src/Person/Infrastructure/Http/PersonController.php'
-    type: attribute
+admin:
+    resource: routes/api/admin.yaml
 
-expense_api:
-    resource: '../src/Expense/Infrastructure/Http/ExpenseController.php'
-    type: attribute
+auth:
+    resource: routes/api/auth.yaml
 
-auth_api:
-    resource: '../src/Auth/Infrastructure/Http/AuthController.php'
-    type: attribute
+billing:
+    resource: routes/api/billing.yaml
 
-billing_api:
-    resource: '../src/Billing/Infrastructure/Http/BillingController.php'
-    type: attribute
+expense:
+    resource: routes/api/expense.yaml
+
+person:
+    resource: routes/api/person.yaml

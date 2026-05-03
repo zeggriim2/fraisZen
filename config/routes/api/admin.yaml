@@ -1,0 +1,20 @@
+api_admin_user:
+    resource: '../../../src/Admin/Infrastructure/Http/AdminUser/'
+    type: attribute
+    prefix: /api/admin/
+    trailing_slash_on_root: false
+    name_prefix: adminUser_
+
+api_admin_fiscal:
+    resource: '../../../src/Admin/Infrastructure/Http/AdminFiscal/'
+    type: attribute
+    prefix: /api/admin/
+    trailing_slash_on_root: false
+    name_prefix: adminFiscal_
+
+api_admin_stat:
+    resource: '../../../src/Admin/Infrastructure/Http/AdminStat/'
+    type: attribute
+    prefix: /api/admin/
+    trailing_slash_on_root: false
+    name_prefix: adminStat_

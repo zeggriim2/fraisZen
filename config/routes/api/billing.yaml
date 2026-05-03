@@ -1,0 +1,3 @@
+api_billing:
+    resource: '../../../src/Billing/Infrastructure/Http/BillingController.php'
+    type: attribute

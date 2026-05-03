@@ -1,0 +1,3 @@
+api_expense:
+    resource: '../../../src/Expense/Infrastructure/Http/'
+    type: attribute
