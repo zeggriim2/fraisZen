@@ -30,6 +30,8 @@ RUN <<-EOF
 		apcu \
 		intl \
 		opcache \
+		pcntl \
+		sockets \
 		zip
 	rm -rf /var/lib/apt/lists/*
 EOF
@@ -75,6 +77,8 @@ RUN <<-EOF
 		ipset \
 		iptables \
 		jq \
+		nodejs \
+		npm \
 		sudo
 	install-php-extensions xdebug
 	rm -rf /var/lib/apt/lists/*
