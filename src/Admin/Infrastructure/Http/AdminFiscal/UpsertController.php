@@ -2,46 +2,25 @@
 
 declare(strict_types=1);
 
-namespace App\Admin\Infrastructure\Http;
+namespace App\Admin\Infrastructure\Http\AdminFiscal;
 
 use App\Admin\Domain\Entity\FiscalConfig;
 use App\Admin\Domain\Repository\FiscalConfigRepositoryInterface;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use App\Admin\Infrastructure\Http\AbstractAdminController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
-use Symfony\Component\Security\Http\Attribute\IsGranted;
 
-#[Route('/api/admin')]
-#[IsGranted('ROLE_ADMIN')]
-final class AdminFiscalConfigController extends AbstractController
+
+#[Route('/fiscal-config/{year}', name: 'upsert', requirements: ['year' => '\d{4}'], methods: [Request::METHOD_PUT])]
+class UpsertController extends AbstractAdminController
 {
     public function __construct(private readonly FiscalConfigRepositoryInterface $fiscalConfigRepository)
     {
     }
 
-    #[Route('/fiscal-config', methods: [Request::METHOD_GET])]
-    public function list(): JsonResponse
-    {
-        $configs = $this->fiscalConfigRepository->findAll();
-
-        return $this->json(array_map(fn (FiscalConfig $c) => $c->toArray(), $configs));
-    }
-
-    #[Route('/fiscal-config/{year}', requirements: ['year' => '\d{4}'], methods: [Request::METHOD_GET])]
-    public function get(int $year): JsonResponse
-    {
-        $config = $this->fiscalConfigRepository->findByYear($year);
-        if (!$config) {
-            return $this->json(['error' => 'No config for this year'], Response::HTTP_NOT_FOUND);
-        }
-
-        return $this->json($config->toArray());
-    }
-
-    #[Route('/fiscal-config/{year}', requirements: ['year' => '\d{4}'], methods: [Request::METHOD_PUT])]
-    public function upsert(int $year, Request $request): JsonResponse
+    public function __invoke(int $year, Request $request): JsonResponse
     {
         $data = json_decode($request->getContent(), true) ?? [];
         $allowance = $data['remoteWorkDailyAllowance'] ?? null;

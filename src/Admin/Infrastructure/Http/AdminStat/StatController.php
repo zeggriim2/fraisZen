@@ -2,25 +2,22 @@
 
 declare(strict_types=1);
 
-namespace App\Admin\Infrastructure\Http;
+namespace App\Admin\Infrastructure\Http\AdminStat;
 
 use App\Admin\Application\Stats\AdminStatsProviderInterface;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use App\Admin\Infrastructure\Http\AbstractAdminController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
-use Symfony\Component\Security\Http\Attribute\IsGranted;
 
-#[Route('/api/admin')]
-#[IsGranted('ROLE_ADMIN')]
-final class AdminStatsController extends AbstractController
+#[Route('/stats', name: 'stats', methods: [Request::METHOD_GET])]
+class StatController extends AbstractAdminController
 {
     public function __construct(private readonly AdminStatsProviderInterface $statsProvider)
     {
     }
 
-    #[Route('/stats', methods: [Request::METHOD_GET])]
-    public function stats(): JsonResponse
+    public function __invoke(): JsonResponse
     {
         return $this->json($this->statsProvider->getStats());
     }
