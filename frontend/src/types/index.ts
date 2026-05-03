@@ -91,7 +91,13 @@ export type CreateExpenseDto =
   | { type: 'meal'; personId: string; date: string; mealAmount: number; employerTicketContribution?: number; withoutReceipt?: boolean; description?: string }
   | { type: 'parking'; personId: string; date: string; amount: number; location?: string; description?: string }
 
-export type UpdateExpenseDto = Record<string, unknown>
+// Note : le PATCH backend utilise `amount` (pas `tollAmount`/`parkingAmount`) pour les mises à jour
+export type UpdateExpenseDto =
+  | Partial<Pick<TravelExpense, 'date' | 'distanceKm' | 'vehiclePower' | 'vehicleType' | 'isElectric' | 'departure' | 'arrival' | 'description' | 'roundTrip'>>
+  | (Partial<Pick<TollExpense, 'date' | 'departure' | 'arrival' | 'description'>> & { amount?: number })
+  | (Partial<Pick<ParkingExpense, 'date' | 'location' | 'description'>> & { amount?: number })
+  | Partial<Pick<MealExpense, 'date' | 'mealAmount' | 'employerTicketContribution' | 'withoutReceipt' | 'description'>>
+  | Partial<Pick<RemoteWorkExpense, 'date' | 'description'>>
 
 export interface FavoriteRoute {
   id: string

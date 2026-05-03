@@ -135,7 +135,9 @@ onMounted(async () => {
   const urlParams = new URLSearchParams(window.location.search)
   const impToken = urlParams.get('impersonate_token')
   if (impToken) {
-    localStorage.setItem('jwt_token', impToken)
+    // Impersonation : sessionStorage uniquement (expire à la fermeture de l'onglet)
+    sessionStorage.setItem('jwt_token', impToken)
+    localStorage.removeItem('jwt_token')
     authStore.token = impToken
     window.history.replaceState({}, '', window.location.pathname)
   }

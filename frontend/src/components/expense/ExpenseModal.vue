@@ -53,7 +53,7 @@
             <template v-else>
               <label class="cursor-pointer text-sm text-indigo-600 hover:text-indigo-800 flex items-center gap-1">
                 <span>📎</span>Attacher un PDF
-                <input type="file" accept=".pdf,application/pdf" class="sr-only" @change="(e) => attachReceiptToExisting(expense.id, e)" />
+                <input type="file" accept=".pdf,application/pdf" class="sr-only" @change="(e) => attachReceiptToExisting(expense!.id, e)" />
               </label>
             </template>
           </div>
@@ -327,7 +327,7 @@ function applyFavorite(fav: typeof favorites.value[number]) {
   form.value.departure = fav.departure
   form.value.arrival = fav.arrival
   form.value.vehicleType = fav.vehicleType
-  form.value.vehiclePower = fav.vehiclePower
+  form.value.vehiclePower = fav.vehiclePower ?? 5
   form.value.isElectric = fav.isElectric
   form.value.roundTrip = fav.roundTrip
 }

@@ -3,7 +3,7 @@ import { defineStore } from 'pinia'
 import { authApi, type AuthUser, type UpdateProfilePayload } from '@/api/authApi'
 
 export const useAuthStore = defineStore('auth', () => {
-  const token = ref<string | null>(localStorage.getItem('jwt_token'))
+  const token = ref<string | null>(sessionStorage.getItem('jwt_token') ?? localStorage.getItem('jwt_token'))
   const user = ref<AuthUser | null>(null)
 
   const isAuthenticated = computed(() => !!token.value)
