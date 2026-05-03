@@ -8,6 +8,13 @@ framework:
     #esi: true
     #fragments: true
 
+    http_client:
+        scoped_clients:
+            datagouv.client:
+                base_uri: 'https://calendrier.api.gouv.fr'
+                headers:
+                    Accept: 'application/json'
+
 when@test:
     framework:
         test: true
