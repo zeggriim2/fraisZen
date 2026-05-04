@@ -20,6 +20,11 @@ export const expenseApi = {
   getFiscalConfig: (year: number) =>
     http.get<{ year: number; remoteWorkDailyAllowance: number; homeMealValue: number }>(`/expenses/fiscal-config/${year}`).then(r => r.data),
 
+  getDistance: (fromLat: number, fromLng: number, toLat: number, toLng: number) =>
+    http.get<{ distanceKm: number }>('/expenses/distance', {
+      params: { fromLat, fromLng, toLat, toLng },
+    }).then(r => r.data.distanceKm),
+
   uploadReceipt: (id: string, file: File) => {
     const form = new FormData()
     form.append('receipt', file)
