@@ -1,3 +1,6 @@
 api_billing:
-    resource: '../../../src/Billing/Infrastructure/Http/BillingController.php'
+    resource: '../../../src/Billing/Infrastructure/Http/Billing/'
     type: attribute
+    prefix: /api/billing
+    trailing_slash_on_root: false
+    name_prefix: billing_

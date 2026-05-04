@@ -39,9 +39,12 @@ services:
         arguments:
             $config: '%env(STRIPE_SECRET_KEY)%'
 
-    App\Billing\Infrastructure\Http\BillingController:
+    App\Billing\Infrastructure\Http\Billing\WebhookController:
         arguments:
             $webhookSecret: '%env(STRIPE_WEBHOOK_SECRET)%'
+
+    App\Billing\Infrastructure\Http\Billing\CheckoutController:
+        arguments:
             $priceIdMonthly: '%env(STRIPE_PRICE_ID_MONTHLY)%'
             $priceIdYearly: '%env(STRIPE_PRICE_ID_YEARLY)%'
 

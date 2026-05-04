@@ -22,13 +22,14 @@ const router = createRouter({
 })
 
 router.beforeEach(async to => {
-  const token = localStorage.getItem('jwt_token')
+  const token = localStorage.getItem('jwt_token') ?? sessionStorage.getItem('jwt_token')
   if (!to.meta.public && !token) return '/login'
 
-  if (to.meta.admin) {
+  if (token) {
     const authStore = useAuthStore()
     if (!authStore.user) await authStore.fetchMe()
-    if (!authStore.user?.roles.includes('ROLE_ADMIN')) return '/calendar'
+
+    if (to.meta.admin && !authStore.user?.roles.includes('ROLE_ADMIN')) return '/calendar'
   }
 })
 

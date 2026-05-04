@@ -1,3 +1,15 @@
 api_person:
-    resource: '../../../src/Person/Infrastructure/Http/'
+    resource: '../../../src/Person/Infrastructure/Http/Person/'
     type: attribute
+    prefix: /api/persons
+    trailing_slash_on_root: false
+    name_prefix: person_
+
+api_favorite_route:
+    resource: '../../../src/Person/Infrastructure/Http/FavoriteRoute/'
+    type: attribute
+    prefix: /api/persons/{personId}/favorite-routes
+    requirements:
+        personId: !php/const Symfony\Component\Routing\Requirement\Requirement::UUID_V4
+    name_prefix: favoriteRoute_
+    trailing_slash_on_root: false

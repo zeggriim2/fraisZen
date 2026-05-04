@@ -8,6 +8,7 @@ use Symfony\Contracts\Cache\CacheInterface;
 use Symfony\Contracts\Cache\ItemInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
+/** @psalm-api */
 final class PublicHolidayService
 {
     private const TTL = 86400;
@@ -15,7 +16,8 @@ final class PublicHolidayService
     public function __construct(
         private readonly HttpClientInterface $httpClient,
         private readonly CacheInterface $cache,
-    ) {}
+    ) {
+    }
 
     /** @return array<string, string> */
     public function forYear(int $year): array
@@ -27,6 +29,7 @@ final class PublicHolidayService
                 if (200 !== $response->getStatusCode()) {
                     return [];
                 }
+
                 return $response->toArray();
             } catch (\Throwable) {
                 return [];
