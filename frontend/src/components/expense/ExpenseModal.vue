@@ -131,8 +131,24 @@
           </div>
 
           <div class="grid grid-cols-2 gap-4">
-            <div><label class="block text-sm font-medium text-gray-700 mb-1.5">Départ</label><input v-model="form.departure" type="text" class="w-full rounded-lg border-gray-300 shadow-sm text-sm" placeholder="Adresse de départ" /></div>
-            <div><label class="block text-sm font-medium text-gray-700 mb-1.5">Arrivée</label><input v-model="form.arrival" type="text" class="w-full rounded-lg border-gray-300 shadow-sm text-sm" placeholder="Adresse d'arrivée" /></div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1.5">Départ</label>
+              <AddressAutocompleteInput
+                v-model="form.departure"
+                placeholder="Adresse de départ"
+                @select="onDepartureSelect"
+                @update:modelValue="departureCoords = null"
+              />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1.5">Arrivée</label>
+              <AddressAutocompleteInput
+                v-model="form.arrival"
+                placeholder="Adresse d'arrivée"
+                @select="onArrivalSelect"
+                @update:modelValue="arrivalCoords = null"
+              />
+            </div>
           </div>
 
           <div class="flex items-center gap-2">
@@ -295,6 +311,8 @@ import type { Expense, TravelExpense, TollExpense, MealExpense, ParkingExpense, 
 import InfoRow from '@/components/ui/InfoRow.vue'
 import { useRouteDistance } from '@/composables/useRouteDistance'
 import { useFavoriteRoutes } from '@/composables/useFavoriteRoutes'
+import AddressAutocompleteInput from '@/components/ui/AddressAutocompleteInput.vue'
+import type { AddressSuggestion } from '@/composables/useAddressAutocomplete'
 
 const props = defineProps<{ date: string; expense?: Expense | null; prefill?: Expense | null }>()
 const emit = defineEmits<{ close: []; saved: []; duplicate: [expense: Expense] }>()
@@ -323,13 +341,47 @@ async function togglePersonFavorite() {
 const showSaveFavorite = ref(false)
 const favoriteName = ref('')
 
-function applyFavorite(fav: typeof favorites.value[number]) {
+const departureCoords = ref<{ lat: number; lng: number } | null>(null)
+const arrivalCoords = ref<{ lat: number; lng: number } | null>(null)
+
+function onDepartureSelect(s: AddressSuggestion) {
+  departureCoords.value = { lat: s.lat, lng: s.lng }
+  autoCalcIfReady()
+}
+
+function onArrivalSelect(s: AddressSuggestion) {
+  arrivalCoords.value = { lat: s.lat, lng: s.lng }
+  autoCalcIfReady()
+}
+
+async function autoCalcIfReady() {
+  if (!departureCoords.value || !arrivalCoords.value) return
+  calculating.value = true
+  calcError.value = ''
+  try {
+    const km = await expenseApi.getDistance(
+      departureCoords.value.lat, departureCoords.value.lng,
+      arrivalCoords.value.lat, arrivalCoords.value.lng,
+    )
+    form.value.distanceKm = km
+  } catch {
+    calcError.value = 'Calcul indisponible, saisie manuelle.'
+  } finally {
+    calculating.value = false
+  }
+}
+
+async function applyFavorite(fav: typeof favorites.value[number]) {
   form.value.departure = fav.departure
   form.value.arrival = fav.arrival
   form.value.vehicleType = fav.vehicleType
   form.value.vehiclePower = fav.vehiclePower ?? 5
   form.value.isElectric = fav.isElectric
   form.value.roundTrip = fav.roundTrip
+  departureCoords.value = null
+  arrivalCoords.value = null
+  const km = await calculate(fav.departure, fav.arrival)
+  if (km !== null) form.value.distanceKm = km
 }
 
 async function calcDistance() {
