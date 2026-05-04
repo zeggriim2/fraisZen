@@ -55,8 +55,8 @@
               <input v-model="newRoute.name" type="text" class="w-full rounded-lg border-gray-300 shadow-sm text-sm" placeholder="Nom (ex : Domicile → Bureau)" />
             </div>
             <div class="grid grid-cols-2 gap-2">
-              <input v-model="newRoute.departure" type="text" class="rounded-lg border-gray-300 shadow-sm text-sm" placeholder="Départ" />
-              <input v-model="newRoute.arrival" type="text" class="rounded-lg border-gray-300 shadow-sm text-sm" placeholder="Arrivée" />
+              <AddressAutocompleteInput v-model="newRoute.departure" placeholder="Départ" />
+              <AddressAutocompleteInput v-model="newRoute.arrival" placeholder="Arrivée" />
             </div>
             <div class="grid grid-cols-3 gap-1.5">
               <button v-for="v in vehicleTypes" :key="v.value" @click="newRoute.vehicleType = v.value"
@@ -106,8 +106,8 @@
                   <input v-model="editForm.name" type="text" class="w-full rounded-lg border-gray-300 shadow-sm text-sm" placeholder="Nom du trajet" />
                 </div>
                 <div class="grid grid-cols-2 gap-2">
-                  <input v-model="editForm.departure" type="text" class="rounded-lg border-gray-300 shadow-sm text-sm" placeholder="Départ" />
-                  <input v-model="editForm.arrival" type="text" class="rounded-lg border-gray-300 shadow-sm text-sm" placeholder="Arrivée" />
+                  <AddressAutocompleteInput v-model="editForm.departure" placeholder="Départ" />
+                  <AddressAutocompleteInput v-model="editForm.arrival" placeholder="Arrivée" />
                 </div>
                 <div class="grid grid-cols-3 gap-1.5">
                   <button v-for="v in vehicleTypes" :key="v.value" @click="editForm.vehicleType = v.value"
@@ -192,6 +192,7 @@ import { ref, onMounted } from 'vue'
 import { usePersonStore } from '@/stores/personStore'
 import { useFavoriteRouteStore } from '@/stores/favoriteRouteStore'
 import type { Person, VehicleType } from '@/types'
+import AddressAutocompleteInput from '@/components/ui/AddressAutocompleteInput.vue'
 
 const props = defineProps<{ person?: Person | null }>()
 const emit = defineEmits<{ close: []; saved: [] }>()

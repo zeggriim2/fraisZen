@@ -23,8 +23,8 @@ final class GetDistanceController extends AbstractController
     {
         $fromLat = (float) $request->query->get('fromLat', 0);
         $fromLng = (float) $request->query->get('fromLng', 0);
-        $toLat   = (float) $request->query->get('toLat', 0);
-        $toLng   = (float) $request->query->get('toLng', 0);
+        $toLat = (float) $request->query->get('toLat', 0);
+        $toLng = (float) $request->query->get('toLng', 0);
 
         try {
             $km = $this->queryBus->ask(new GetDistanceQuery($fromLat, $fromLng, $toLat, $toLng));
