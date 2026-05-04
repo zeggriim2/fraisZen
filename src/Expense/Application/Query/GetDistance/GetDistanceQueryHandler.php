@@ -37,6 +37,6 @@ final readonly class GetDistanceQueryHandler implements QueryHandlerInterface
 
         $meters = (float) $data['features'][0]['properties']['summary']['distance'];
 
-        return round($meters / 1000, 1);
+        return round($meters / 1000.0, 1);
     }
 }
