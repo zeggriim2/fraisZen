@@ -68,6 +68,11 @@ services:
         arguments:
             $httpClient: '@datagouv.client'
 
+    # Distance handler — uses scoped HTTP client for OpenRouteService
+    App\Expense\Application\Query\GetDistance\GetDistanceQueryHandler:
+        arguments:
+            $httpClient: '@openrouteservice.client'
+
     # Tag command & query handlers to their respective buses
     _instanceof:
         App\SharedKernel\Application\Bus\CommandHandlerInterface:
