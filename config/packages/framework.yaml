@@ -14,6 +14,11 @@ framework:
                 base_uri: 'https://calendrier.api.gouv.fr'
                 headers:
                     Accept: 'application/json'
+            openrouteservice.client:
+                base_uri: 'https://api.openrouteservice.org'
+                headers:
+                    Accept: 'application/json, application/geo+json'
+                    Authorization: '%env(ORS_API_KEY)%'
 
 when@test:
     framework:
