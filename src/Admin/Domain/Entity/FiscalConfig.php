@@ -18,7 +18,7 @@ class FiscalConfig
     #[ORM\Column(type: Types::DECIMAL, precision: 5, scale: 2)]
     private string $remoteWorkDailyAllowance;
 
-    #[ORM\Column(type: Types::DECIMAL, precision: 5, scale: 2)]
+    #[ORM\Column(type: Types::DECIMAL, precision: 5, scale: 2, options: ['default' => '5.35'])]
     private string $homeMealValue;
 
     public function __construct(int $year, string $remoteWorkDailyAllowance, string $homeMealValue = '5.35')
