@@ -13,13 +13,14 @@ use Webmozart\Assert\Assert;
 
 #[ORM\Entity]
 #[ORM\Table(name: '`user`')]
+#[ORM\UniqueConstraint(name: 'uniq_user_email', columns: ['email'])]
 class User implements UserInterface, PasswordAuthenticatedUserInterface
 {
     #[ORM\Id]
     #[ORM\Column(type: Types::STRING, length: 36)]
     private string $id;
 
-    #[ORM\Column(type: Types::STRING, length: 255, unique: true)]
+    #[ORM\Column(type: Types::STRING, length: 255)]
     private string $email;
 
     #[ORM\Column(type: Types::STRING, length: 255)]

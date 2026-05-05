@@ -7,11 +7,17 @@ namespace App\Person\Domain\Entity;
 use App\Person\Domain\ValueObject\PersonId;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Gedmo\Mapping\Annotation as Gedmo;
+use Gedmo\SoftDeleteable\Traits\SoftDeleteableEntity;
 
 #[ORM\Entity]
 #[ORM\Table(name: 'person')]
+#[ORM\Index(name: 'IDX_PERSON_USER', columns: ['user_id'])]
+#[Gedmo\SoftDeleteable()]
 class Person
 {
+    use SoftDeleteableEntity;
+
     #[ORM\Id]
     #[ORM\Column(type: Types::STRING, length: 36)]
     private string $id;

@@ -11,6 +11,8 @@ use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity]
 #[ORM\Table(name: 'expense')]
+#[ORM\Index(name: 'IDX_EXPENSE_PERSON', columns: ['person_id'])]
+#[ORM\Index(name: 'IDX_EXPENSE_DATE', columns: ['date'])]
 #[ORM\InheritanceType('SINGLE_TABLE')]
 #[ORM\DiscriminatorColumn(name: 'type', type: 'string')]
 #[ORM\DiscriminatorMap([

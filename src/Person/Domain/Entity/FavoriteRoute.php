@@ -10,6 +10,7 @@ use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity]
 #[ORM\Table(name: 'person_favorite_route')]
+#[ORM\Index(name: 'IDX_PERSON', columns: ['person_id'])]
 class FavoriteRoute
 {
     #[ORM\Id]
