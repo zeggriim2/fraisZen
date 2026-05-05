@@ -4,14 +4,31 @@ declare(strict_types=1);
 
 namespace App\Expense\Domain\Service;
 
+use App\Expense\Domain\Repository\BaremeKilometriqueRepositoryInterface;
+
 final class KilometricAllowanceCalculator
 {
+    public function __construct(
+        private readonly BaremeKilometriqueRepositoryInterface $repository,
+    ) {
+    }
+
+    private function resolveBareme(int $year): array
+    {
+        $entity = $this->repository->findByYear($year);
+        if (null !== $entity) {
+            return $entity->rates();
+        }
+
+        return BaremeKilometriqueProvider::forYear($year);
+    }
+
     /**
      * @param array<array-key, array{distanceKm: float, vehiclePower: int|null, vehicleType?: string, isElectric?: bool, ...}> $trips
      */
     public function calculateAnnualDeduction(array $trips, int $year): float
     {
-        $bareme = BaremeKilometriqueProvider::forYear($year);
+        $bareme = $this->resolveBareme($year);
 
         $buckets = [];
         foreach ($trips as $trip) {
@@ -85,7 +102,7 @@ final class KilometricAllowanceCalculator
 
     public function calculateForPowerAndDistance(int $vehiclePower, float $totalKm, int $year = 2025): float
     {
-        $bareme = BaremeKilometriqueProvider::forYear($year);
+        $bareme = $this->resolveBareme($year);
 
         return $this->forCar($bareme['car'], $vehiclePower, $totalKm);
     }
