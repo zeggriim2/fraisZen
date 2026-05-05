@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace App\Admin\Infrastructure\Http\AdminUser;
 
+use App\Admin\Application\Query\ExportUsersCsv\ExportUsersCsvQuery;
 use App\Admin\Infrastructure\Http\AbstractAdminController;
-use App\Auth\Domain\Repository\UserRepositoryInterface;
-use App\Person\Domain\Repository\PersonRepositoryInterface;
+use App\SharedKernel\Application\Bus\QueryBusInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Symfony\Component\Routing\Attribute\Route;
@@ -15,30 +15,21 @@ use Webmozart\Assert\Assert;
 #[Route('/users/export', name: 'exportCsv', methods: [Request::METHOD_GET])]
 class ExportCsvController extends AbstractAdminController
 {
-    public function __construct(
-        private readonly UserRepositoryInterface $userRepository,
-        private readonly PersonRepositoryInterface $personRepository,
-    ) {
+    public function __construct(private readonly QueryBusInterface $queryBus)
+    {
     }
 
     public function __invoke(): StreamedResponse
     {
-        $users = $this->userRepository->findAll();
+        $rows = $this->queryBus->ask(new ExportUsersCsvQuery());
 
-        $response = new StreamedResponse(function () use ($users) {
+        $response = new StreamedResponse(function () use ($rows) {
             $handle = fopen('php://output', 'w');
             Assert::resource($handle);
             fputcsv($handle, ['ID', 'Email', 'Statut', 'Inscription', 'Nb personnes']);
 
-            foreach ($users as $user) {
-                $persons = $this->personRepository->findAllByUserId($user->id()->value());
-                fputcsv($handle, [
-                    $user->id()->value(),
-                    $user->email(),
-                    $user->subscriptionStatus() ?? '',
-                    $user->createdAt()->format('Y-m-d H:i:s'),
-                    count($persons),
-                ]);
+            foreach ($rows as $row) {
+                fputcsv($handle, [$row['id'], $row['email'], $row['status'], $row['createdAt'], $row['personCount']]);
             }
 
             fclose($handle);
