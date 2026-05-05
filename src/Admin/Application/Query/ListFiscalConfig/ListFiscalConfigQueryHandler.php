@@ -19,6 +19,6 @@ final readonly class ListFiscalConfigQueryHandler implements QueryHandlerInterfa
     /** @return list<array{year: int, remoteWorkDailyAllowance: float, homeMealValue: float}> */
     public function __invoke(ListFiscalConfigQuery $query): array
     {
-        return array_map(fn (FiscalConfig $c) => $c->toArray(), $this->repository->findAll());
+        return array_values(array_map(fn (FiscalConfig $c) => $c->toArray(), $this->repository->findAll()));
     }
 }

@@ -1,0 +1,81 @@
+---
+# FraisZen — Production stack
+# Deployed via: .github/workflows/cd-prod.yml
+# On VPS: /opt/fraiszen/
+# JWT keys: auto-generated via lexik:jwt:generate-keypair, persisted in jwt_keys volume
+services:
+  php:
+    image: ${PHP_IMAGE}
+    restart: unless-stopped
+    depends_on:
+      database:
+        condition: service_healthy
+    environment:
+      SERVER_NAME: ":80"
+      APP_ENV: prod
+      APP_SECRET: ${APP_SECRET}
+      DATABASE_URL: mysql://${MYSQL_USER}:${MYSQL_PASSWORD}@database:3306/${MYSQL_DATABASE}?serverVersion=8.0&charset=utf8mb4
+      DEFAULT_URI: https://${SERVER_NAME_PUBLIC}
+      JWT_SECRET_KEY: /app/config/jwt/private.pem
+      JWT_PUBLIC_KEY: /app/config/jwt/public.pem
+      JWT_PASSPHRASE: ${JWT_PASSPHRASE}
+      MERCURE_URL: http://php/.well-known/mercure
+      MERCURE_PUBLIC_URL: https://${SERVER_NAME_PUBLIC}/.well-known/mercure
+      MERCURE_JWT_SECRET: ${CADDY_MERCURE_JWT_SECRET}
+      MERCURE_PUBLISHER_JWT_KEY: ${CADDY_MERCURE_JWT_SECRET}
+      MERCURE_SUBSCRIBER_JWT_KEY: ${CADDY_MERCURE_JWT_SECRET}
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY}
+      STRIPE_PUBLISHABLE_KEY: ${STRIPE_PUBLISHABLE_KEY}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET}
+      STRIPE_PRICE_ID: ${STRIPE_PRICE_ID}
+      ORS_API_KEY: ${ORS_API_KEY}
+      MESSENGER_TRANSPORT_DSN: doctrine://default?auto_setup=0
+      TRUSTED_PROXIES: "127.0.0.1,REMOTE_ADDR"
+      TRUSTED_HOSTS: "^${SERVER_NAME_PUBLIC}$$"
+    volumes:
+      - caddy_data:/data
+      - caddy_config:/config
+      - jwt_keys:/app/config/jwt
+      - app_var:/app/var
+    networks:
+      - web-network
+      - internal
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=web-network
+      - traefik.http.routers.fraiszen.rule=Host(`${SERVER_NAME_PUBLIC}`)
+      - traefik.http.routers.fraiszen.entrypoints=websecure
+      - traefik.http.routers.fraiszen.tls.certresolver=letsencrypt
+      - traefik.http.services.fraiszen.loadbalancer.server.port=80
+      - traefik.http.routers.fraiszen.middlewares=secure-headers@docker
+
+  database:
+    image: mysql:8
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    volumes:
+      - database_data:/var/lib/mysql
+    networks:
+      - internal
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+
+volumes:
+  caddy_data:
+  caddy_config:
+  database_data:
+  jwt_keys:
+  app_var:
+
+networks:
+  web-network:
+    external: true
+  internal:
+    driver: bridge

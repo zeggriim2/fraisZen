@@ -35,11 +35,11 @@ final readonly class GetUserListQueryHandler implements QueryHandlerInterface
         $total = count($users);
         $paged = array_slice($users, ($query->page - 1) * self::PAGE_SIZE, self::PAGE_SIZE);
 
-        $items = array_map(function (User $u) {
+        $items = array_values(array_map(function (User $u) {
             $persons = $this->personRepository->findAllByUserId($u->id()->value());
 
             return array_merge($u->toArray(), ['personCount' => count($persons)]);
-        }, $paged);
+        }, $paged));
 
         return [
             'items' => $items,
