@@ -18,3 +18,10 @@ api_admin_stat:
     prefix: /api/admin/
     trailing_slash_on_root: false
     name_prefix: adminStat_
+
+api_admin_bareme:
+    resource: '../../../src/Admin/Infrastructure/Http/AdminBareme/'
+    type: attribute
+    prefix: /api/admin/
+    trailing_slash_on_root: false
+    name_prefix: adminBareme_
