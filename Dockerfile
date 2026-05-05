@@ -91,6 +91,18 @@ COPY --link frankenphp/conf.d/20-app.dev.ini $PHP_INI_DIR/app.conf.d/
 
 CMD [ "frankenphp", "run", "--config", "/etc/frankenphp/Caddyfile", "--watch" ]
 
+# Frontend builder
+FROM node:22-alpine AS frontend_builder
+
+WORKDIR /app/frontend
+
+COPY frontend/package*.json ./
+RUN npm ci --prefer-offline
+
+COPY frontend/ ./
+# vite outDir is '../public/app' relative to /app/frontend → outputs to /app/public/app
+RUN npm run build
+
 # Builder for the prod FrankenPHP image
 FROM frankenphp_base AS frankenphp_prod_builder
 
@@ -106,6 +118,8 @@ RUN composer install --no-cache --prefer-dist --no-dev --no-autoloader --no-scri
 
 # copy sources
 COPY --link --exclude=frankenphp/ . ./
+# inject pre-built Vue app (outDir: ../public/app relative to frontend/)
+COPY --from=frontend_builder /app/public/app ./public/app
 
 RUN <<-EOF
 	mkdir -p var/cache var/log var/share

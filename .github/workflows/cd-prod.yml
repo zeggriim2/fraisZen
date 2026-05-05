@@ -1,0 +1,158 @@
+---
+name: CD — Production
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch: ~
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build & push Docker image
+    runs-on: ubuntu-latest
+    outputs:
+      image: ghcr.io/${{ github.repository_owner }}/fraiszen-app:sha-${{ github.sha }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository_owner }}/fraiszen-app
+          tags: |
+            type=sha,prefix=sha-,format=long
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          target: frankenphp_prod
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: |
+            type=gha,scope=prod
+            type=gha,scope=refs/heads/main
+          cache-to: type=gha,scope=prod,mode=max
+
+  deploy:
+    name: Deploy via Portainer API
+    runs-on: ubuntu-latest
+    needs: build
+    environment: production
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Deploy stack via Portainer API
+        env:
+          IMAGE: ${{ needs.build.outputs.image }}
+          PORTAINER_URL: ${{ secrets.PORTAINER_URL }}
+          PORTAINER_TOKEN: ${{ secrets.PORTAINER_API_TOKEN }}
+          ENDPOINT_ID: ${{ secrets.PORTAINER_ENDPOINT_ID }}
+          SERVER_NAME_PUBLIC: ${{ secrets.SERVER_NAME_PUBLIC }}
+          APP_SECRET: ${{ secrets.APP_SECRET }}
+          MYSQL_ROOT_PASSWORD: ${{ secrets.MYSQL_ROOT_PASSWORD }}
+          MYSQL_DATABASE: ${{ secrets.MYSQL_DATABASE }}
+          MYSQL_USER: ${{ secrets.MYSQL_USER }}
+          MYSQL_PASSWORD: ${{ secrets.MYSQL_PASSWORD }}
+          JWT_PASSPHRASE: ${{ secrets.JWT_PASSPHRASE }}
+          CADDY_MERCURE_JWT_SECRET: ${{ secrets.CADDY_MERCURE_JWT_SECRET }}
+          STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
+          STRIPE_PUBLISHABLE_KEY: ${{ secrets.STRIPE_PUBLISHABLE_KEY }}
+          STRIPE_WEBHOOK_SECRET: ${{ secrets.STRIPE_WEBHOOK_SECRET }}
+          STRIPE_PRICE_ID: ${{ secrets.STRIPE_PRICE_ID }}
+          ORS_API_KEY: ${{ secrets.ORS_API_KEY }}
+        run: |
+          set -e
+
+          # Build the env array for Portainer using jq (avoids quoting issues)
+          ENV_JSON=$(jq -n \
+            --arg php_image    "$IMAGE" \
+            --arg server_name  "$SERVER_NAME_PUBLIC" \
+            --arg app_secret   "$APP_SECRET" \
+            --arg mysql_root   "$MYSQL_ROOT_PASSWORD" \
+            --arg mysql_db     "$MYSQL_DATABASE" \
+            --arg mysql_user   "$MYSQL_USER" \
+            --arg mysql_pass   "$MYSQL_PASSWORD" \
+            --arg jwt_pass     "$JWT_PASSPHRASE" \
+            --arg mercure_jwt  "$CADDY_MERCURE_JWT_SECRET" \
+            --arg stripe_sk    "$STRIPE_SECRET_KEY" \
+            --arg stripe_pk    "$STRIPE_PUBLISHABLE_KEY" \
+            --arg stripe_ws    "$STRIPE_WEBHOOK_SECRET" \
+            --arg stripe_price "$STRIPE_PRICE_ID" \
+            --arg ors_key      "$ORS_API_KEY" \
+            '[
+              {name: "PHP_IMAGE",                value: $php_image},
+              {name: "SERVER_NAME_PUBLIC",        value: $server_name},
+              {name: "APP_SECRET",               value: $app_secret},
+              {name: "MYSQL_ROOT_PASSWORD",      value: $mysql_root},
+              {name: "MYSQL_DATABASE",           value: $mysql_db},
+              {name: "MYSQL_USER",               value: $mysql_user},
+              {name: "MYSQL_PASSWORD",           value: $mysql_pass},
+              {name: "JWT_PASSPHRASE",           value: $jwt_pass},
+              {name: "CADDY_MERCURE_JWT_SECRET", value: $mercure_jwt},
+              {name: "STRIPE_SECRET_KEY",        value: $stripe_sk},
+              {name: "STRIPE_PUBLISHABLE_KEY",   value: $stripe_pk},
+              {name: "STRIPE_WEBHOOK_SECRET",    value: $stripe_ws},
+              {name: "STRIPE_PRICE_ID",          value: $stripe_price},
+              {name: "ORS_API_KEY",              value: $ors_key}
+            ]')
+
+          COMPOSE_CONTENT=$(cat compose.vps.yaml)
+
+          PAYLOAD=$(jq -n \
+            --arg content "$COMPOSE_CONTENT" \
+            --argjson env "$ENV_JSON" \
+            '{stackFileContent: $content, env: $env, pullImage: true, prune: true}')
+
+          # Look for an existing stack named "fraiszen"
+          STACKS=$(curl -sf \
+            -H "X-API-Key: $PORTAINER_TOKEN" \
+            "$PORTAINER_URL/api/stacks")
+
+          STACK_ID=$(echo "$STACKS" | jq -r '.[] | select(.Name=="fraiszen") | .Id // empty')
+
+          if [ -z "$STACK_ID" ]; then
+            echo "Stack not found — creating..."
+            curl -sf -X POST \
+              -H "X-API-Key: $PORTAINER_TOKEN" \
+              -H "Content-Type: application/json" \
+              "$PORTAINER_URL/api/stacks/create/standalone/string?endpointId=$ENDPOINT_ID" \
+              -d "$(echo "$PAYLOAD" | jq '. + {name: "fraiszen"}')"
+          else
+            echo "Updating stack $STACK_ID..."
+            curl -sf -X PUT \
+              -H "X-API-Key: $PORTAINER_TOKEN" \
+              -H "Content-Type: application/json" \
+              "$PORTAINER_URL/api/stacks/$STACK_ID?endpointId=$ENDPOINT_ID" \
+              -d "$PAYLOAD"
+          fi
+
+          echo "Deployment triggered successfully."
