@@ -142,6 +142,13 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         $this->password = $hashedPassword;
     }
 
+    public function promoteToAdmin(): void
+    {
+        if (!in_array('ROLE_ADMIN', $this->roles, true)) {
+            $this->roles[] = 'ROLE_ADMIN';
+        }
+    }
+
     /** @return array<string, mixed> */
     public function toArray(): array
     {

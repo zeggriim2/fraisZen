@@ -91,6 +91,18 @@ COPY --link frankenphp/conf.d/20-app.dev.ini $PHP_INI_DIR/app.conf.d/
 
 CMD [ "frankenphp", "run", "--config", "/etc/frankenphp/Caddyfile", "--watch" ]
 
+# Frontend builder
+FROM node:22-alpine AS frontend_builder
+
+WORKDIR /app/frontend
+
+COPY frontend/package*.json ./
+RUN npm ci --prefer-offline
+
+COPY frontend/ ./
+# vite outDir is '../public/app' relative to /app/frontend → outputs to /app/public/app
+RUN npm run build
+
 # Builder for the prod FrankenPHP image
 FROM frankenphp_base AS frankenphp_prod_builder
 
@@ -106,15 +118,13 @@ RUN composer install --no-cache --prefer-dist --no-dev --no-autoloader --no-scri
 
 # copy sources
 COPY --link --exclude=frankenphp/ . ./
+# inject pre-built Vue app (outDir: ../public/app relative to frontend/)
+COPY --from=frontend_builder /app/public/app ./public/app
 
 RUN <<-EOF
 	mkdir -p var/cache var/log var/share
 	composer dump-autoload --classmap-authoritative --no-dev
-	composer dump-env prod
-	composer run-script --no-dev post-install-cmd
-	if [ -f importmap.php ]; then
-		php bin/console asset-map:compile
-	fi
+	printf '<?php return ["APP_ENV" => "prod", "APP_DEBUG" => "0"];' > .env.local.php
 	chmod +x bin/console; sync
 EOF
 
@@ -155,14 +165,18 @@ COPY --from=frankenphp_prod_builder /usr/local/etc/php/app.conf.d /usr/local/etc
 
 COPY --from=frankenphp_prod_builder /etc/frankenphp/Caddyfile /etc/frankenphp/Caddyfile
 
-# CA certificates for TLS, file/libmagic for Symfony MIME type detection
+# CA certificates, OpenSSL config (required for key generation), file/libmagic for Symfony MIME type detection
 COPY --from=frankenphp_prod_builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
+COPY --from=frankenphp_prod_builder /etc/ssl/openssl.cnf /etc/ssl/openssl.cnf
 COPY --from=frankenphp_prod_builder /usr/bin/file /usr/bin/file
 COPY --from=frankenphp_prod_builder /usr/lib/file/magic.mgc /usr/lib/file/magic.mgc
 
 ENV XDG_CONFIG_HOME=/config XDG_DATA_HOME=/data
 
 RUN <<-EOF
+	apt-get update
+	apt-get install -y --no-install-recommends openssl
+	rm -rf /var/lib/apt/lists/*
 	mkdir -p /data/caddy /config/caddy
 	chown -R www-data:www-data /data /config
 	# Remove setuid/setgid bits
@@ -171,6 +185,9 @@ EOF
 
 COPY --link --exclude=var --from=frankenphp_prod_builder /app /app
 COPY --chown=www-data:www-data --from=frankenphp_prod_builder /app/var /app/var
+
+# jwt dir must be writable by www-data so the entrypoint can write the keypair on first start
+RUN mkdir -p /app/config/jwt && chown www-data:www-data /app/config/jwt
 
 COPY --link --chmod=755 frankenphp/docker-entrypoint.sh /usr/local/bin/docker-entrypoint
 

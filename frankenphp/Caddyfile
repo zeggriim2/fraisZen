@@ -44,11 +44,19 @@
 	# Disable Topics tracking if not enabled explicitly: https://github.com/jkarlin/topics
 	header ?Permissions-Policy "browsing-topics=()"
 
+	# API and Mercure → PHP front controller
 	@phpRoute {
+		path /api/* /.well-known/mercure*
+	}
+	rewrite @phpRoute index.php
+
+	# SPA catch-all: non-API, non-file requests → Vue app entry point
+	@spaRoute {
+		not path /api/*
 		not path /.well-known/mercure*
 		not file {path}
 	}
-	rewrite @phpRoute index.php
+	rewrite @spaRoute /app/index.html
 
 	@frontController path index.php
 	php @frontController {

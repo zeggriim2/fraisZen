@@ -11,6 +11,13 @@ if [ "$1" = 'frankenphp' ] || [ "$1" = 'php' ] || [ "$1" = 'bin/console' ]; then
 	# Or about an error in project initialization
 	php bin/console -V
 
+	JWT_KEY_DIR="$(dirname "${JWT_SECRET_KEY:-/app/config/jwt/private.pem}")"
+	mkdir -p "$JWT_KEY_DIR"
+	if [ ! -f "${JWT_SECRET_KEY:-/app/config/jwt/private.pem}" ]; then
+		echo 'Generating JWT keypair...'
+		php bin/console lexik:jwt:generate-keypair --skip-if-exists
+	fi
+
 	if grep -q ^DATABASE_URL= .env; then
 		echo 'Waiting for database to be ready...'
 		ATTEMPTS_LEFT_TO_REACH_DATABASE=60
@@ -38,6 +45,7 @@ if [ "$1" = 'frankenphp' ] || [ "$1" = 'php' ] || [ "$1" = 'bin/console' ]; then
 		fi
 	fi
 
+	php bin/console cache:warmup --no-debug
 	echo 'PHP app ready!'
 fi
 
