@@ -2,9 +2,18 @@
 
 declare(strict_types=1);
 
+use App\Expense\Domain\Entity\BaremeKilometrique;
+use App\Expense\Domain\Repository\BaremeKilometriqueRepositoryInterface;
 use App\Expense\Domain\Service\KilometricAllowanceCalculator;
 
-$calc = new KilometricAllowanceCalculator();
+// Stub : retourne toujours null → fallback sur BaremeKilometriqueProvider (PHP hardcodé)
+$stubRepo = new class implements BaremeKilometriqueRepositoryInterface {
+    public function findByYear(int $year): ?BaremeKilometrique { return null; }
+    public function findAll(): array { return []; }
+    public function save(BaremeKilometrique $bareme): void {}
+};
+
+$calc = new KilometricAllowanceCalculator($stubRepo);
 
 // Barème 2025 (identique 2023) — voiture 5 CV, tranche 1 : 0.636 €/km
 
@@ -83,4 +92,33 @@ it('utilise le barème 2023 pour une année antérieure inconnue', function () u
     $result2019 = $calc->calculateForPowerAndDistance(5, 1000.0, 2019);
 
     expect($result2023)->toBe($result2019);
+});
+
+it('utilise le barème de la BDD quand disponible', function () {
+    $dbRates = [
+        'car' => [
+            3 => ['rate1' => 0.999, 'rate2' => 0.999, 'fixed2' => 999, 'rate3' => 0.999],
+            4 => ['rate1' => 0.999, 'rate2' => 0.999, 'fixed2' => 999, 'rate3' => 0.999],
+            5 => ['rate1' => 1.0,   'rate2' => 0.999, 'fixed2' => 999, 'rate3' => 0.999],
+            6 => ['rate1' => 0.999, 'rate2' => 0.999, 'fixed2' => 999, 'rate3' => 0.999],
+            7 => ['rate1' => 0.999, 'rate2' => 0.999, 'fixed2' => 999, 'rate3' => 0.999],
+        ],
+        'motorcycle' => [
+            1 => ['rate1' => 0.999, 'rate2' => 0.999, 'fixed2' => 999, 'rate3' => 0.999],
+            3 => ['rate1' => 0.999, 'rate2' => 0.999, 'fixed2' => 999, 'rate3' => 0.999],
+            6 => ['rate1' => 0.999, 'rate2' => 0.999, 'fixed2' => 999, 'rate3' => 0.999],
+        ],
+        'moped' => ['rate1' => 0.999, 'rate2' => 0.999, 'fixed2' => 999, 'rate3' => 0.999],
+        'electricMultiplier' => 1.0,
+    ];
+    $entity = new BaremeKilometrique(2026, $dbRates);
+    $dbRepo = new class($entity) implements BaremeKilometriqueRepositoryInterface {
+        public function __construct(private BaremeKilometrique $e) {}
+        public function findByYear(int $year): ?BaremeKilometrique { return $this->e; }
+        public function findAll(): array { return [$this->e]; }
+        public function save(BaremeKilometrique $b): void {}
+    };
+    $calc = new KilometricAllowanceCalculator($dbRepo);
+    // 100 km × 1.0 = 100.0 (taux custom de la BDD, pas le fallback PHP)
+    expect($calc->calculateForPowerAndDistance(5, 100.0, 2026))->toBe(100.0);
 });
