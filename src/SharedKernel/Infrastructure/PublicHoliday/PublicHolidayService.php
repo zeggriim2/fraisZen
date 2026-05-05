@@ -6,7 +6,6 @@ namespace App\SharedKernel\Infrastructure\PublicHoliday;
 
 use Symfony\Contracts\Cache\CacheInterface;
 use Symfony\Contracts\Cache\ItemInterface;
-use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 /** @psalm-api */
 final class PublicHolidayService
@@ -14,7 +13,7 @@ final class PublicHolidayService
     private const TTL = 86400;
 
     public function __construct(
-        private readonly HttpClientInterface $httpClient,
+        private readonly PublicHolidayApiClient $apiClient,
         private readonly CacheInterface $cache,
     ) {
     }
@@ -24,16 +23,8 @@ final class PublicHolidayService
     {
         return $this->cache->get("public_holidays_{$year}", function (ItemInterface $item) use ($year): array {
             $item->expiresAfter(self::TTL);
-            try {
-                $response = $this->httpClient->request('GET', "/jours-feries/metropole/{$year}.json");
-                if (200 !== $response->getStatusCode()) {
-                    return [];
-                }
 
-                return $response->toArray();
-            } catch (\Throwable) {
-                return [];
-            }
+            return $this->apiClient->forYear($year);
         });
     }
 }
