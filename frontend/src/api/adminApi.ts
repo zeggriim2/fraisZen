@@ -46,6 +46,25 @@ export interface FiscalConfig {
   homeMealValue: number
 }
 
+export interface TrancheTaux {
+  rate1: number
+  rate2: number
+  fixed2: number
+  rate3: number
+}
+
+export interface BaremeRates {
+  car: Record<number, TrancheTaux>
+  motorcycle: Record<number, TrancheTaux>
+  moped: TrancheTaux
+  electricMultiplier: number
+}
+
+export interface BaremeKilometrique {
+  year: number
+  rates: BaremeRates
+}
+
 export const adminApi = {
   getStats: () =>
     http.get<AdminStats>('/admin/stats').then(r => r.data),
@@ -73,4 +92,10 @@ export const adminApi = {
 
   upsertFiscalConfig: (year: number, remoteWorkDailyAllowance: number, homeMealValue: number) =>
     http.put<FiscalConfig>(`/admin/fiscal-config/${year}`, { remoteWorkDailyAllowance, homeMealValue }).then(r => r.data),
+
+  listBaremes: () =>
+    http.get<BaremeKilometrique[]>('/admin/bareme-kilometrique').then(r => r.data),
+
+  upsertBareme: (year: number, rates: BaremeRates) =>
+    http.put<BaremeKilometrique>(`/admin/bareme-kilometrique/${year}`, { rates }).then(r => r.data),
 }
