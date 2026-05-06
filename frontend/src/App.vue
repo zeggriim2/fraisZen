@@ -124,6 +124,7 @@ const adminNav = [
   { to: '/admin/dashboard', label: 'Tableau de bord', icon: '📊' },
   { to: '/admin/users', label: 'Utilisateurs', icon: '👥' },
   { to: '/admin/fiscal-config', label: 'Config fiscale', icon: '⚙️' },
+  { to: '/admin/bareme-kilometrique', label: 'Barèmes km', icon: '🚗' },
 ]
 const types = [
   { label: 'Trajet', color: 'bg-blue-500' },

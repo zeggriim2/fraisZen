@@ -18,6 +18,7 @@ const router = createRouter({
     { path: '/admin/users', component: () => import('@/views/admin/AdminUsersView.vue'), meta: { admin: true } },
     { path: '/admin/users/:id', component: () => import('@/views/admin/AdminUserDetailView.vue'), meta: { admin: true } },
     { path: '/admin/fiscal-config', component: () => import('@/views/admin/AdminFiscalConfigView.vue'), meta: { admin: true } },
+    { path: '/admin/bareme-kilometrique', component: () => import('@/views/admin/AdminBaremeKilometriqueView.vue'), meta: { admin: true } },
   ],
 })
 
