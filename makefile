@@ -40,9 +40,9 @@ sh: ## Connect to the FrankenPHP container
 bash: ## Connect to the FrankenPHP container via bash so up and down arrows go to previous commands
 	@$(PHP_CONT) bash
 
-test: ## Start tests with Pest, pass the parameter "c=" to add options, example: make test c="--filter calculator"
+test: ## Run unit tests with Pest (browser tests excluded — use make test-browser), pass c= for options
 	@$(eval c ?=)
-	@$(DOCKER_COMP) exec -e APP_ENV=test php vendor/bin/pest $(c)
+	@$(DOCKER_COMP) exec -e APP_ENV=test php vendor/bin/pest tests/Unit/ $(c)
 
 coverage: ## Generate HTML coverage report and open it in the browser
 	@$(DOCKER_COMP) exec -e APP_ENV=test -e XDEBUG_MODE=coverage php vendor/bin/pest --coverage --coverage-html=var/coverage
