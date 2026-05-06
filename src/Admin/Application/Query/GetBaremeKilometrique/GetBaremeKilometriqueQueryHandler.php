@@ -15,6 +15,9 @@ final readonly class GetBaremeKilometriqueQueryHandler implements QueryHandlerIn
     {
     }
 
+    /**
+     * @return array{year: int, rates: array{car: array<int, array{rate1: float, rate2: float, fixed2: int, rate3: float}>, motorcycle: array<int, array{rate1: float, rate2: float, fixed2: int, rate3: float}>, moped: array{rate1: float, rate2: float, fixed2: int, rate3: float}, electricMultiplier: float}}|null
+     */
     public function __invoke(GetBaremeKilometriqueQuery $query): ?array
     {
         return $this->repository->findByYear($query->year)?->toArray();

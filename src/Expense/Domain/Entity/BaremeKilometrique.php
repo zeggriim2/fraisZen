@@ -15,9 +15,15 @@ class BaremeKilometrique
     #[ORM\Column(type: Types::INTEGER)]
     private int $year;
 
+    /**
+     * @var array{car: array<int, array{rate1: float, rate2: float, fixed2: int, rate3: float}>, motorcycle: array<int, array{rate1: float, rate2: float, fixed2: int, rate3: float}>, moped: array{rate1: float, rate2: float, fixed2: int, rate3: float}, electricMultiplier: float}
+     */
     #[ORM\Column(type: Types::JSON)]
     private array $rates;
 
+    /**
+     * @param array{car: array<int, array{rate1: float, rate2: float, fixed2: int, rate3: float}>, motorcycle: array<int, array{rate1: float, rate2: float, fixed2: int, rate3: float}>, moped: array{rate1: float, rate2: float, fixed2: int, rate3: float}, electricMultiplier: float} $rates
+     */
     public function __construct(int $year, array $rates)
     {
         $this->year = $year;
@@ -29,17 +35,25 @@ class BaremeKilometrique
         return $this->year;
     }
 
+    /**
+     * @return array{car: array<int, array{rate1: float, rate2: float, fixed2: int, rate3: float}>, motorcycle: array<int, array{rate1: float, rate2: float, fixed2: int, rate3: float}>, moped: array{rate1: float, rate2: float, fixed2: int, rate3: float}, electricMultiplier: float}
+     */
     public function rates(): array
     {
         return $this->rates;
     }
 
+    /**
+     * @param array{car: array<int, array{rate1: float, rate2: float, fixed2: int, rate3: float}>, motorcycle: array<int, array{rate1: float, rate2: float, fixed2: int, rate3: float}>, moped: array{rate1: float, rate2: float, fixed2: int, rate3: float}, electricMultiplier: float} $rates
+     */
     public function setRates(array $rates): void
     {
         $this->rates = $rates;
     }
 
-    /** @return array{year: int, rates: array} */
+    /**
+     * @return array{year: int, rates: array{car: array<int, array{rate1: float, rate2: float, fixed2: int, rate3: float}>, motorcycle: array<int, array{rate1: float, rate2: float, fixed2: int, rate3: float}>, moped: array{rate1: float, rate2: float, fixed2: int, rate3: float}, electricMultiplier: float}}
+     */
     public function toArray(): array
     {
         return [

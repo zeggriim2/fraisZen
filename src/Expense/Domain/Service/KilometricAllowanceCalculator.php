@@ -6,13 +6,16 @@ namespace App\Expense\Domain\Service;
 
 use App\Expense\Domain\Repository\BaremeKilometriqueRepositoryInterface;
 
-final class KilometricAllowanceCalculator
+final readonly class KilometricAllowanceCalculator
 {
     public function __construct(
-        private readonly BaremeKilometriqueRepositoryInterface $repository,
+        private BaremeKilometriqueRepositoryInterface $repository,
     ) {
     }
 
+    /**
+     * @return array{car: array<int, array{rate1: float, rate2: float, fixed2: int, rate3: float}>, motorcycle: array<int, array{rate1: float, rate2: float, fixed2: int, rate3: float}>, moped: array{rate1: float, rate2: float, fixed2: int, rate3: float}, electricMultiplier: float}
+     */
     private function resolveBareme(int $year): array
     {
         $entity = $this->repository->findByYear($year);
