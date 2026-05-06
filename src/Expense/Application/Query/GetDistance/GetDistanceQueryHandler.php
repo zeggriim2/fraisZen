@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Expense\Application\Query\GetDistance;
 
 use App\SharedKernel\Application\Bus\QueryHandlerInterface;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
@@ -12,13 +13,13 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
 final readonly class GetDistanceQueryHandler implements QueryHandlerInterface
 {
     public function __construct(
-        private HttpClientInterface $httpClient,
+        private HttpClientInterface $openrouteserviceClient,
     ) {
     }
 
     public function __invoke(GetDistanceQuery $query): float
     {
-        $response = $this->httpClient->request('GET', '/v2/directions/driving-car', [
+        $response = $this->openrouteserviceClient->request(Request::METHOD_GET, '/v2/directions/driving-car', [
             'query' => [
                 'start' => "{$query->fromLng},{$query->fromLat}",
                 'end' => "{$query->toLng},{$query->toLat}",
