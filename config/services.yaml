@@ -69,16 +69,6 @@ services:
     App\Admin\Domain\Repository\FiscalConfigRepositoryInterface:
         class: App\Admin\Infrastructure\Persistence\DoctrineFiscalConfigRepository
 
-    # Public holiday API client — uses scoped HTTP client for calendrier.api.gouv.fr
-    App\SharedKernel\Infrastructure\PublicHoliday\PublicHolidayApiClient:
-        arguments:
-            $httpClient: '@datagouv.client'
-
-    # Distance handler — uses scoped HTTP client for OpenRouteService
-    App\Expense\Application\Query\GetDistance\GetDistanceQueryHandler:
-        arguments:
-            $httpClient: '@openrouteservice.client'
-
     # Tag command & query handlers to their respective buses
     _instanceof:
         App\SharedKernel\Application\Bus\CommandHandlerInterface:
