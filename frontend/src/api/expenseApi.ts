@@ -1,6 +1,23 @@
 import http from './http'
 import type { CreateExpenseDto, UpdateExpenseDto, Expense, ExpenseSummary } from '@/types'
 
+export interface TrancheTaux {
+  rate1: number
+  rate2: number
+  fixed2: number
+  rate3: number
+}
+
+export interface BaremeYear {
+  year: number
+  rates: {
+    car: Record<number, TrancheTaux>
+    motorcycle: Record<number, TrancheTaux>
+    moped: TrancheTaux
+    electricMultiplier: number
+  }
+}
+
 export const expenseApi = {
   getByPeriod: (from: string, to: string, personId?: string) => {
     const params: Record<string, string> = { from, to }
@@ -19,6 +36,9 @@ export const expenseApi = {
 
   getFiscalConfig: (year: number) =>
     http.get<{ year: number; remoteWorkDailyAllowance: number; homeMealValue: number }>(`/expenses/fiscal-config/${year}`).then(r => r.data),
+
+  getBareme: (year: number) =>
+    http.get<BaremeYear>(`/baremes/${year}`).then(r => r.data),
 
   getDistance: (fromLat: number, fromLng: number, toLat: number, toLng: number) =>
     http.get<{ distanceKm: number }>('/expenses/distance', {
