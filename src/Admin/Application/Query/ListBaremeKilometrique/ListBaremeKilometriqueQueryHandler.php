@@ -16,7 +16,7 @@ final readonly class ListBaremeKilometriqueQueryHandler implements QueryHandlerI
     {
     }
 
-    /** @return list<array{year: int, rates: array}> */
+    /** @return list<array{year: int, rates: array{car: array<int, array{rate1: float, rate2: float, fixed2: int, rate3: float}>, motorcycle: array<int, array{rate1: float, rate2: float, fixed2: int, rate3: float}>, moped: array{rate1: float, rate2: float, fixed2: int, rate3: float}, electricMultiplier: float}}> */
     public function __invoke(ListBaremeKilometriqueQuery $query): array
     {
         return array_values(

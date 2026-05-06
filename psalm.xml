@@ -31,6 +31,8 @@
                 <directory name="src/SharedKernel/Infrastructure" />
                 <directory name="src/Admin/Infrastructure/Stats" />
                 <directory name="src/Expense/Infrastructure/Export" />
+                <directory name="src/Admin/Application" />
+                <directory name="src/Auth/Infrastructure/Console" />
                 <directory name="src/Billing/Application/Webhook" />
                 <directory name="src/Auth/Application" />
                 <directory name="src/Expense/Application" />
@@ -55,6 +57,7 @@
                 <directory name="src/Admin/Infrastructure/Stats" />
                 <directory name="src/Billing/Application/Webhook" />
                 <directory name="src/Expense/Infrastructure/Export" />
+                <directory name="src/SharedKernel/Infrastructure" />
             </errorLevel>
         </PossiblyUnusedMethod>
         <!-- Propriétés mappées Doctrine : persistées en DB même si non lues en PHP -->
@@ -66,6 +69,12 @@
                 <directory name="src/Person/Domain/Entity" />
             </errorLevel>
         </PossiblyUnusedProperty>
+        <!-- Query handlers sans paramètre utile : query = objet marqueur, le handler n'en a pas besoin -->
+        <UnusedParam>
+            <errorLevel type="suppress">
+                <directory name="src/Admin/Application/Query" />
+            </errorLevel>
+        </UnusedParam>
         <!-- Stubs Stripe SDK trop stricts sur les types nullable -->
         <InvalidArgument>
             <errorLevel type="suppress">
