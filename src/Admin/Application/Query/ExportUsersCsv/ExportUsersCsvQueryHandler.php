@@ -21,7 +21,7 @@ final readonly class ExportUsersCsvQueryHandler implements QueryHandlerInterface
     /** @return list<array{id: string, email: string, status: string, createdAt: string, personCount: int}> */
     public function __invoke(ExportUsersCsvQuery $query): array
     {
-        return array_map(function ($user) {
+        return array_values(array_map(function ($user) {
             $persons = $this->personRepository->findAllByUserId($user->id()->value());
 
             return [
@@ -31,6 +31,6 @@ final readonly class ExportUsersCsvQueryHandler implements QueryHandlerInterface
                 'createdAt' => $user->createdAt()->format('Y-m-d H:i:s'),
                 'personCount' => count($persons),
             ];
-        }, $this->userRepository->findAll());
+        }, $this->userRepository->findAll()));
     }
 }
