@@ -178,7 +178,7 @@ import { ref, watch, onMounted, computed, defineComponent, h } from 'vue'
 import { usePersonStore } from '@/stores/personStore'
 import { useExpenseStore } from '@/stores/expenseStore'
 import { useAuthStore } from '@/stores/authStore'
-import { expenseApi } from '@/api/expenseApi'
+import { expenseApi, type BaremeYear, type TrancheTaux } from '@/api/expenseApi'
 import type { ExpenseSummary } from '@/types'
 
 const personStore = usePersonStore()
@@ -209,30 +209,20 @@ const forfaitComparison = computed(() => {
   return { favorable: false, label: `Forfait 10 % plus avantageux de ${fmt(Math.abs(diff))}` }
 })
 
-// E — Détail barème (calculé côté frontend à partir des trips)
-const BAREME_2024: Record<number, { rate1: number; rate2: number; fixed2: number; rate3: number }> = {
-  3: { rate1: 0.456, rate2: 0.273, fixed2: 915, rate3: 0.318 },
-  4: { rate1: 0.523, rate2: 0.294, fixed2: 1147, rate3: 0.352 },
-  5: { rate1: 0.548, rate2: 0.308, fixed2: 1200, rate3: 0.368 },
-  6: { rate1: 0.574, rate2: 0.323, fixed2: 1256, rate3: 0.386 },
-  7: { rate1: 0.601, rate2: 0.340, fixed2: 1301, rate3: 0.405 },
-}
+// E — Détail barème (taux chargés depuis l'API pour refléter la configuration BDD)
+const baremeYear = ref<BaremeYear | null>(null)
 
-function applyTranches(b: { rate1: number; rate2: number; fixed2: number; rate3: number }, km: number) {
-  const tranches = []
-  if (km <= 5000) {
-    tranches.push({ label: `${km.toFixed(0)} km × ${b.rate1} €/km (tranche 1)`, amount: km * b.rate1 })
-  } else if (km <= 20000) {
-    tranches.push({ label: `${km.toFixed(0)} km × ${b.rate2} + ${b.fixed2} € (tranche 2)`, amount: km * b.rate2 + b.fixed2 })
-  } else {
-    tranches.push({ label: `${km.toFixed(0)} km × ${b.rate3} €/km (tranche 3)`, amount: km * b.rate3 })
-  }
-  return tranches
+function applyTranches(b: TrancheTaux, km: number, t1 = 5000, t2 = 20000) {
+  if (km <= t1) return [{ label: `${km.toFixed(0)} km × ${b.rate1} €/km (tranche 1)`, amount: km * b.rate1 }]
+  if (km <= t2) return [{ label: `${km.toFixed(0)} km × ${b.rate2} + ${b.fixed2} € (tranche 2)`, amount: km * b.rate2 + b.fixed2 }]
+  return [{ label: `${km.toFixed(0)} km × ${b.rate3} €/km (tranche 3)`, amount: km * b.rate3 }]
 }
 
 const baremeBreakdown = computed(() => {
-  if (!summary.value) return {}
+  if (!summary.value || !baremeYear.value) return {}
+  const rates = baremeYear.value.rates
   const buckets: Record<string, { label: string; totalKm: number; tranches: { label: string; amount: number }[]; subtotal: number }> = {}
+
   for (const t of summary.value.travel.trips) {
     const cv = Math.min(Math.max(t.vehiclePower ?? 5, 3), 7)
     const key = `${t.vehicleType}|${cv}|${t.isElectric ? 1 : 0}`
@@ -242,12 +232,24 @@ const baremeBreakdown = computed(() => {
     }
     buckets[key].totalKm += t.distanceKm
   }
-  for (const b of Object.values(buckets)) {
-    const cv = parseInt(b.label.match(/(\d+) CV/)?.[1] ?? '5')
-    const rates = BAREME_2024[cv] ?? BAREME_2024[5]
-    b.tranches = applyTranches(rates, b.totalKm)
-    b.subtotal = b.tranches.reduce((s, t) => s + t.amount, 0)
-    if (b.label.includes('électrique')) b.subtotal *= 1.20
+
+  for (const [key, b] of Object.entries(buckets)) {
+    const [vehicleType, cvStr] = key.split('|')
+    const cv = parseInt(cvStr)
+    if (vehicleType === 'car') {
+      const r = rates.car[cv] ?? rates.car[5]
+      b.tranches = applyTranches(r, b.totalKm, 5000, 20000)
+      b.subtotal = b.tranches.reduce((s, t) => s + t.amount, 0)
+      if (b.label.includes('électrique')) b.subtotal = Math.round(b.subtotal * rates.electricMultiplier * 100) / 100
+    } else if (vehicleType === 'motorcycle') {
+      const group = cv <= 2 ? 1 : cv <= 5 ? 3 : 6
+      const r = rates.motorcycle[group]
+      b.tranches = applyTranches(r, b.totalKm, 3000, 6000)
+      b.subtotal = b.tranches.reduce((s, t) => s + t.amount, 0)
+    } else {
+      b.tranches = applyTranches(rates.moped, b.totalKm, 3000, 6000)
+      b.subtotal = b.tranches.reduce((s, t) => s + t.amount, 0)
+    }
   }
   return buckets
 })
@@ -256,8 +258,12 @@ async function load() {
   if (!personStore.activePerson) return
   loading.value = true; summary.value = null
   try {
-    await expenseStore.fetchSummary(personStore.activePerson.id, selectedYear.value)
+    const [, bareme] = await Promise.all([
+      expenseStore.fetchSummary(personStore.activePerson.id, selectedYear.value),
+      expenseApi.getBareme(selectedYear.value),
+    ])
     summary.value = expenseStore.summary
+    baremeYear.value = bareme
     loadMultiYear()
   } finally { loading.value = false }
 }
