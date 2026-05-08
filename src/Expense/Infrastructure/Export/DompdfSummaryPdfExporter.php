@@ -4,19 +4,24 @@ declare(strict_types=1);
 
 namespace App\Expense\Infrastructure\Export;
 
-use App\Expense\Application\Export\SummaryPdfExporterInterface;
+use App\Expense\Application\Export\ExportResult;
+use App\Expense\Application\Export\SummaryExporterInterface;
 use Dompdf\Dompdf;
 use Dompdf\Options;
-use Symfony\Component\HttpFoundation\Response;
 use Twig\Environment;
 
-final class DompdfSummaryPdfExporter implements SummaryPdfExporterInterface
+final class DompdfSummaryPdfExporter implements SummaryExporterInterface
 {
     public function __construct(private readonly Environment $twig)
     {
     }
 
-    public function export(array $data, int $year): Response
+    public function format(): string
+    {
+        return 'pdf';
+    }
+
+    public function export(array $data, int $year): ExportResult
     {
         $html = $this->twig->render('expense/summary_pdf.html.twig', [
             'data' => $data,
@@ -30,13 +35,10 @@ final class DompdfSummaryPdfExporter implements SummaryPdfExporterInterface
         $dompdf->setPaper('A4', 'portrait');
         $dompdf->render();
 
-        return new Response(
+        return new ExportResult(
             $dompdf->output(),
-            Response::HTTP_OK,
-            [
-                'Content-Type' => 'application/pdf',
-                'Content-Disposition' => sprintf('attachment; filename="frais-reels-%s.pdf"', $year),
-            ]
+            'application/pdf',
+            sprintf('frais-reels-%s.pdf', $year),
         );
     }
 }
