@@ -12,8 +12,7 @@ use App\Expense\Application\Command\CreateTollExpense\CreateTollExpenseCommand;
 use App\Expense\Application\Command\CreateTravelExpense\CreateTravelExpenseCommand;
 use App\Expense\Application\Command\DeleteExpense\DeleteExpenseCommand;
 use App\Expense\Application\Command\UpdateExpense\UpdateExpenseCommand;
-use App\Expense\Application\Export\SummaryCsvExporterInterface;
-use App\Expense\Application\Export\SummaryPdfExporterInterface;
+use App\Expense\Application\Export\SummaryExporterRegistry;
 use App\Expense\Application\Query\GetExpensesByPeriod\GetExpensesByPeriodQuery;
 use App\Expense\Application\Query\GetExpensesSummary\GetExpensesSummaryQuery;
 use App\Expense\Domain\Exception\ExpenseNotFoundException;
@@ -23,7 +22,6 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpFoundation\StreamedResponse;
 use Symfony\Component\Messenger\Exception\HandlerFailedException;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Routing\Requirement\Requirement;
@@ -38,8 +36,7 @@ final class ExpenseController extends AbstractController
         private readonly CommandBusInterface $commandBus,
         private readonly QueryBusInterface $queryBus,
         private readonly FiscalConfigRepositoryInterface $fiscalConfigRepository,
-        private readonly SummaryPdfExporterInterface $pdfExporter,
-        private readonly SummaryCsvExporterInterface $csvExporter,
+        private readonly SummaryExporterRegistry $exporters,
     ) {
     }
 
@@ -76,23 +73,31 @@ final class ExpenseController extends AbstractController
         }
 
         $data = $this->queryBus->ask(new GetExpensesSummaryQuery($personId, $year));
+        $result = $this->exporters->get('pdf')->export($data, $year);
 
-        return $this->pdfExporter->export($data, $year);
+        return new Response($result->content, Response::HTTP_OK, [
+            'Content-Type' => $result->mimeType,
+            'Content-Disposition' => 'attachment; filename="'.$result->filename.'"',
+        ]);
     }
 
     #[Route('/summary/csv', name: 'summaryCsv', methods: [Request::METHOD_GET])]
-    public function summaryCsv(Request $request): StreamedResponse
+    public function summaryCsv(Request $request): Response
     {
         $personId = $request->query->get('personId', '');
         $year = (int) $request->query->get('year', (int) date('Y'));
 
         if (empty($personId)) {
-            return new StreamedResponse(fn () => print ('personId is required'), Response::HTTP_BAD_REQUEST);
+            return new Response('personId is required', Response::HTTP_BAD_REQUEST);
         }
 
         $data = $this->queryBus->ask(new GetExpensesSummaryQuery($personId, $year));
+        $result = $this->exporters->get('csv')->export($data, $year);
 
-        return $this->csvExporter->export($data, $year);
+        return new Response($result->content, Response::HTTP_OK, [
+            'Content-Type' => $result->mimeType,
+            'Content-Disposition' => 'attachment; filename="'.$result->filename.'"',
+        ]);
     }
 
     #[Route('/summary', name: 'summary', methods: [Request::METHOD_GET])]
