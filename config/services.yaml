@@ -59,11 +59,9 @@ services:
         alias: App\Admin\Infrastructure\Stats\StripeAdminStatsProvider
 
     # Expense export services
-    App\Expense\Application\Export\SummaryPdfExporterInterface:
-        alias: App\Expense\Infrastructure\Export\DompdfSummaryPdfExporter
-
-    App\Expense\Application\Export\SummaryCsvExporterInterface:
-        alias: App\Expense\Infrastructure\Export\StreamedSummaryCsvExporter
+    App\Expense\Application\Export\SummaryExporterRegistry:
+        arguments:
+            $exporters: !tagged_iterator app.summary_exporter
 
     # Admin fiscal config repository
     App\Admin\Domain\Repository\FiscalConfigRepositoryInterface:
@@ -75,3 +73,5 @@ services:
             tags: [{ name: messenger.message_handler, bus: command.bus }]
         App\SharedKernel\Application\Bus\QueryHandlerInterface:
             tags: [{ name: messenger.message_handler, bus: query.bus }]
+        App\Expense\Application\Export\SummaryExporterInterface:
+            tags: ['app.summary_exporter']
