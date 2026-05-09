@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-gray-50 flex">
+  <div class="h-screen bg-gray-50 flex overflow-hidden">
     <!-- Admin sidebar -->
     <aside v-if="isAdminRoute" class="w-64 bg-gray-900 border-r border-gray-800 flex flex-col shrink-0">
       <div class="px-6 py-5 border-b border-gray-800">
