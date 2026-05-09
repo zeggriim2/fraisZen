@@ -57,6 +57,7 @@
                 <directory name="src/Admin/Infrastructure/Stats" />
                 <directory name="src/Billing/Application/Webhook" />
                 <directory name="src/Expense/Infrastructure/Export" />
+                <directory name="src/Expense/Application/Export" />
                 <directory name="src/SharedKernel/Infrastructure" />
             </errorLevel>
         </PossiblyUnusedMethod>
