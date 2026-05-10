@@ -1,0 +1,13 @@
+---
+# CI-specific overrides: give the PHP container more time to warmup
+services:
+  php:
+    healthcheck:
+      test:
+        - "CMD"
+        - "php"
+        - "-r"
+        - "exit(false === @file_get_contents('http://localhost:2019/metrics', context: stream_context_create(['http' => ['timeout' => 5]])) ? 1 : 0);"
+      start_period: 180s
+      interval: 15s
+      retries: 20
