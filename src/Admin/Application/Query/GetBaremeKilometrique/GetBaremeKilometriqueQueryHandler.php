@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Admin\Application\Query\GetBaremeKilometrique;
 
+use App\Admin\Application\ReadModel\BaremeKilometriqueReadModel;
 use App\Expense\Domain\Repository\BaremeKilometriqueRepositoryInterface;
 use App\SharedKernel\Application\Bus\QueryHandlerInterface;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
@@ -15,11 +16,10 @@ final readonly class GetBaremeKilometriqueQueryHandler implements QueryHandlerIn
     {
     }
 
-    /**
-     * @return array{year: int, rates: array{car: array<int, array{rate1: float, rate2: float, fixed2: int, rate3: float}>, motorcycle: array<int, array{rate1: float, rate2: float, fixed2: int, rate3: float}>, moped: array{rate1: float, rate2: float, fixed2: int, rate3: float}, electricMultiplier: float}}|null
-     */
-    public function __invoke(GetBaremeKilometriqueQuery $query): ?array
+    public function __invoke(GetBaremeKilometriqueQuery $query): ?BaremeKilometriqueReadModel
     {
-        return $this->repository->findByYear($query->year)?->toArray();
+        $entity = $this->repository->findByYear($query->year);
+
+        return null !== $entity ? BaremeKilometriqueReadModel::fromEntity($entity) : null;
     }
 }
