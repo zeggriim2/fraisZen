@@ -26,20 +26,23 @@ jobs:
           persist-credentials: false
       - name: Create CI environment file
         run: |
-          echo 'APP_ENV=dev' > .env
-          echo 'APP_SECRET=ci_secret_for_tests_only' >> .env
-          echo 'APP_SHARE_DIR=var/share' >> .env
-          echo 'DEFAULT_URI=http://localhost' >> .env
-          echo 'DATABASE_URL="mysql://app:!ChangeMe!@database:3306/app?serverVersion=8.0.32&charset=utf8mb4"' >> .env
-          echo 'MESSENGER_TRANSPORT_DSN=doctrine://default?auto_setup=0' >> .env
-          echo 'JWT_SECRET_KEY=%kernel.project_dir%/config/jwt/private.pem' >> .env
-          echo 'JWT_PUBLIC_KEY=%kernel.project_dir%/config/jwt/public.pem' >> .env
-          echo 'JWT_PASSPHRASE=ci_passphrase' >> .env
-          echo 'STRIPE_SECRET_KEY=sk_test_ci' >> .env
-          echo 'STRIPE_PUBLISHABLE_KEY=pk_test_ci' >> .env
-          echo 'STRIPE_WEBHOOK_SECRET=whsec_ci' >> .env
-          echo 'STRIPE_PRICE_ID=price_ci' >> .env
-          echo 'ORS_API_KEY=' >> .env
+          {
+            echo 'APP_ENV=dev'
+            echo 'APP_SECRET=ci_secret_for_tests_only'
+            echo 'APP_SHARE_DIR=var/share'
+            echo 'DEFAULT_URI=http://localhost'
+            echo 'DATABASE_URL="mysql://app:!ChangeMe!@database:3306/app?serverVersion=8.0.32&charset=utf8mb4"'
+            echo 'MESSENGER_TRANSPORT_DSN=doctrine://default?auto_setup=0'
+            echo 'JWT_SECRET_KEY=%kernel.project_dir%/config/jwt/private.pem'
+            echo 'JWT_PUBLIC_KEY=%kernel.project_dir%/config/jwt/public.pem'
+            echo 'JWT_PASSPHRASE=ci_passphrase'
+            echo 'STRIPE_SECRET_KEY=sk_test_ci'
+            echo 'STRIPE_PUBLISHABLE_KEY=pk_test_ci'
+            echo 'STRIPE_WEBHOOK_SECRET=whsec_ci'
+            echo 'STRIPE_PRICE_ID=price_ci'
+            echo 'ORS_API_KEY='
+          } > .env
+
       - name: Set up PHP
         uses: shivammathur/setup-php@v2
         with:
@@ -89,20 +92,22 @@ jobs:
           tools: composer
       - name: Create CI environment file
         run: |
-          echo 'APP_ENV=dev' > .env
-          echo 'APP_SECRET=ci_secret_for_quality_checks_only' >> .env
-          echo 'APP_SHARE_DIR=var/share' >> .env
-          echo 'DEFAULT_URI=http://localhost' >> .env
-          echo 'DATABASE_URL="mysql://app:!ChangeMe!@127.0.0.1:3306/app?serverVersion=8.0&charset=utf8mb4"' >> .env
-          echo 'MESSENGER_TRANSPORT_DSN=doctrine://default?auto_setup=0' >> .env
-          echo 'JWT_SECRET_KEY=%kernel.project_dir%/config/jwt/private.pem' >> .env
-          echo 'JWT_PUBLIC_KEY=%kernel.project_dir%/config/jwt/public.pem' >> .env
-          echo 'JWT_PASSPHRASE=ci_passphrase' >> .env
-          echo 'STRIPE_SECRET_KEY=sk_test_ci' >> .env
-          echo 'STRIPE_PUBLISHABLE_KEY=pk_test_ci' >> .env
-          echo 'STRIPE_WEBHOOK_SECRET=whsec_ci' >> .env
-          echo 'STRIPE_PRICE_ID=price_ci' >> .env
-          echo 'ORS_API_KEY=' >> .env
+          {
+            echo 'APP_ENV=dev'
+            echo 'APP_SECRET=ci_secret_for_quality_checks_only'
+            echo 'APP_SHARE_DIR=var/share'
+            echo 'DEFAULT_URI=http://localhost'
+            echo 'DATABASE_URL="mysql://app:!ChangeMe!@127.0.0.1:3306/app?serverVersion=8.0&charset=utf8mb4"'
+            echo 'MESSENGER_TRANSPORT_DSN=doctrine://default?auto_setup=0'
+            echo 'JWT_SECRET_KEY=%kernel.project_dir%/config/jwt/private.pem'
+            echo 'JWT_PUBLIC_KEY=%kernel.project_dir%/config/jwt/public.pem'
+            echo 'JWT_PASSPHRASE=ci_passphrase'
+            echo 'STRIPE_SECRET_KEY=sk_test_ci'
+            echo 'STRIPE_PUBLISHABLE_KEY=pk_test_ci'
+            echo 'STRIPE_WEBHOOK_SECRET=whsec_ci'
+            echo 'STRIPE_PRICE_ID=price_ci'
+            echo 'ORS_API_KEY='
+          } > .env
       - name: Generate JWT keys
         run: |
           mkdir -p config/jwt
@@ -148,7 +153,6 @@ jobs:
           VALIDATE_PHP_PSALM: false
           # Frontend code linted by its own toolchain (Vite + ESLint + Prettier)
           VALIDATE_CSS: false
-          VALIDATE_CSS_PRETTIER: false
           VALIDATE_HTML_PRETTIER: false
           VALIDATE_JAVASCRIPT_ES: false
           VALIDATE_JAVASCRIPT_PRETTIER: false
