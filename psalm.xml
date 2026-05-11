@@ -65,6 +65,7 @@
         <PossiblyUnusedProperty>
             <errorLevel type="suppress">
                 <directory name="src/Admin/Domain/Entity" />
+                <directory name="src/Admin/Application/ReadModel" />
                 <directory name="src/Auth/Domain/Entity" />
                 <directory name="src/Expense/Domain/Entity" />
                 <directory name="src/Person/Domain/Entity" />

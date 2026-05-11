@@ -21,11 +21,12 @@ class GetController extends AbstractAdminController
 
     public function __invoke(int $year): JsonResponse
     {
-        $result = $this->queryBus->ask(new GetBaremeKilometriqueQuery($year));
-        if (!$result) {
-            return $this->json(['error' => 'No barème for this year'], Response::HTTP_NOT_FOUND);
+        $readModel = $this->queryBus->ask(new GetBaremeKilometriqueQuery($year));
+
+        if (null === $readModel) {
+            return $this->json(['error' => "Aucun barème configuré pour l'année {$year}."], Response::HTTP_NOT_FOUND);
         }
 
-        return $this->json($result);
+        return $this->json($readModel);
     }
 }
