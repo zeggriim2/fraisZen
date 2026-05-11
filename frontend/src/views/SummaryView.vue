@@ -103,8 +103,14 @@
         </div>
       </div>
 
+      <!-- Erreur barème kilométrique -->
+      <div v-if="baremeError" class="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-4 flex items-start gap-3">
+        <span class="text-amber-500 text-lg shrink-0">⚠️</span>
+        <p class="text-sm text-amber-700">{{ baremeError }}</p>
+      </div>
+
       <!-- Détail barème kilométrique -->
-      <div v-if="summary.travel.trips.length" class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden mb-4">
+      <div v-if="summary.travel.trips.length && baremeYear" class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden mb-4">
         <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
           <span class="font-semibold text-gray-900">Détail des trajets</span>
           <router-link :to="`/trips?year=${selectedYear}&personId=${personStore.activePerson?.id}`"
@@ -211,6 +217,7 @@ const forfaitComparison = computed(() => {
 
 // E — Détail barème (taux chargés depuis l'API pour refléter la configuration BDD)
 const baremeYear = ref<BaremeYear | null>(null)
+const baremeError = ref<string | null>(null)
 
 function applyTranches(b: TrancheTaux, km: number, t1 = 5000, t2 = 20000) {
   if (km <= t1) return [{ label: `${km.toFixed(0)} km × ${b.rate1} €/km (tranche 1)`, amount: km * b.rate1 }]
@@ -256,11 +263,15 @@ const baremeBreakdown = computed(() => {
 
 async function load() {
   if (!personStore.activePerson) return
-  loading.value = true; summary.value = null
+  loading.value = true; summary.value = null; baremeError.value = null; baremeYear.value = null
   try {
     const [, bareme] = await Promise.all([
       expenseStore.fetchSummary(personStore.activePerson.id, selectedYear.value),
-      expenseApi.getBareme(selectedYear.value),
+      expenseApi.getBareme(selectedYear.value).catch((err: unknown) => {
+        const msg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error
+        baremeError.value = msg ?? `Le barème kilométrique de ${selectedYear.value} n'a pas été configuré.`
+        return null
+      }),
     ])
     summary.value = expenseStore.summary
     baremeYear.value = bareme
