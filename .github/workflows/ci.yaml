@@ -123,6 +123,18 @@ jobs:
         run: vendor/bin/phpstan analyse --memory-limit=512M --error-format=github
       - name: Psalm
         run: vendor/bin/psalm --no-progress --output-format=github
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install frontend dependencies
+        run: npm ci
+        working-directory: frontend
+      - name: TypeScript typecheck
+        run: npm run typecheck
+        working-directory: frontend
 
   lint:
     name: Lint
@@ -151,7 +163,7 @@ jobs:
           VALIDATE_PHP_PHPCS: false
           VALIDATE_PHP_PHPSTAN: false
           VALIDATE_PHP_PSALM: false
-          # Frontend code linted by its own toolchain (Vite + ESLint + Prettier)
+          # Frontend: TypeScript handled by quality job — no ESLint/Prettier configured
           VALIDATE_CSS: false
           VALIDATE_HTML_PRETTIER: false
           VALIDATE_JAVASCRIPT_ES: false
@@ -166,7 +178,6 @@ jobs:
           VALIDATE_JSCPD: false
           VALIDATE_NATURAL_LANGUAGE: false
           VALIDATE_EDITORCONFIG: false
-          VALIDATE_DOCKERFILE_HADOLINT: false
           VALIDATE_ENV: false
           VALIDATE_MARKDOWN: false
           VALIDATE_MARKDOWN_PRETTIER: false
