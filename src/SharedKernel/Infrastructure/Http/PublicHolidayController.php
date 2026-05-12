@@ -12,7 +12,7 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[IsGranted('ROLE_USER')]
-#[Route('/api/public-holidays/{year}', name: 'public_holidays', requirements: ['year' => '\d{4}'], methods: [Request::METHOD_GET])]
+#[Route('/public-holidays/{year}', name: 'public_holidays', requirements: ['year' => '\d{4}'], methods: [Request::METHOD_GET])]
 final class PublicHolidayController extends AbstractController
 {
     public function __construct(private readonly PublicHolidayService $publicHolidayService)
