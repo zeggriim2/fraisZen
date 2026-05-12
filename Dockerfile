@@ -117,7 +117,7 @@ COPY --link composer.* symfony.* ./
 RUN composer install --no-cache --prefer-dist --no-dev --no-autoloader --no-scripts --no-progress
 
 # copy sources
-COPY --link --exclude=frankenphp/ . ./
+COPY --link bin/ config/ migrations/ public/ src/ templates/ ./
 # inject pre-built Vue app (outDir: ../public/app relative to frontend/)
 COPY --from=frontend_builder /app/public/app ./public/app
 
@@ -173,6 +173,7 @@ COPY --from=frankenphp_prod_builder /usr/lib/file/magic.mgc /usr/lib/file/magic.
 
 ENV XDG_CONFIG_HOME=/config XDG_DATA_HOME=/data
 
+# hadolint ignore=DL3008
 RUN <<-EOF
 	apt-get update
 	apt-get install -y --no-install-recommends openssl
