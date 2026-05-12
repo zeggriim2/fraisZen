@@ -14,3 +14,6 @@ expense:
 
 person:
     resource: routes/api/person.yaml
+
+shared:
+    resource: routes/api/shared.yaml

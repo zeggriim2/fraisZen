@@ -11,7 +11,7 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
 final readonly class PublicHolidayApiClient
 {
     public function __construct(
-        private HttpClientInterface $datagouClient,
+        private HttpClientInterface $datagouvClient,
     ) {
     }
 
@@ -19,7 +19,7 @@ final readonly class PublicHolidayApiClient
     public function forYear(int $year): array
     {
         try {
-            $response = $this->datagouClient->request(Request::METHOD_GET, "/jours-feries/metropole/{$year}.json");
+            $response = $this->datagouvClient->request(Request::METHOD_GET, "/jours-feries/metropole/{$year}.json");
             if (Response::HTTP_OK !== $response->getStatusCode()) {
                 return [];
             }

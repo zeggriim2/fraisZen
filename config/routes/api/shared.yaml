@@ -1,0 +1,6 @@
+api_shared:
+    resource: '../../../src/SharedKernel/Infrastructure/Http/'
+    type: attribute
+    prefix: /api/
+    trailing_slash_on_root: false
+    name_prefix: shared_
