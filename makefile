@@ -13,7 +13,7 @@ SYMFONY  = $(PHP) bin/console
 .DEFAULT_GOAL = help
 .PHONY        : help build up start down logs sh composer vendor sf cc test \
                 coverage frontend-install frontend-dev frontend-build db-setup \
-                lint cs-fix phpstan psalm analyse
+                lint cs-fix phpstan psalm typecheck hadolint actionlint analyse
 
 ## —— 🎵 🐳 The Symfony Docker Makefile 🐳 🎵 ——————————————————————————————————
 help: ## Outputs this help screen
@@ -92,7 +92,16 @@ phpstan: ## PHPStan — analyse statique (niveau 5)
 psalm: ## Psalm — analyse statique complémentaire
 	@$(PHP_CONT) vendor/bin/psalm --no-progress
 
-analyse: lint phpstan psalm ## Lance tous les contrôles qualité
+typecheck: ## TypeScript — vérifie les types du frontend sans build
+	@$(DOCKER_COMP) exec node npm run typecheck
+
+hadolint: ## Hadolint — vérifie les best practices du Dockerfile
+	@docker run --rm -i hadolint/hadolint < Dockerfile
+
+actionlint: ## Actionlint — vérifie les workflows GitHub Actions
+	@docker run --rm -v $(PWD):/repo --workdir /repo rhysd/actionlint:latest
+
+analyse: lint phpstan psalm typecheck hadolint actionlint ## Lance tous les contrôles qualité
 
 ## —— Frontend 🎨 ——————————————————————————————————————————————————————————————
 frontend-logs: ## Tail logs du container node (Vite)
