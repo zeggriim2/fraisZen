@@ -59,6 +59,10 @@
                 <directory name="src/Expense/Infrastructure/Export" />
                 <directory name="src/Expense/Application/Export" />
                 <directory name="src/SharedKernel/Infrastructure" />
+                <directory name="src/Admin/Infrastructure/Persistence" />
+                <directory name="src/Auth/Infrastructure/Persistence" />
+                <directory name="src/Expense/Infrastructure/Persistence" />
+                <directory name="src/Person/Infrastructure/Persistence" />
             </errorLevel>
         </PossiblyUnusedMethod>
         <!-- Propriétés mappées Doctrine : persistées en DB même si non lues en PHP -->

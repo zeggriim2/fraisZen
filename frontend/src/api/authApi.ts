@@ -28,4 +28,8 @@ export const authApi = {
     http.patch('/auth/me/password', { currentPassword, newPassword }).then(r => r.data),
   deleteAccount: () =>
     http.delete('/auth/me').then(r => r.data),
+  forgotPassword: (email: string) =>
+    http.post('/auth/forgot-password', { email }).then(r => r.data),
+  resetPassword: (token: string, newPassword: string) =>
+    http.post('/auth/reset-password', { token, newPassword }).then(r => r.data),
 }

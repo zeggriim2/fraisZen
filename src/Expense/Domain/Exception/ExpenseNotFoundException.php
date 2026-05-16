@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Expense\Domain\Exception;
 
-final class ExpenseNotFoundException extends \DomainException
+use App\SharedKernel\Domain\Exception\NotFoundException;
+
+final class ExpenseNotFoundException extends NotFoundException
 {
     public static function withId(string $id): self
     {
