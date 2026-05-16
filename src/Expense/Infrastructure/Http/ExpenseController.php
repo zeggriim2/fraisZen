@@ -15,14 +15,12 @@ use App\Expense\Application\Command\UpdateExpense\UpdateExpenseCommand;
 use App\Expense\Application\Export\SummaryExporterRegistry;
 use App\Expense\Application\Query\GetExpensesByPeriod\GetExpensesByPeriodQuery;
 use App\Expense\Application\Query\GetExpensesSummary\GetExpensesSummaryQuery;
-use App\Expense\Domain\Exception\ExpenseNotFoundException;
 use App\SharedKernel\Application\Bus\CommandBusInterface;
 use App\SharedKernel\Application\Bus\QueryBusInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Messenger\Exception\HandlerFailedException;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Routing\Requirement\Requirement;
 
@@ -177,30 +175,16 @@ final class ExpenseController extends AbstractController
     {
         $fields = json_decode($request->getContent(), true) ?? [];
 
-        try {
-            $this->commandBus->dispatch(new UpdateExpenseCommand($id, $fields));
+        $this->commandBus->dispatch(new UpdateExpenseCommand($id, $fields));
 
-            return $this->json(['success' => true]);
-        } catch (HandlerFailedException $e) {
-            if ($e->getPrevious() instanceof ExpenseNotFoundException) {
-                return $this->json(['error' => $e->getPrevious()->getMessage()], Response::HTTP_NOT_FOUND);
-            }
-            throw $e;
-        }
+        return $this->json(['success' => true]);
     }
 
     #[Route('/{id}', name: 'delete', requirements: ['id' => Requirement::UUID_V4], methods: [Request::METHOD_DELETE])]
     public function delete(string $id): JsonResponse
     {
-        try {
-            $this->commandBus->dispatch(new DeleteExpenseCommand($id));
+        $this->commandBus->dispatch(new DeleteExpenseCommand($id));
 
-            return $this->json(null, Response::HTTP_NO_CONTENT);
-        } catch (HandlerFailedException $e) {
-            if ($e->getPrevious() instanceof ExpenseNotFoundException) {
-                return $this->json(['error' => $e->getPrevious()->getMessage()], Response::HTTP_NOT_FOUND);
-            }
-            throw $e;
-        }
+        return $this->json(null, Response::HTTP_NO_CONTENT);
     }
 }

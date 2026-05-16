@@ -6,16 +6,16 @@ namespace App\Auth\Infrastructure\Http;
 
 use App\Auth\Application\Command\DeleteUser\DeleteUserCommand;
 use App\Auth\Application\Command\RegisterUser\RegisterUserCommand;
+use App\Auth\Application\Command\RequestPasswordReset\RequestPasswordResetCommand;
+use App\Auth\Application\Command\ResetPassword\ResetPasswordCommand;
 use App\Auth\Application\Command\UpdatePassword\UpdatePasswordCommand;
 use App\Auth\Application\Command\UpdateProfile\UpdateProfileCommand;
 use App\Auth\Domain\Entity\User;
-use App\Auth\Domain\Exception\UserAlreadyExistsException;
 use App\SharedKernel\Application\Bus\CommandBusInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Messenger\Exception\HandlerFailedException;
 use Symfony\Component\Routing\Attribute\Route;
 
 #[Route('/api/auth')]
@@ -37,17 +37,10 @@ final class AuthController extends AbstractController
     {
         $data = json_decode($request->getContent(), true) ?? [];
 
-        try {
-            $id = $this->commandBus->dispatch(new RegisterUserCommand(
-                email: $data['email'] ?? '',
-                plainPassword: $data['password'] ?? '',
-            ));
-        } catch (HandlerFailedException $e) {
-            if ($e->getPrevious() instanceof UserAlreadyExistsException) {
-                return $this->json(['error' => $e->getPrevious()->getMessage()], Response::HTTP_CONFLICT);
-            }
-            throw $e;
-        }
+        $id = $this->commandBus->dispatch(new RegisterUserCommand(
+            email: $data['email'] ?? '',
+            plainPassword: $data['password'] ?? '',
+        ));
 
         return $this->json([
             'id' => $id,
@@ -74,19 +67,12 @@ final class AuthController extends AbstractController
         $user = $this->getUser();
         $data = json_decode($request->getContent(), true) ?? [];
 
-        try {
-            $this->commandBus->dispatch(new UpdateProfileCommand(
-                userId: $user->id()->value(),
-                email: $data['email'] ?? $user->email(),
-                defaultYear: isset($data['defaultYear']) ? (int) $data['defaultYear'] : null,
-                defaultFiscalPower: isset($data['defaultFiscalPower']) ? (int) $data['defaultFiscalPower'] : null,
-            ));
-        } catch (HandlerFailedException $e) {
-            if ($e->getPrevious() instanceof UserAlreadyExistsException) {
-                return $this->json(['error' => $e->getPrevious()->getMessage()], Response::HTTP_CONFLICT);
-            }
-            throw $e;
-        }
+        $this->commandBus->dispatch(new UpdateProfileCommand(
+            userId: $user->id()->value(),
+            email: $data['email'] ?? $user->email(),
+            defaultYear: isset($data['defaultYear']) ? (int) $data['defaultYear'] : null,
+            defaultFiscalPower: isset($data['defaultFiscalPower']) ? (int) $data['defaultFiscalPower'] : null,
+        ));
 
         return $this->json(['success' => true]);
     }
@@ -98,18 +84,11 @@ final class AuthController extends AbstractController
         $user = $this->getUser();
         $data = json_decode($request->getContent(), true) ?? [];
 
-        try {
-            $this->commandBus->dispatch(new UpdatePasswordCommand(
-                userId: $user->id()->value(),
-                currentPassword: $data['currentPassword'] ?? '',
-                newPassword: $data['newPassword'] ?? '',
-            ));
-        } catch (HandlerFailedException $e) {
-            if ($e->getPrevious() instanceof \DomainException) {
-                return $this->json(['error' => $e->getPrevious()->getMessage()], Response::HTTP_UNPROCESSABLE_ENTITY);
-            }
-            throw $e;
-        }
+        $this->commandBus->dispatch(new UpdatePasswordCommand(
+            userId: $user->id()->value(),
+            currentPassword: $data['currentPassword'] ?? '',
+            newPassword: $data['newPassword'] ?? '',
+        ));
 
         return $this->json(['success' => true]);
     }
@@ -123,5 +102,30 @@ final class AuthController extends AbstractController
         $this->commandBus->dispatch(new DeleteUserCommand($user->id()->value()));
 
         return $this->json(null, Response::HTTP_NO_CONTENT);
+    }
+
+    #[Route('/forgot-password', name: 'api_forgot_password', methods: [Request::METHOD_POST])]
+    public function forgotPassword(Request $request): JsonResponse
+    {
+        $data = json_decode($request->getContent(), true) ?? [];
+
+        $this->commandBus->dispatch(new RequestPasswordResetCommand(
+            email: $data['email'] ?? '',
+        ));
+
+        return $this->json(['message' => 'Si un compte existe avec cet email, un lien de réinitialisation a été envoyé.']);
+    }
+
+    #[Route('/reset-password', name: 'api_reset_password', methods: [Request::METHOD_POST])]
+    public function resetPassword(Request $request): JsonResponse
+    {
+        $data = json_decode($request->getContent(), true) ?? [];
+
+        $this->commandBus->dispatch(new ResetPasswordCommand(
+            token: $data['token'] ?? '',
+            newPassword: $data['newPassword'] ?? '',
+        ));
+
+        return $this->json(['message' => 'Mot de passe réinitialisé avec succès.']);
     }
 }

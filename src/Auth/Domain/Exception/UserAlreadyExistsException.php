@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Auth\Domain\Exception;
 
-final class UserAlreadyExistsException extends \DomainException
+use App\SharedKernel\Domain\Exception\ConflictException;
+
+final class UserAlreadyExistsException extends ConflictException
 {
     public static function withEmail(string $email): self
     {

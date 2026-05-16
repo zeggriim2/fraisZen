@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\SharedKernel\Infrastructure\Bus;
 
 use App\SharedKernel\Application\Bus\QueryBusInterface;
+use Symfony\Component\Messenger\Exception\HandlerFailedException;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Messenger\Stamp\HandledStamp;
 
@@ -18,8 +19,12 @@ final readonly class MessengerQueryBus implements QueryBusInterface
     #[\Override]
     public function ask(object $query): mixed
     {
-        $envelope = $this->queryBus->dispatch($query);
+        try {
+            $envelope = $this->queryBus->dispatch($query);
 
-        return $envelope->last(HandledStamp::class)?->getResult();
+            return $envelope->last(HandledStamp::class)?->getResult();
+        } catch (HandlerFailedException $e) {
+            throw $e->getPrevious() ?? $e;
+        }
     }
 }

@@ -29,7 +29,11 @@
         </button>
       </form>
 
-      <p class="mt-6 text-center text-sm text-gray-500">
+      <p class="mt-4 text-center text-sm text-gray-500">
+        <RouterLink to="/forgot-password" class="text-indigo-600 font-medium hover:text-indigo-700">Mot de passe oublié ?</RouterLink>
+      </p>
+
+      <p class="mt-2 text-center text-sm text-gray-500">
         Pas encore de compte ?
         <RouterLink to="/register" class="text-indigo-600 font-medium hover:text-indigo-700">S'inscrire</RouterLink>
       </p>
