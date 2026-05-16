@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Expense\Domain\Exception;
 
-final class BaremeKilometriqueNotFoundException extends \DomainException
+use App\SharedKernel\Domain\Exception\NotFoundException;
+
+final class BaremeKilometriqueNotFoundException extends NotFoundException
 {
     public static function forYear(int $year): self
     {
