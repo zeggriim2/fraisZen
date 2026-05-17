@@ -89,7 +89,13 @@
       <div class="px-4 py-4 border-b border-gray-200">
         <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Personne</p>
         <div v-if="personStore.loading" class="text-sm text-gray-400">Chargement…</div>
-        <div v-else-if="personStore.persons.length === 0" class="text-sm text-gray-400">Aucune personne</div>
+        <div v-else-if="personStore.persons.length === 0" class="bg-indigo-50 border border-indigo-100 rounded-lg p-3">
+          <p class="text-xs text-indigo-700 font-medium mb-1">Commencez ici</p>
+          <p class="text-xs text-indigo-500 mb-2">Créez votre premier profil pour démarrer la saisie.</p>
+          <RouterLink to="/persons" class="block w-full py-1.5 px-2 bg-indigo-600 text-white rounded-lg text-xs font-medium hover:bg-indigo-700 transition-colors text-center">
+            Créer un profil
+          </RouterLink>
+        </div>
         <div v-else class="space-y-1">
           <button
             v-for="p in personStore.persons" :key="p.id"
