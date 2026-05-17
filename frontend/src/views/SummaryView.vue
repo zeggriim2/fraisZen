@@ -29,26 +29,34 @@
 
     <template v-else-if="summary">
       <!-- Total hero -->
-      <div class="bg-indigo-600 rounded-2xl p-6 text-white mb-4 shadow-lg">
+      <div class="bg-gradient-to-br from-indigo-600 via-indigo-700 to-violet-700 rounded-2xl p-6 text-white mb-4 shadow-lg">
         <p class="text-indigo-200 text-sm font-medium">Total déductible {{ summary.year }}</p>
-        <p class="text-5xl font-bold mt-2">{{ fmt(summary.total) }}</p>
-        <p class="text-indigo-200 text-sm mt-2">{{ personStore.activePerson?.fullName }}</p>
+        <p class="text-5xl font-bold mt-2 tracking-tight">{{ fmt(summary.total) }}</p>
+        <div class="flex items-center justify-between mt-3">
+          <p class="text-indigo-200 text-sm">{{ personStore.activePerson?.fullName }}</p>
+          <div class="flex items-center gap-4 text-xs text-indigo-300">
+            <span>🚗 {{ summary.travel.totalKm.toFixed(0) }} km</span>
+            <span>🏠 {{ summary.remoteWork.days }} j.</span>
+          </div>
+        </div>
       </div>
 
       <!-- Comparaison forfait 10% -->
-      <div class="mb-6">
-        <div class="flex items-center gap-3">
+      <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 mb-6">
+        <p class="text-sm font-semibold text-gray-700 mb-3">Comparaison avec le forfait 10 %</p>
+        <div class="flex flex-wrap items-center gap-3">
           <label class="text-sm text-gray-500 whitespace-nowrap">Salaire brut annuel :</label>
-          <input v-model.number="grossSalary" type="number" min="0" step="100" placeholder="ex : 35000"
+          <input v-model.number="grossSalary" type="number" min="0" step="100" placeholder="ex : 35 000"
             class="w-40 px-3 py-1.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300" />
-          <span v-if="grossSalary > 0" :class="['text-sm font-medium px-3 py-1.5 rounded-lg', forfaitComparison.favorable ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700']">
+          <span v-if="grossSalary > 0" :class="['text-sm font-medium px-3 py-1.5 rounded-lg', forfaitComparison.favorable ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-amber-50 text-amber-700 border border-amber-200']">
             {{ forfaitComparison.label }}
           </span>
+          <span v-else class="text-xs text-gray-400">Renseignez votre salaire pour comparer</span>
         </div>
       </div>
 
       <!-- Cards -->
-      <div class="grid grid-cols-5 gap-4 mb-8">
+      <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
         <SummaryCard icon="🚗" title="Trajets" subtitle="Barème kilométrique" :amount="summary.travel.deduction" color="blue">
           <template #details>
             <div class="flex justify-between text-sm"><span class="text-gray-500">Trajets</span><span class="font-medium">{{ summary.travel.trips.length }}</span></div>
