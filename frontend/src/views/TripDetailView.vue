@@ -1,5 +1,5 @@
 <template>
-  <div class="p-6">
+  <div class="p-4 sm:p-6">
     <!-- Header -->
     <div class="flex items-center gap-3 mb-6">
       <router-link to="/summary" class="text-gray-400 hover:text-gray-600 text-lg leading-none">←</router-link>

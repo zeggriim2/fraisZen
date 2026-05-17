@@ -1,5 +1,5 @@
 <template>
-  <div class="p-8 max-w-2xl mx-auto space-y-8">
+  <div class="p-4 sm:p-8 max-w-2xl mx-auto space-y-8">
     <h1 class="text-2xl font-bold text-gray-900">Paramètres</h1>
 
     <!-- Compte -->

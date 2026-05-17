@@ -196,9 +196,11 @@ const adminNav = [
   { to: '/admin/bareme-kilometrique', label: 'Barèmes km', icon: '🚗' },
 ]
 const types = [
-  { label: 'Trajet', color: 'bg-blue-500' },
+  { label: 'Trajet',      color: 'bg-blue-500' },
   { label: 'Télétravail', color: 'bg-emerald-500' },
-  { label: 'Péage', color: 'bg-amber-500' },
+  { label: 'Péage',       color: 'bg-amber-500' },
+  { label: 'Repas',       color: 'bg-orange-500' },
+  { label: 'Parking',     color: 'bg-rose-500' },
 ]
 
 onMounted(async () => {
