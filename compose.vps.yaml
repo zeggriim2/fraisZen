@@ -36,7 +36,8 @@ services:
       - caddy_data:/data
       - caddy_config:/config
       - jwt_keys:/app/config/jwt
-      - app_var:/app/var
+      - app_var_log:/app/var/log
+      - app_var_share:/app/var/share
     networks:
       - web-network
       - internal
@@ -72,7 +73,8 @@ volumes:
   caddy_config:
   database_data:
   jwt_keys:
-  app_var:
+  app_var_log:
+  app_var_share:
 
 networks:
   web-network:
