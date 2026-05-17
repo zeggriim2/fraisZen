@@ -1,5 +1,5 @@
 <template>
-  <div class="p-6">
+  <div class="p-4 sm:p-6">
     <div class="flex items-center justify-between mb-6">
       <h2 class="text-xl font-semibold text-gray-900">Personnes</h2>
       <button @click="openCreate" class="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700">

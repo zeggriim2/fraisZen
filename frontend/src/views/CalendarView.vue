@@ -1,5 +1,5 @@
 <template>
-  <div class="p-6">
+  <div class="p-4 sm:p-6">
     <div class="flex items-center justify-between mb-6">
       <div class="flex items-center gap-3">
         <button @click="prevMonth" class="p-2 rounded-lg hover:bg-gray-100">
@@ -45,19 +45,19 @@
     <template v-else>
 
     <!-- Stats -->
-    <div class="grid grid-cols-3 gap-4 mb-6">
-      <div class="bg-blue-50 border border-blue-100 rounded-xl p-4">
-        <p class="text-xs text-blue-600 font-medium">Trajets</p>
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+      <div class="bg-blue-50 border border-blue-200 rounded-xl p-4">
+        <p class="text-xs text-blue-600 font-semibold uppercase tracking-wide">Trajets</p>
         <p class="text-2xl font-bold text-blue-700 mt-1">{{ stats.travelCount }}</p>
         <p class="text-xs text-blue-500 mt-1">{{ stats.travelKm.toFixed(0) }} km</p>
       </div>
-      <div class="bg-emerald-50 border border-emerald-100 rounded-xl p-4">
-        <p class="text-xs text-emerald-600 font-medium">Télétravail</p>
+      <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-4">
+        <p class="text-xs text-emerald-600 font-semibold uppercase tracking-wide">Télétravail</p>
         <p class="text-2xl font-bold text-emerald-700 mt-1">{{ stats.remoteCount }}</p>
         <p class="text-xs text-emerald-500 mt-1">{{ stats.remoteTotalAmount.toFixed(2) }} €</p>
       </div>
-      <div class="bg-amber-50 border border-amber-100 rounded-xl p-4">
-        <p class="text-xs text-amber-600 font-medium">Péages</p>
+      <div class="bg-amber-50 border border-amber-200 rounded-xl p-4">
+        <p class="text-xs text-amber-600 font-semibold uppercase tracking-wide">Péages</p>
         <p class="text-2xl font-bold text-amber-700 mt-1">{{ stats.tollCount }}</p>
         <p class="text-xs text-amber-500 mt-1">{{ stats.tollAmount.toFixed(2) }} €</p>
       </div>
