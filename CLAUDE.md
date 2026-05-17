@@ -142,6 +142,48 @@ npm run typecheck # run tsc --noEmit
 | GET | `/api/admin/users` | Admin — paginated user list |
 | GET | `/api/admin/users/export` | Admin — CSV export all users |
 
+## Dev Fixtures
+
+Commande pour (re)charger un jeu de données complet en local :
+
+```bash
+make fixtures   # drop DB → create → migrate → fixtures:load
+```
+
+### Utilisateurs
+
+| Email | Mot de passe | Rôle | Abonnement | Année | CV fiscal |
+|-------|-------------|------|-----------|-------|-----------|
+| `admin@fraisreel.fr` | `Admin1234!` | ROLE_ADMIN | active | 2025 | 5 |
+| `alice@example.com` | `Test1234!` | ROLE_USER | active | 2025 | 5 |
+| `bob@example.com` | `Test1234!` | ROLE_USER | active | 2025 | 3 |
+| `carol@example.com` | `Test1234!` | ROLE_USER | _(aucun)_ | — | — |
+
+> Carol n'a pas d'abonnement actif → toutes les routes `/api/*` retournent 402.
+
+### Personnes & routes favorites
+
+| Personne | Compte | Trajet domicile-travail | Véhicule | CV |
+|----------|--------|------------------------|----------|----|
+| Alice Dupont _(self)_ | alice | Paris 13e → La Défense (18 km) | Voiture | 5 |
+| Marc Dupont | alice | Lyon 3e → Villeurbanne (8 km) | Voiture | 3 |
+| Robert Martin _(self)_ | bob | Bordeaux Centre → Mérignac (15 km) | Voiture / Moto | 3/5 |
+
+### Dépenses chargées
+
+| Personne | Période | Types |
+|----------|---------|-------|
+| Alice Dupont | Jan–Déc 2025 (sans août) + Oct–Déc 2024 | Trajet, télétravail, péage, repas, parking, électrique |
+| Marc Dupont | Jan–Mars 2025 | Trajet, télétravail, repas |
+| Robert Martin | Jan–Mars 2025 | Trajet (voiture jan-fév, moto mars), télétravail, repas, péage |
+
+### Référentiel (ReferentialFixtures)
+
+| Table | Années |
+|-------|--------|
+| `fiscal_config` | 2023 (2,50 €/j · repas 4,85 €), 2024 (2,70 € · 5,35 €), 2025 (2,70 € · 5,45 €) |
+| `bareme_kilometrique` | 2023 · 2024 · 2025 · 2026 — arrêté du 27 mars 2023 |
+
 <!-- rtk-instructions v2 -->
 # RTK (Rust Token Killer) - Token-Optimized Commands
 

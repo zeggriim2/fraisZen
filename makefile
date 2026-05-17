@@ -12,7 +12,7 @@ SYMFONY  = $(PHP) bin/console
 # Misc
 .DEFAULT_GOAL = help
 .PHONY        : help build up start down logs sh composer vendor sf cc test \
-                coverage frontend-install frontend-dev frontend-build db-setup \
+                coverage frontend-install frontend-dev frontend-build db-setup fixtures \
                 lint cs-fix phpstan psalm typecheck hadolint actionlint analyse
 
 ## —— 🎵 🐳 The Symfony Docker Makefile 🐳 🎵 ——————————————————————————————————
@@ -78,6 +78,12 @@ cc: sf
 db-setup: ## Create DB schema and run migrations (first run)
 	@$(SYMFONY) doctrine:database:create --if-not-exists
 	@$(SYMFONY) doctrine:migrations:migrate --no-interaction
+
+fixtures: ## Reset DB and load all dev fixtures (drop → create → migrate → fixtures)
+	@$(SYMFONY) doctrine:database:drop --force --if-exists
+	@$(SYMFONY) doctrine:database:create
+	@$(SYMFONY) doctrine:migrations:migrate --no-interaction
+	@$(SYMFONY) doctrine:fixtures:load --no-interaction
 
 ## —— Qualité de code 🔍 ————————————————————————————————————————————————————————
 lint: ## PHP CS Fixer — vérifie le style sans modifier (rapport diff)
