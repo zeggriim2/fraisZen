@@ -1,28 +1,37 @@
 <template>
   <div class="p-4 sm:p-6">
-    <div class="flex items-center justify-between mb-6">
-      <div class="flex items-center gap-3">
-        <button @click="prevMonth" class="p-2 rounded-lg hover:bg-gray-100">
+
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center gap-3 mb-6">
+      <!-- Navigation mois / année -->
+      <div class="flex items-center gap-1.5 min-w-0">
+        <button @click="prevMonth" class="p-2 rounded-lg hover:bg-gray-100 shrink-0">
           <svg class="w-5 h-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
         </button>
-        <select v-model="month" class="text-base font-semibold text-gray-900 border-0 bg-transparent cursor-pointer focus:ring-0 capitalize">
+        <select v-model="month" class="text-base font-semibold text-gray-900 border-0 bg-transparent cursor-pointer focus:ring-0 capitalize min-w-0">
           <option v-for="(name, i) in monthNames" :key="i" :value="i">{{ name }}</option>
         </select>
-        <select v-model="year" class="text-base font-semibold text-gray-900 border-0 bg-transparent cursor-pointer focus:ring-0">
+        <select v-model="year" class="text-base font-semibold text-gray-900 border-0 bg-transparent cursor-pointer focus:ring-0 w-20">
           <option v-for="y in years" :key="y" :value="y">{{ y }}</option>
         </select>
-        <button @click="nextMonth" class="p-2 rounded-lg hover:bg-gray-100">
+        <button @click="nextMonth" class="p-2 rounded-lg hover:bg-gray-100 shrink-0">
           <svg class="w-5 h-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
         </button>
-        <button @click="goToday" class="px-3 py-1.5 text-sm font-medium text-indigo-600 border border-indigo-200 rounded-lg hover:bg-indigo-50">Aujourd'hui</button>
+        <button @click="goToday" class="px-3 py-1.5 text-sm font-medium text-indigo-600 border border-indigo-200 rounded-lg hover:bg-indigo-50 shrink-0">
+          Aujourd'hui
+        </button>
       </div>
-      <div class="flex items-center gap-3">
-        <span v-if="personStore.activePerson" class="text-sm text-gray-500">
+      <!-- Personne + import CSV -->
+      <div class="flex items-center gap-3 sm:ml-auto">
+        <span v-if="personStore.activePerson" class="text-sm text-gray-500 truncate">
           <span class="font-medium text-gray-900">{{ personStore.activePerson.fullName }}</span>
         </span>
-        <button @click="showCsvImport = true" class="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50" title="Importer depuis un relevé bancaire CSV">
+        <button @click="showCsvImport = true"
+          class="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 shrink-0"
+          title="Importer depuis un relevé bancaire CSV">
           <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
-          Import CSV
+          <span class="hidden sm:inline">Import CSV</span>
+          <span class="sm:hidden">CSV</span>
         </button>
       </div>
     </div>
@@ -44,65 +53,89 @@
 
     <template v-else>
 
-    <!-- Stats -->
-    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-      <div class="bg-blue-50 border border-blue-200 rounded-xl p-4">
-        <p class="text-xs text-blue-600 font-semibold uppercase tracking-wide">Trajets</p>
-        <p class="text-2xl font-bold text-blue-700 mt-1">{{ stats.travelCount }}</p>
-        <p class="text-xs text-blue-500 mt-1">{{ stats.travelKm.toFixed(0) }} km</p>
+      <!-- Stats -->
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-4">
+          <p class="text-xs text-blue-600 font-semibold uppercase tracking-wide">Trajets</p>
+          <p class="text-2xl font-bold text-blue-700 mt-1">{{ stats.travelCount }}</p>
+          <p class="text-xs text-blue-500 mt-1">{{ stats.travelKm.toFixed(0) }} km</p>
+        </div>
+        <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-4">
+          <p class="text-xs text-emerald-600 font-semibold uppercase tracking-wide">Télétravail</p>
+          <p class="text-2xl font-bold text-emerald-700 mt-1">{{ stats.remoteCount }}</p>
+          <p class="text-xs text-emerald-500 mt-1">{{ stats.remoteTotalAmount.toFixed(2) }} €</p>
+        </div>
+        <div class="bg-amber-50 border border-amber-200 rounded-xl p-4">
+          <p class="text-xs text-amber-600 font-semibold uppercase tracking-wide">Péages</p>
+          <p class="text-2xl font-bold text-amber-700 mt-1">{{ stats.tollCount }}</p>
+          <p class="text-xs text-amber-500 mt-1">{{ stats.tollAmount.toFixed(2) }} €</p>
+        </div>
       </div>
-      <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-4">
-        <p class="text-xs text-emerald-600 font-semibold uppercase tracking-wide">Télétravail</p>
-        <p class="text-2xl font-bold text-emerald-700 mt-1">{{ stats.remoteCount }}</p>
-        <p class="text-xs text-emerald-500 mt-1">{{ stats.remoteTotalAmount.toFixed(2) }} €</p>
-      </div>
-      <div class="bg-amber-50 border border-amber-200 rounded-xl p-4">
-        <p class="text-xs text-amber-600 font-semibold uppercase tracking-wide">Péages</p>
-        <p class="text-2xl font-bold text-amber-700 mt-1">{{ stats.tollCount }}</p>
-        <p class="text-xs text-amber-500 mt-1">{{ stats.tollAmount.toFixed(2) }} €</p>
-      </div>
-    </div>
 
-    <!-- Calendar -->
-    <div class="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
-      <div class="grid grid-cols-7 border-b border-gray-200">
-        <div v-for="d in ['Lun','Mar','Mer','Jeu','Ven','Sam','Dim']" :key="d"
-          class="py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider">{{ d }}</div>
-      </div>
-      <div class="grid grid-cols-7">
-        <div
-          v-for="(cell, i) in cells" :key="i"
-          @click="cell.date && openModal(cell.date)"
-          :class="['min-h-28 p-2 border-b border-r border-gray-100 transition-colors cursor-pointer',
-            !cell.inMonth && 'bg-gray-50/50 opacity-40',
-            cell.isHoliday && cell.inMonth && 'bg-amber-50',
-            cell.isToday && 'bg-indigo-50/40',
-            cell.inMonth && !cell.isHoliday && 'hover:bg-gray-50',
-            cell.inMonth && cell.isHoliday && 'hover:bg-amber-100']"
-        >
-          <div class="flex items-center justify-between mb-1">
-            <span :class="['inline-flex items-center justify-center w-7 h-7 rounded-full text-sm font-medium',
-              cell.isToday ? 'bg-indigo-600 text-white' : 'text-gray-700']">
-              {{ cell.day }}
-            </span>
-            <span v-if="cell.isHoliday && cell.inMonth" class="text-xs text-amber-600 font-medium truncate ml-1 max-w-[70%]" :title="cell.holidayName ?? ''">
-              {{ cell.holidayName }}
-            </span>
+      <!-- Calendrier -->
+      <div class="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
+        <!-- En-têtes des jours -->
+        <div class="grid grid-cols-7 border-b border-gray-200">
+          <div v-for="d in dayHeaders" :key="d.full"
+            class="py-2 sm:py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider">
+            <span class="sm:hidden">{{ d.letter }}</span>
+            <span class="hidden sm:inline">{{ d.abbr }}</span>
           </div>
-          <div class="space-y-0.5">
-            <div v-for="e in cell.expenses" :key="e.id"
-              @click.stop="openDetail(e)"
-              :class="['flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-medium truncate', badgeClass(e.type)]">
-              <span>{{ expenseIcon(e) }}</span>
-              <span class="truncate">{{ label(e) }}</span>
+        </div>
+
+        <!-- Cellules -->
+        <div class="grid grid-cols-7">
+          <div
+            v-for="(cell, i) in cells" :key="i"
+            @click="cell.date && openModal(cell.date)"
+            :class="[
+              'min-h-10 sm:min-h-28 p-1 sm:p-2 border-b border-r border-gray-100 transition-colors cursor-pointer',
+              !cell.inMonth && 'bg-gray-50/50 opacity-40',
+              cell.isHoliday && cell.inMonth && 'bg-amber-50',
+              cell.isToday && 'bg-indigo-50/40',
+              cell.inMonth && !cell.isHoliday && 'hover:bg-gray-50',
+              cell.inMonth && cell.isHoliday && 'hover:bg-amber-100',
+            ]"
+          >
+            <!-- Numéro du jour + nom du jour férié (desktop) -->
+            <div class="flex items-start justify-between gap-1 mb-0.5 sm:mb-1">
+              <span :class="[
+                'inline-flex items-center justify-center rounded-full font-medium shrink-0',
+                'w-6 h-6 text-xs sm:w-7 sm:h-7 sm:text-sm',
+                cell.isToday ? 'bg-indigo-600 text-white' : 'text-gray-700',
+              ]">{{ cell.day }}</span>
+              <span v-if="cell.isHoliday && cell.inMonth"
+                class="hidden sm:block text-xs text-amber-600 font-medium truncate leading-tight mt-0.5"
+                :title="cell.holidayName ?? ''">
+                {{ cell.holidayName }}
+              </span>
+            </div>
+
+            <!-- Mobile : points colorés -->
+            <div v-if="cell.expenses.length" class="sm:hidden flex flex-wrap gap-0.5 mt-0.5">
+              <span
+                v-for="e in cell.expenses" :key="e.id"
+                @click.stop="openDetail(e)"
+                :class="['w-1.5 h-1.5 rounded-full shrink-0', dotClass(e.type)]"
+              />
+            </div>
+
+            <!-- Desktop : badges avec texte -->
+            <div class="hidden sm:block space-y-0.5">
+              <div
+                v-for="e in cell.expenses" :key="e.id"
+                @click.stop="openDetail(e)"
+                :class="['flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-medium truncate', badgeClass(e.type)]">
+                <span>{{ expenseIcon(e) }}</span>
+                <span class="truncate">{{ label(e) }}</span>
+              </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
 
-    <ExpenseModal v-if="showModal" :date="selectedDate!" :expense="selectedExpense" :prefill="duplicateSource" @close="closeModal" @saved="onSaved" @duplicate="onDuplicate" />
-    <CsvImportModal v-if="showCsvImport" @close="showCsvImport = false" @imported="onCsvImported" />
+      <ExpenseModal v-if="showModal" :date="selectedDate!" :expense="selectedExpense" :prefill="duplicateSource" @close="closeModal" @saved="onSaved" @duplicate="onDuplicate" />
+      <CsvImportModal v-if="showCsvImport" @close="showCsvImport = false" @imported="onCsvImported" />
 
     </template>
   </div>
@@ -116,7 +149,7 @@ import { useAuthStore } from '@/stores/authStore'
 import type { Expense, TravelExpense, TollExpense, MealExpense } from '@/types'
 import ExpenseModal from '@/components/expense/ExpenseModal.vue'
 import CsvImportModal from '@/components/expense/CsvImportModal.vue'
-import {ParkingExpense} from "@/types";
+import { ParkingExpense } from '@/types'
 import { getPublicHolidays } from '@/api/expenseApi'
 
 const personStore = usePersonStore()
@@ -126,8 +159,17 @@ const authStore = useAuthStore()
 const today = new Date()
 const year = ref(authStore.user?.defaultYear ?? today.getFullYear())
 const month = ref(today.getMonth())
-
 const publicHolidays = ref<Record<string, string>>({})
+
+const dayHeaders = [
+  { letter: 'L', abbr: 'Lun' },
+  { letter: 'M', abbr: 'Mar' },
+  { letter: 'M', abbr: 'Mer' },
+  { letter: 'J', abbr: 'Jeu' },
+  { letter: 'V', abbr: 'Ven' },
+  { letter: 'S', abbr: 'Sam' },
+  { letter: 'D', abbr: 'Dim' },
+]
 
 async function loadHolidays() {
   try {
@@ -140,6 +182,7 @@ async function loadHolidays() {
 watch(() => authStore.user, (u) => {
   if (u?.defaultYear != null) year.value = u.defaultYear
 }, { immediate: true })
+
 const monthNames = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre']
 const years = Array.from({ length: 8 }, (_, i) => today.getFullYear() - 5 + i)
 const showModal = ref(false)
@@ -164,8 +207,7 @@ const cells = computed(() => {
 
   for (let i = 0; i < offset; i++) {
     const d = new Date(year.value, month.value, 1 - (offset - i))
-    const dateStr = toDateStr(d)
-    result.push({ date: dateStr, day: d.getDate(), inMonth: false, isToday: false, isHoliday: false, holidayName: null, expenses: [] as Expense[] })
+    result.push({ date: toDateStr(d), day: d.getDate(), inMonth: false, isToday: false, isHoliday: false, holidayName: null, expenses: [] as Expense[] })
   }
   for (let d = 1; d <= last.getDate(); d++) {
     const dateStr = toDateStr(new Date(year.value, month.value, d))
@@ -193,19 +235,30 @@ const stats = computed(() => {
 })
 
 function badgeClass(type: string) {
-  return (
-      {
-          travel: 'bg-blue-100 text-blue-700',
-          remote_work: 'bg-emerald-100 text-emerald-700',
-          toll: 'bg-amber-100 text-amber-700',
-          meal: 'bg-orange-100 text-orange-700',
-          parking: 'bg-red-100 text-red-700'
-      } as Record<string,string>)[type] ?? ''
+  return ({
+    travel:      'bg-blue-100 text-blue-700',
+    remote_work: 'bg-emerald-100 text-emerald-700',
+    toll:        'bg-amber-100 text-amber-700',
+    meal:        'bg-orange-100 text-orange-700',
+    parking:     'bg-red-100 text-red-700',
+  } as Record<string, string>)[type] ?? ''
 }
+
+function dotClass(type: string) {
+  return ({
+    travel:      'bg-blue-500',
+    remote_work: 'bg-emerald-500',
+    toll:        'bg-amber-500',
+    meal:        'bg-orange-500',
+    parking:     'bg-rose-500',
+  } as Record<string, string>)[type] ?? 'bg-gray-400'
+}
+
 function expenseIcon(e: Expense) {
   if (e.type === 'travel' && (e as TravelExpense).isElectric) return '⚡'
-  return ({ travel: '🚗', remote_work: '🏠', toll: '🛣️', meal: '🍽️', parking: '🅿️' } as Record<string,string>)[e.type] ?? '📌'
+  return ({ travel: '🚗', remote_work: '🏠', toll: '🛣️', meal: '🍽️', parking: '🅿️' } as Record<string, string>)[e.type] ?? '📌'
 }
+
 function label(e: Expense): string {
   if (e.type === 'travel') { const t = e as TravelExpense; return t.arrival ? `→ ${t.arrival}` : `${t.distanceKm} km` }
   if (e.type === 'remote_work') return `${e.amount.toFixed(2)} €`
@@ -214,6 +267,7 @@ function label(e: Expense): string {
   if (e.type === 'parking') return `${(e as ParkingExpense).parkingAmount.toFixed(2)} €`
   return ''
 }
+
 function openModal(date: string) { selectedDate.value = date; selectedExpense.value = null; showModal.value = true }
 function openDetail(e: Expense) { selectedDate.value = e.date; selectedExpense.value = e; showModal.value = true }
 function closeModal() { showModal.value = false; selectedExpense.value = null; duplicateSource.value = null }
