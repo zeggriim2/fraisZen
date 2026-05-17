@@ -76,7 +76,7 @@
       <div class="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
         <!-- En-têtes des jours -->
         <div class="grid grid-cols-7 border-b border-gray-200">
-          <div v-for="d in dayHeaders" :key="d.full"
+          <div v-for="d in dayHeaders" :key="d.abbr"
             class="py-2 sm:py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider">
             <span class="sm:hidden">{{ d.letter }}</span>
             <span class="hidden sm:inline">{{ d.abbr }}</span>
