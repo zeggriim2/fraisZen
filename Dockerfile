@@ -116,14 +116,19 @@ COPY --link frankenphp/conf.d/20-app.prod.ini $PHP_INI_DIR/app.conf.d/
 COPY --link composer.* symfony.* ./
 RUN composer install --no-cache --prefer-dist --no-dev --no-autoloader --no-scripts --no-progress
 
-# copy sources
-COPY --link bin/ config/ migrations/ public/ src/ templates/ ./
+# copy sources — explicit dest required: COPY src/ dest/ copies *contents* of src into dest
+COPY --link bin/ ./bin/
+COPY --link config/ ./config/
+COPY --link migrations/ ./migrations/
+COPY --link public/ ./public/
+COPY --link src/ ./src/
+COPY --link templates/ ./templates/
 # inject pre-built Vue app (outDir: ../public/app relative to frontend/)
 COPY --from=frontend_builder /app/public/app ./public/app
 
 RUN <<-EOF
 	mkdir -p var/cache var/log var/share
-	composer dump-autoload --classmap-authoritative --no-dev
+	composer dump-autoload --classmap-authoritative --no-dev --no-scripts
 	printf '<?php return ["APP_ENV" => "prod", "APP_DEBUG" => "0"];' > .env.local.php
 	chmod +x bin/console; sync
 EOF
