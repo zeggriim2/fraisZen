@@ -1,10 +1,38 @@
 <template>
   <div class="h-screen bg-gray-50 flex overflow-hidden">
+
+    <!-- Mobile overlay -->
+    <Transition
+      enter-active-class="transition-opacity duration-300"
+      enter-from-class="opacity-0"
+      leave-active-class="transition-opacity duration-300"
+      leave-to-class="opacity-0"
+    >
+      <div
+        v-if="sidebarOpen && !isPublicRoute"
+        class="fixed inset-0 z-40 bg-black/40 lg:hidden"
+        @click="sidebarOpen = false"
+      />
+    </Transition>
+
     <!-- Admin sidebar -->
-    <aside v-if="isAdminRoute" class="w-64 bg-gray-900 border-r border-gray-800 flex flex-col shrink-0">
-      <div class="px-6 py-5 border-b border-gray-800">
-        <h1 class="text-lg font-bold text-white">Administration</h1>
-        <p class="text-xs text-gray-400 mt-0.5">Back-office</p>
+    <aside
+      v-if="isAdminRoute"
+      :class="[
+        'fixed inset-y-0 left-0 z-50 w-64 bg-gray-900 border-r border-gray-800 flex flex-col shrink-0',
+        'transition-transform duration-300 ease-in-out',
+        'lg:static lg:translate-x-0',
+        sidebarOpen ? 'translate-x-0' : '-translate-x-full',
+      ]"
+    >
+      <div class="px-6 py-5 border-b border-gray-800 flex items-center justify-between">
+        <div>
+          <h1 class="text-lg font-bold text-white">Administration</h1>
+          <p class="text-xs text-gray-400 mt-0.5">Back-office</p>
+        </div>
+        <button @click="sidebarOpen = false" class="lg:hidden p-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-gray-800 transition-colors">
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
       </div>
 
       <nav class="flex-1 px-4 py-4 space-y-1">
@@ -29,10 +57,23 @@
     </aside>
 
     <!-- User sidebar -->
-    <aside v-else-if="!isPublicRoute" class="w-64 bg-white border-r border-gray-200 flex flex-col shrink-0">
-      <div class="px-6 py-5 border-b border-gray-200">
-        <h1 class="text-lg font-bold text-gray-900">Frais Réels</h1>
-        <p class="text-xs text-gray-500 mt-0.5">Déclaration d'impôts</p>
+    <aside
+      v-else-if="!isPublicRoute"
+      :class="[
+        'fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-gray-200 flex flex-col shrink-0',
+        'transition-transform duration-300 ease-in-out',
+        'lg:static lg:translate-x-0',
+        sidebarOpen ? 'translate-x-0' : '-translate-x-full',
+      ]"
+    >
+      <div class="px-6 py-5 border-b border-gray-200 flex items-center justify-between">
+        <div>
+          <h1 class="text-lg font-bold text-gray-900">Frais Réels</h1>
+          <p class="text-xs text-gray-500 mt-0.5">Déclaration d'impôts</p>
+        </div>
+        <button @click="sidebarOpen = false" class="lg:hidden p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors">
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
       </div>
 
       <!-- Bandeau abonnement inactif -->
@@ -90,14 +131,31 @@
       </div>
     </aside>
 
-    <main class="flex-1 overflow-auto">
+    <main class="flex-1 overflow-auto min-w-0">
+      <!-- Mobile top bar -->
+      <div v-if="!isPublicRoute" class="lg:hidden sticky top-0 z-30 flex items-center gap-3 px-4 py-3 bg-white border-b border-gray-200">
+        <button
+          @click="sidebarOpen = true"
+          class="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+          aria-label="Ouvrir le menu"
+        >
+          <svg class="w-5 h-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+          </svg>
+        </button>
+        <span class="text-base font-semibold text-gray-900">{{ isAdminRoute ? 'Administration' : 'Frais Réels' }}</span>
+        <span v-if="personStore.activePerson && !isAdminRoute" class="ml-auto text-xs text-gray-500 truncate max-w-[120px]">
+          {{ personStore.activePerson.fullName }}
+        </span>
+      </div>
+
       <RouterView />
     </main>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { usePersonStore } from '@/stores/personStore'
 import { useAuthStore } from '@/stores/authStore'
@@ -106,8 +164,13 @@ const personStore = usePersonStore()
 const authStore = useAuthStore()
 const router = useRouter()
 const route = useRoute()
+
+const sidebarOpen = ref(false)
 const isPublicRoute = computed(() => !!route.meta.public)
 const isAdminRoute = computed(() => route.path.startsWith('/admin'))
+
+// Close sidebar on navigation
+watch(route, () => { sidebarOpen.value = false })
 
 function logout() {
   authStore.logout()
@@ -131,12 +194,11 @@ const types = [
   { label: 'Télétravail', color: 'bg-emerald-500' },
   { label: 'Péage', color: 'bg-amber-500' },
 ]
+
 onMounted(async () => {
-  // Handle impersonation token from admin
   const urlParams = new URLSearchParams(window.location.search)
   const impToken = urlParams.get('impersonate_token')
   if (impToken) {
-    // Impersonation : sessionStorage uniquement (expire à la fermeture de l'onglet)
     sessionStorage.setItem('jwt_token', impToken)
     localStorage.removeItem('jwt_token')
     authStore.token = impToken
@@ -149,8 +211,6 @@ onMounted(async () => {
   }
 })
 
-// Charge les personnes lors d'une connexion depuis la page login
-// (App.vue ne remonte pas après navigation, donc onMounted ne se re-déclenche pas)
 watch(() => authStore.isAuthenticated, async (isAuth) => {
   if (isAuth) {
     await personStore.fetchAll()
