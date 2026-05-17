@@ -3,8 +3,8 @@ name: CD — Production
 
 on:
   push:
-    branches:
-      - main
+    tags:
+      - 'v*'
   workflow_dispatch: ~
 
 permissions:
@@ -44,7 +44,8 @@ jobs:
           images: ghcr.io/${{ github.repository_owner }}/fraiszen-app
           tags: |
             type=sha,prefix=sha-,format=long
-            type=raw,value=latest,enable={{is_default_branch}}
+            type=ref,event=tag
+            type=raw,value=latest
 
       - name: Build and push
         uses: docker/build-push-action@v6
