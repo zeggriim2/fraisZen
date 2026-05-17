@@ -194,7 +194,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted, computed, defineComponent, h } from 'vue'
+import { ref, watch, onMounted, computed } from 'vue'
+import SummaryCard from '@/components/ui/SummaryCard.vue'
 import { usePersonStore } from '@/stores/personStore'
 import { useExpenseStore } from '@/stores/expenseStore'
 import { useAuthStore } from '@/stores/authStore'
@@ -332,30 +333,4 @@ async function downloadPdf() {
 watch(() => personStore.activePerson, load)
 watch(selectedYear, load)
 onMounted(load)
-
-// Inline SummaryCard
-const SummaryCard = defineComponent({
-  props: { icon: String, title: String, subtitle: String, amount: Number, color: String },
-  setup(props, { slots }) {
-    const colors: Record<string, { bg: string; text: string }> = {
-      blue:    { bg: 'bg-blue-100',    text: 'text-blue-600' },
-      emerald: { bg: 'bg-emerald-100', text: 'text-emerald-600' },
-      amber:   { bg: 'bg-amber-100',   text: 'text-amber-600' },
-      orange:  { bg: 'bg-orange-100',  text: 'text-orange-600' },
-      rose:    { bg: 'bg-rose-100',    text: 'text-rose-600' },
-    }
-    const c = colors[props.color ?? 'blue']
-    return () => h('div', { class: 'bg-white rounded-2xl border border-gray-200 p-5 shadow-sm' }, [
-      h('div', { class: 'flex items-center gap-3 mb-4' }, [
-        h('div', { class: `w-10 h-10 rounded-xl ${c.bg} flex items-center justify-center text-xl` }, props.icon),
-        h('div', {}, [h('p', { class: 'font-semibold text-gray-900 text-sm' }, props.title), h('p', { class: 'text-xs text-gray-500' }, props.subtitle)]),
-      ]),
-      h('div', { class: 'space-y-2' }, [slots.details?.()]),
-      h('div', { class: 'mt-4 pt-4 border-t border-gray-100 flex justify-between items-center' }, [
-        h('span', { class: 'text-sm text-gray-500' }, 'Déduction'),
-        h('span', { class: `text-lg font-bold ${c.text}` }, fmt(props.amount ?? 0)),
-      ]),
-    ])
-  },
-})
 </script>

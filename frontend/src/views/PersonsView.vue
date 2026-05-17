@@ -39,20 +39,30 @@
             <button @click="openEdit(p)" class="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100">
               <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
             </button>
-            <button @click="remove(p.id)" class="p-1.5 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50">
+            <button @click="confirmRemove(p)" class="p-1.5 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50">
               <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
             </button>
           </div>
         </div>
-        <h3 class="font-semibold text-gray-900 flex items-center gap-1.5">
-          {{ p.fullName }}
-        </h3>
+        <h3 class="font-semibold text-gray-900">{{ p.fullName }}</h3>
         <p v-if="p.email" class="text-sm text-gray-500 mt-0.5">{{ p.email }}</p>
         <p class="text-xs text-gray-400 mt-2">Depuis le {{ fmt(p.createdAt) }}</p>
       </div>
     </div>
 
     <PersonModal v-if="showModal" :person="editing" @close="closeModal" @saved="onSaved" />
+
+    <ConfirmModal
+      v-if="pendingRemove"
+      title="Supprimer cette personne ?"
+      :message="`${pendingRemove.fullName} et tous ses frais associés seront définitivement supprimés.`"
+      confirm-label="Supprimer"
+      cancel-label="Annuler"
+      variant="danger"
+      :icon="true"
+      @confirm="doRemove"
+      @cancel="pendingRemove = null"
+    />
   </div>
 </template>
 
@@ -61,10 +71,12 @@ import { ref } from 'vue'
 import { usePersonStore } from '@/stores/personStore'
 import type { Person } from '@/types'
 import PersonModal from '@/components/person/PersonModal.vue'
+import ConfirmModal from '@/components/ui/ConfirmModal.vue'
 
 const store = usePersonStore()
 const showModal = ref(false)
 const editing = ref<Person | null>(null)
+const pendingRemove = ref<Person | null>(null)
 
 const initials = (p: Person) => (p.firstName[0] + p.lastName[0]).toUpperCase()
 const fmt = (d: string) => new Date(d).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
@@ -73,8 +85,10 @@ function openCreate() { editing.value = null; showModal.value = true }
 function openEdit(p: Person) { editing.value = p; showModal.value = true }
 function closeModal() { showModal.value = false; editing.value = null }
 async function onSaved() { closeModal(); await store.fetchAll() }
-async function remove(id: string) {
-  if (!confirm('Supprimer cette personne et tous ses frais ?')) return
-  await store.remove(id)
+function confirmRemove(p: Person) { pendingRemove.value = p }
+async function doRemove() {
+  if (!pendingRemove.value) return
+  await store.remove(pendingRemove.value.id)
+  pendingRemove.value = null
 }
 </script>
