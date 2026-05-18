@@ -96,9 +96,10 @@
             <label class="block text-xs font-medium text-gray-500 mb-1">Année fiscale par défaut</label>
             <select v-model="form.defaultYear"
               class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300">
-              <option :value="null">Aucune (année en cours)</option>
+              <option :value="null">Aucune (automatique)</option>
               <option v-for="y in years" :key="y" :value="y">{{ y }}</option>
             </select>
+            <p class="text-xs text-gray-400 mt-1">{{ defaultYearHint }}</p>
           </div>
           <div>
             <label class="block text-xs font-medium text-gray-500 mb-1">Puissance fiscale par défaut</label>
@@ -148,8 +149,14 @@ import { billingApi } from '@/api/billingApi'
 const authStore = useAuthStore()
 const router = useRouter()
 
-const currentYear = new Date().getFullYear()
+const _nowDate = new Date()
+const currentYear = _nowDate.getFullYear()
+const isDeclarationSeason = _nowDate.getMonth() < 6
 const years = Array.from({ length: 8 }, (_, i) => currentYear - 5 + i)
+// Texte d'aide contextuel : pointe vers l'année à déclarer selon la période
+const defaultYearHint = isDeclarationSeason
+  ? `En période de déclaration, "Automatique" affiche ${currentYear - 1} par défaut.`
+  : `Hors période de déclaration, "Automatique" affiche ${currentYear} par défaut.`
 const fiscalPowers = [3, 4, 5, 6, 7]
 
 const form = reactive({
