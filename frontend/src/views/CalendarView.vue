@@ -26,6 +26,12 @@
         <span v-if="personStore.activePerson" class="text-sm text-gray-500 truncate">
           <span class="font-medium text-gray-900">{{ personStore.activePerson.fullName }}</span>
         </span>
+        <button v-if="personStore.activePerson" @click="showBulkModal = true"
+          class="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-indigo-600 border border-indigo-200 rounded-lg hover:bg-indigo-50 shrink-0"
+          title="Générer des trajets sur une plage de dates">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+          <span class="hidden sm:inline">Générer</span>
+        </button>
         <button @click="showCsvImport = true"
           class="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 shrink-0"
           title="Importer depuis un relevé bancaire CSV">
@@ -35,6 +41,16 @@
         </button>
       </div>
     </div>
+
+    <!-- Modal génération de trajets en masse -->
+    <BulkTripModal v-if="showBulkModal && personStore.activePerson"
+      :person-id="personStore.activePerson.id"
+      :year="year"
+      :month="month"
+      :public-holidays="publicHolidays"
+      @close="showBulkModal = false"
+      @generated="onBulkGenerated"
+    />
 
     <!-- État vide : aucune personne existante -->
     <div v-if="!personStore.loading && personStore.persons.length === 0" class="flex flex-col items-center justify-center py-24 text-center">
@@ -149,6 +165,7 @@ import { useAuthStore } from '@/stores/authStore'
 import type { Expense, TravelExpense, TollExpense, MealExpense } from '@/types'
 import ExpenseModal from '@/components/expense/ExpenseModal.vue'
 import CsvImportModal from '@/components/expense/CsvImportModal.vue'
+import BulkTripModal from '@/components/expense/BulkTripModal.vue'
 import { ParkingExpense } from '@/types'
 import { getPublicHolidays } from '@/api/expenseApi'
 
@@ -187,6 +204,7 @@ const monthNames = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','
 const years = Array.from({ length: 8 }, (_, i) => today.getFullYear() - 5 + i)
 const showModal = ref(false)
 const showCsvImport = ref(false)
+const showBulkModal = ref(false)
 const selectedDate = ref<string | null>(null)
 const selectedExpense = ref<Expense | null>(null)
 const duplicateSource = ref<Expense | null>(null)
@@ -281,6 +299,7 @@ function onDuplicate(e: Expense) {
 }
 async function load() { await expenseStore.fetchByPeriod(from.value, to.value, personStore.activePerson?.id) }
 async function onCsvImported(count: number) { showCsvImport.value = false; await load(); if (count) alert(`${count} frais importés avec succès.`) }
+async function onBulkGenerated(count: number) { showBulkModal.value = false; await load(); if (count) alert(`${count} trajet${count > 1 ? 's' : ''} généré${count > 1 ? 's' : ''} avec succès.`) }
 function prevMonth() { if (month.value === 0) { month.value = 11; year.value-- } else month.value-- }
 function nextMonth() { if (month.value === 11) { month.value = 0; year.value++ } else month.value++ }
 function goToday() { month.value = today.getMonth(); year.value = today.getFullYear() }

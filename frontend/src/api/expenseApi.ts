@@ -56,6 +56,19 @@ export const expenseApi = {
     http.get(`/expenses/${id}/receipt`, { responseType: 'blob' }).then(r => r.data as Blob),
   deleteReceipt: (id: string) =>
     http.delete(`/expenses/${id}/receipt`),
+
+  bulkCreateTravel: (payload: {
+    personId: string
+    dates: string[]
+    distanceKm: number
+    vehiclePower?: number | null
+    departure?: string | null
+    arrival?: string | null
+    description?: string | null
+    roundTrip?: boolean
+    vehicleType?: string
+    isElectric?: boolean
+  }) => http.post<{ created: number }>('/expenses/bulk-travel', payload).then(r => r.data),
 }
 
 export function getPublicHolidays(year: number): Promise<Record<string, string>> {
