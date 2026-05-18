@@ -15,6 +15,8 @@ use App\Expense\Application\Command\UpdateExpense\UpdateExpenseCommand;
 use App\Expense\Application\Export\SummaryExporterRegistry;
 use App\Expense\Application\Query\GetExpensesByPeriod\GetExpensesByPeriodQuery;
 use App\Expense\Application\Query\GetExpensesSummary\GetExpensesSummaryQuery;
+use App\Person\Domain\Repository\PersonRepositoryInterface;
+use App\Person\Domain\ValueObject\PersonId;
 use App\SharedKernel\Application\Bus\CommandBusInterface;
 use App\SharedKernel\Application\Bus\QueryBusInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -35,6 +37,7 @@ final class ExpenseController extends AbstractController
         private readonly QueryBusInterface $queryBus,
         private readonly FiscalConfigRepositoryInterface $fiscalConfigRepository,
         private readonly SummaryExporterRegistry $exporters,
+        private readonly PersonRepositoryInterface $personRepository,
     ) {
     }
 
@@ -71,6 +74,8 @@ final class ExpenseController extends AbstractController
         }
 
         $data = $this->queryBus->ask(new GetExpensesSummaryQuery($personId, $year));
+        $person = $this->personRepository->findById(PersonId::fromString($personId));
+        $data['personName'] = $person?->fullName() ?? '';
         $result = $this->exporters->get('pdf')->export($data, $year);
 
         return new Response($result->content, Response::HTTP_OK, [

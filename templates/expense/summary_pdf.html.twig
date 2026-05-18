@@ -3,83 +3,365 @@
 <head>
 <meta charset="UTF-8">
 <style>
-body { font-family: DejaVu Sans, sans-serif; font-size: 12px; color: #111; margin: 30px; }
-h1 { font-size: 20px; color: #4f46e5; margin-bottom: 4px; }
-.sub { color: #6b7280; font-size: 12px; margin-bottom: 24px; }
-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-th { background: #f3f4f6; text-align: left; padding: 6px 8px; font-size: 11px; }
-td { padding: 5px 8px; border-bottom: 1px solid #f3f4f6; }
-.total-row td { font-weight: bold; background: #eef2ff; font-size: 14px; }
-.section-title { font-size: 13px; font-weight: bold; color: #374151; margin: 16px 0 6px; }
-.footer { font-size: 10px; color: #9ca3af; margin-top: 20px; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: DejaVu Sans, sans-serif;
+  font-size: 11px;
+  color: #1f2937;
+  background: #fff;
+}
+
+/* ── En-tête ─────────────────────────────────────────────── */
+.header {
+  background: #1e1b4b;
+  color: #fff;
+  padding: 22px 28px 18px;
+  margin-bottom: 20px;
+}
+.header-top {
+  border-bottom: 1px solid #4338ca;
+  padding-bottom: 12px;
+  margin-bottom: 12px;
+}
+.brand {
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #a5b4fc;
+  margin-bottom: 4px;
+}
+.doc-title {
+  font-size: 20px;
+  font-weight: bold;
+  color: #fff;
+  line-height: 1.2;
+}
+.doc-subtitle {
+  font-size: 11px;
+  color: #c7d2fe;
+  margin-top: 2px;
+}
+.header-meta {
+  font-size: 10px;
+  color: #a5b4fc;
+}
+.header-meta strong {
+  color: #e0e7ff;
+}
+
+/* ── Bloc récapitulatif ───────────────────────────────────── */
+.summary-block {
+  margin: 0 20px 20px;
+  border: 1px solid #e5e7eb;
+  border-radius: 4px;
+  overflow: hidden;
+}
+.summary-header {
+  background: #f1f5f9;
+  padding: 7px 12px;
+  font-size: 10px;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #475569;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+/* ── Tables ──────────────────────────────────────────────── */
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.summary-table th {
+  background: #f8fafc;
+  padding: 7px 12px;
+  font-size: 10px;
+  font-weight: bold;
+  color: #64748b;
+  text-align: left;
+  border-bottom: 1px solid #e5e7eb;
+}
+.summary-table td {
+  padding: 7px 12px;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: middle;
+}
+.summary-table tr:last-child td {
+  border-bottom: none;
+}
+.summary-table tr:nth-child(even) td {
+  background: #fafafa;
+}
+
+.total-row td {
+  background: #1e1b4b !important;
+  color: #fff;
+  font-weight: bold;
+  font-size: 13px;
+  padding: 9px 12px;
+}
+.amount {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.zero { color: #9ca3af; }
+
+/* ── Section titre ───────────────────────────────────────── */
+.section {
+  margin: 0 20px 20px;
+  border: 1px solid #e5e7eb;
+  border-radius: 4px;
+  overflow: hidden;
+  page-break-inside: avoid;
+}
+.section-header {
+  background: #312e81;
+  color: #e0e7ff;
+  padding: 7px 12px;
+  font-size: 10px;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* ── Table trajets ───────────────────────────────────────── */
+.trips-table th {
+  background: #f8fafc;
+  padding: 6px 10px;
+  font-size: 9.5px;
+  font-weight: bold;
+  color: #64748b;
+  text-align: left;
+  border-bottom: 1px solid #e5e7eb;
+}
+.trips-table td {
+  padding: 5px 10px;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: middle;
+  font-size: 10px;
+}
+.trips-table tr:last-child td {
+  border-bottom: none;
+}
+
+/* Ligne de mois */
+.month-row td {
+  background: #eef2ff;
+  color: #3730a3;
+  font-weight: bold;
+  font-size: 10px;
+  padding: 5px 10px;
+  border-bottom: 1px solid #c7d2fe;
+  border-top: 1px solid #c7d2fe;
+}
+/* Sous-total mois */
+.month-subtotal td {
+  background: #f5f3ff;
+  color: #4338ca;
+  font-size: 10px;
+  font-style: italic;
+  padding: 4px 10px;
+  border-top: 1px solid #ddd6fe;
+}
+
+/* ── Badge véhicule ──────────────────────────────────────── */
+.badge {
+  display: inline-block;
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-size: 9px;
+  font-weight: bold;
+}
+.badge-car      { background: #dbeafe; color: #1e40af; }
+.badge-moto     { background: #fce7f3; color: #9d174d; }
+.badge-electric { background: #dcfce7; color: #166534; }
+
+/* ── Puces catégorie ─────────────────────────────────────── */
+.dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 5px;
+  vertical-align: middle;
+}
+.dot-travel  { background: #4f46e5; }
+.dot-remote  { background: #0891b2; }
+.dot-toll    { background: #d97706; }
+.dot-meal    { background: #16a34a; }
+.dot-parking { background: #9333ea; }
+
+/* ── Pied de page ────────────────────────────────────────── */
+.footer {
+  margin: 24px 20px 16px;
+  padding-top: 10px;
+  border-top: 1px solid #e5e7eb;
+  font-size: 9px;
+  color: #9ca3af;
+  text-align: center;
+}
 </style>
 </head>
 <body>
 
-<h1>Recapitulatif Frais Reels - {{ year }}</h1>
-<div class="sub">Genere le {{ "now"|date("d/m/Y") }} - Annee {{ year }}</div>
+{# ─── En-tête ─────────────────────────────────────────────── #}
+<div class="header">
+  <div class="header-top">
+    <div class="brand">FraisRéel · Impôt sur le revenu</div>
+    <div class="doc-title">Récapitulatif des frais réels — {{ year }}</div>
+    {% if data.personName is defined and data.personName %}
+      <div class="doc-subtitle">{{ data.personName }}</div>
+    {% endif %}
+  </div>
+  <div class="header-meta">
+    Généré le <strong>{{ "now"|date("d/m/Y") }}</strong> &nbsp;·&nbsp;
+    Année fiscale <strong>{{ year }}</strong> &nbsp;·&nbsp;
+    Barème kilométrique officiel {{ year }}
+  </div>
+</div>
 
-<p class="section-title">Deductions par categorie</p>
-<table>
-  <tr><th>Categorie</th><th>Detail</th><th>Deduction</th></tr>
-  <tr>
-    <td>Trajets</td>
-    <td>{{ data.travel.trips|length }} trajets - {{ data.travel.totalKm|round(0) }} km</td>
-    <td>{{ data.travel.deduction|number_format(2, ',', ' ') }} €</td>
-  </tr>
-  <tr>
-    <td>Teletravail</td>
-    <td>{{ data.remoteWork.days }} jours x {{ data.remoteWork.dailyAllowance|number_format(2, ',', ' ') }} EUR</td>
-    <td>{{ data.remoteWork.deduction|number_format(2, ',', ' ') }} €</td>
-  </tr>
-  <tr>
-    <td>Peages</td>
-    <td>{{ data.toll.entries }} entrees</td>
-    <td>{{ data.toll.deduction|number_format(2, ',', ' ') }} €</td>
-  </tr>
-  {% if data.meal.entries > 0 %}
-  <tr>
-    <td>Repas professionnels</td>
-    <td>{{ data.meal.entries }} repas − {{ data.meal.homeMealValue|number_format(2, ',', ' ') }} EUR/repas</td>
-    <td>{{ data.meal.deduction|number_format(2, ',', ' ') }} €</td>
-  </tr>
-  {% endif %}
-  {% if data.parking.entries > 0 %}
-  <tr>
-    <td>Parking</td>
-    <td>{{ data.parking.entries }} entrees</td>
-    <td>{{ data.parking.deduction|number_format(2, ',', ' ') }} €</td>
-  </tr>
-  {% endif %}
-  <tr class="total-row">
-    <td colspan="2">Total deductible {{ year }}</td>
-    <td>{{ data.total|number_format(2, ',', ' ') }} €</td>
-  </tr>
-</table>
+{# ─── Tableau récapitulatif par catégorie ─────────────────── #}
+<div class="summary-block">
+  <div class="summary-header">Synthèse des déductions</div>
+  <table class="summary-table">
+    <tr>
+      <th style="width:35%">Catégorie</th>
+      <th>Détail</th>
+      <th style="width:18%;text-align:right">Déduction</th>
+    </tr>
+    <tr>
+      <td><span class="dot dot-travel"></span>Trajets domicile-travail</td>
+      <td>{{ data.travel.trips|length }} trajet(s) &middot; {{ data.travel.totalKm|round(0) }} km cumulés</td>
+      <td class="amount{% if data.travel.deduction == 0 %} zero{% endif %}">
+        {{ data.travel.deduction|number_format(2, ',', ' ') }}&nbsp;€
+      </td>
+    </tr>
+    <tr>
+      <td><span class="dot dot-remote"></span>Télétravail</td>
+      <td>{{ data.remoteWork.days }} jour(s) × {{ data.remoteWork.dailyAllowance|number_format(2, ',', '.') }}&nbsp;€/j</td>
+      <td class="amount{% if data.remoteWork.deduction == 0 %} zero{% endif %}">
+        {{ data.remoteWork.deduction|number_format(2, ',', ' ') }}&nbsp;€
+      </td>
+    </tr>
+    <tr>
+      <td><span class="dot dot-toll"></span>Péages</td>
+      <td>{{ data.toll.entries }} entrée(s)</td>
+      <td class="amount{% if data.toll.deduction == 0 %} zero{% endif %}">
+        {{ data.toll.deduction|number_format(2, ',', ' ') }}&nbsp;€
+      </td>
+    </tr>
+    {% if data.meal.entries > 0 %}
+    <tr>
+      <td><span class="dot dot-meal"></span>Repas professionnels</td>
+      <td>{{ data.meal.entries }} repas &middot; valeur repas domicile {{ data.meal.homeMealValue|number_format(2, ',', '.') }}&nbsp;€</td>
+      <td class="amount">
+        {{ data.meal.deduction|number_format(2, ',', ' ') }}&nbsp;€
+      </td>
+    </tr>
+    {% endif %}
+    {% if data.parking.entries > 0 %}
+    <tr>
+      <td><span class="dot dot-parking"></span>Parking</td>
+      <td>{{ data.parking.entries }} entrée(s)</td>
+      <td class="amount">
+        {{ data.parking.deduction|number_format(2, ',', ' ') }}&nbsp;€
+      </td>
+    </tr>
+    {% endif %}
+    <tr class="total-row">
+      <td colspan="2">Total déductible {{ year }}</td>
+      <td class="amount">{{ data.total|number_format(2, ',', ' ') }}&nbsp;€</td>
+    </tr>
+  </table>
+</div>
 
+{# ─── Détail des trajets groupés par mois ─────────────────── #}
 {% if data.travel.trips|length > 0 %}
-<p class="section-title">Detail des trajets</p>
-<table>
-  <tr><th>Date</th><th>Trajet</th><th>Distance</th><th>Puissance</th></tr>
-  {% for trip in data.travel.trips %}
-  <tr>
-    <td>{{ trip.date }}</td>
-    <td>
-      {% if trip.departure and trip.arrival %}
-        {{ trip.departure }} → {{ trip.arrival }}
-      {% else %}
-        {{ trip.description ?? '—' }}
-      {% endif %}
-      {% if trip.roundTrip %} (A/R){% endif %}
-    </td>
-    <td>{{ trip.distanceKm }} km</td>
-    <td>{{ trip.vehiclePower ?? '—' }} CV</td>
-  </tr>
-  {% endfor %}
-</table>
+
+{# Construction des groupes par mois (trips déjà triés par date) #}
+{% set months = {} %}
+{% for trip in data.travel.trips %}
+  {% set month_key = trip.date|date('Y-m') %}
+  {% if months[month_key] is not defined %}
+    {% set months = months|merge({(month_key): []}) %}
+  {% endif %}
+  {% set months = months|merge({(month_key): months[month_key]|merge([trip])}) %}
+{% endfor %}
+
+<div class="section">
+  <div class="section-header">Détail des trajets ({{ data.travel.trips|length }} trajets · {{ data.travel.totalKm|round(0) }} km · {{ data.travel.deduction|number_format(2, ',', ' ') }}&nbsp;€)</div>
+  <table class="trips-table">
+    <tr>
+      <th style="width:11%">Date</th>
+      <th>Trajet</th>
+      <th style="width:10%;text-align:right">Distance</th>
+      <th style="width:8%;text-align:center">CV</th>
+      <th style="width:10%;text-align:center">Véhicule</th>
+      <th style="width:13%;text-align:right">Déduction</th>
+    </tr>
+    {% for month_key, month_trips in months %}
+      {% set month_km = 0 %}
+      {% set month_ded = 0 %}
+      {% for t in month_trips %}
+        {% set month_km = month_km + t.distanceKm %}
+        {% set month_ded = month_ded + t.deduction %}
+      {% endfor %}
+
+      {# Ligne de séparateur mois #}
+      <tr class="month-row">
+        <td colspan="6">
+          {{ month_key|date('F Y')|capitalize }}
+          &nbsp;&mdash;&nbsp;{{ month_trips|length }} trajet(s)
+        </td>
+      </tr>
+
+      {% for trip in month_trips %}
+      <tr>
+        <td>{{ trip.date|date('d/m/Y') }}</td>
+        <td>
+          {% if trip.departure and trip.arrival %}
+            {{ trip.departure }} → {{ trip.arrival }}
+          {% else %}
+            {{ trip.description ?? '—' }}
+          {% endif %}
+          {% if trip.roundTrip %}<em> (A/R)</em>{% endif %}
+        </td>
+        <td style="text-align:right">{{ trip.distanceKm|round(1) }} km</td>
+        <td style="text-align:center">{{ trip.vehiclePower ?? '—' }}</td>
+        <td style="text-align:center">
+          {% if trip.isElectric %}
+            <span class="badge badge-electric">Élec.</span>
+          {% elseif trip.vehicleType == 'motorcycle' %}
+            <span class="badge badge-moto">Moto</span>
+          {% else %}
+            <span class="badge badge-car">Voiture</span>
+          {% endif %}
+        </td>
+        <td style="text-align:right">{{ trip.deduction|number_format(2, ',', ' ') }}&nbsp;€</td>
+      </tr>
+      {% endfor %}
+
+      {# Sous-total du mois #}
+      <tr class="month-subtotal">
+        <td colspan="2" style="text-align:right"><em>Sous-total {{ month_key|date('F Y')|capitalize }}</em></td>
+        <td style="text-align:right"><em>{{ month_km|round(1) }} km</em></td>
+        <td colspan="2"></td>
+        <td style="text-align:right"><em>{{ month_ded|number_format(2, ',', ' ') }}&nbsp;€</em></td>
+      </tr>
+    {% endfor %}
+  </table>
+</div>
 {% endif %}
 
-<p class="footer">Calcule selon le bareme kilometrique officiel {{ year }}. Document a conserver en cas de controle fiscal.</p>
+{# ─── Pied de page ─────────────────────────────────────────── #}
+<div class="footer">
+  Document généré automatiquement par FraisRéel &nbsp;·&nbsp;
+  Calcul selon le barème kilométrique officiel {{ year }} (arrêté ministériel) &nbsp;·&nbsp;
+  À conserver en cas de contrôle fiscal
+</div>
 
 </body>
 </html>
