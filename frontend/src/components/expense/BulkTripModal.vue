@@ -115,18 +115,24 @@
                 <option v-for="p in [3,4,5,6,7]" :key="p" :value="p">{{ p }} CV</option>
               </select>
             </div>
-            <div class="flex items-end gap-3 pb-0.5">
+            <div class="flex items-end pb-0.5">
               <label class="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
                 <input v-model="form.roundTrip" type="checkbox"
                   class="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-300" />
                 Aller-retour
               </label>
-              <label class="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
-                <input v-model="form.isElectric" type="checkbox"
-                  class="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-300" />
-                Électrique
-              </label>
             </div>
+          </div>
+
+          <div v-if="form.vehicleType === 'car'" class="flex items-center justify-between p-3 rounded-xl border border-gray-200 bg-gray-50 mt-3">
+            <div>
+              <p class="text-sm font-medium text-gray-700">Véhicule électrique</p>
+              <p class="text-xs text-gray-500 mt-0.5">Majoration de +20 % sur l'indemnité calculée</p>
+            </div>
+            <button type="button" @click="form.isElectric = !form.isElectric"
+              :class="['relative inline-flex h-6 w-11 items-center rounded-full transition-colors', form.isElectric ? 'bg-emerald-600' : 'bg-gray-300']">
+              <span :class="['inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform', form.isElectric ? 'translate-x-6' : 'translate-x-1']" />
+            </button>
           </div>
         </section>
 
@@ -259,7 +265,8 @@ const previewDates = computed(() => {
 
   while (cursor <= end) {
     const dow = cursor.getDay()
-    const iso = cursor.toISOString().slice(0, 10)
+    // Use local date parts to avoid UTC offset shifting the date (e.g. UTC+2 midnight → previous UTC day)
+    const iso = `${cursor.getFullYear()}-${String(cursor.getMonth() + 1).padStart(2, '0')}-${String(cursor.getDate()).padStart(2, '0')}`
 
     if (form.value.weekDays.includes(dow)) {
       if (allHolidays.value[iso]) {
