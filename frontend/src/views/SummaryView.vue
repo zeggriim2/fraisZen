@@ -96,8 +96,8 @@
         <div class="flex items-start gap-3">
           <div class="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center text-xl shrink-0">🧾</div>
           <div class="flex-1">
-            <p class="font-semibold text-gray-900 text-sm mb-1">Aide au remplissage — Déclaration {{ summary.year }}</p>
-            <p class="text-xs text-gray-500 mb-3">Reportez les montants suivants dans votre déclaration de revenus 2042.</p>
+            <p class="font-semibold text-gray-900 text-sm mb-1">Aide au remplissage — Déclaration {{ summary.year + 1 }} · revenus {{ summary.year }}</p>
+            <p class="text-xs text-gray-500 mb-3">Reportez les montants suivants dans votre déclaration de revenus {{ summary.year + 1 }} (formulaire 2042).</p>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div class="bg-emerald-50 rounded-xl p-3 border border-emerald-100">
                 <p class="text-xs font-semibold text-emerald-700 uppercase tracking-wide mb-1">Déclarant 1 — Case 1AK</p>
