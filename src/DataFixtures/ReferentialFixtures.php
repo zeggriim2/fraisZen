@@ -13,11 +13,13 @@ class ReferentialFixtures extends Fixture
 {
     public function load(ObjectManager $manager): void
     {
-        // Valeurs officielles par année (source : migrations Version20260428000001 + Version20260429000001)
+        // Valeurs officielles par année (source : migrations Version20260428000001 + Version20260429000001 + Version20260518000001)
+        // 2026 reconduit sur 2025 en attendant l'arrêté officiel
         foreach ([
             [2023, '2.50', '4.85'],
             [2024, '2.70', '5.35'],
             [2025, '2.70', '5.45'],
+            [2026, '2.70', '5.45'],
         ] as [$year, $allowance, $meal]) {
             $manager->persist(new FiscalConfig($year, $allowance, $meal));
         }
