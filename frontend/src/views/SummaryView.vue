@@ -205,8 +205,12 @@ import type { ExpenseSummary } from '@/types'
 const personStore = usePersonStore()
 const expenseStore = useExpenseStore()
 const authStore = useAuthStore()
-const now = new Date().getFullYear()
-const selectedYear = ref(authStore.user?.defaultYear ?? now)
+const _now = new Date()
+const now = _now.getFullYear()
+// En période de déclaration (jan–juin), on affiche par défaut l'année N-1 (revenus à déclarer).
+// De juillet à décembre, l'utilisateur saisit ses dépenses courantes → année N.
+const declarationDefaultYear = _now.getMonth() < 6 ? now - 1 : now
+const selectedYear = ref(authStore.user?.defaultYear ?? declarationDefaultYear)
 const years = Array.from({ length: 6 }, (_, i) => now - i)
 const multiYears = Array.from({ length: 5 }, (_, i) => now - i)
 const loading = ref(false)
