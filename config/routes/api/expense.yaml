@@ -1,3 +1,32 @@
 api_expense:
-    resource: '../../../src/Expense/Infrastructure/Http/'
+    resource: '../../../src/Expense/Infrastructure/Http/Expense/'
+    type: attribute
+    prefix: /api/expenses
+    name_prefix: expense_
+    trailing_slash_on_root: false
+
+api_expense_summary:
+    resource: '../../../src/Expense/Infrastructure/Http/Summary/'
+    type: attribute
+    prefix: /api/expenses/summary
+    name_prefix: expense_summary_
+    trailing_slash_on_root: false
+
+api_expense_fiscal_config:
+    resource: '../../../src/Expense/Infrastructure/Http/FiscalConfig/'
+    type: attribute
+    prefix: /api/expenses/fiscal-config
+    name_prefix: expense_fiscal_config_
+    trailing_slash_on_root: false
+
+api_expense_bareme:
+    resource: '../../../src/Expense/Infrastructure/Http/BaremeKilometrique/'
+    type: attribute
+
+api_expense_distance:
+    resource: '../../../src/Expense/Infrastructure/Http/Distance/'
+    type: attribute
+
+api_expense_receipt:
+    resource: '../../../src/Expense/Infrastructure/Http/ReceiptController.php'
     type: attribute
