@@ -67,9 +67,13 @@ final readonly class GetExpensesSummaryQueryHandler implements QueryHandlerInter
         $dailyAllowance = $fiscalConfig?->remoteWorkDailyAllowance() ?? self::FALLBACK_DAILY_ALLOWANCE;
         $homeMealValue = $fiscalConfig?->homeMealValue() ?? self::FALLBACK_HOME_MEAL_VALUE;
 
+        usort($trips, static fn (array $a, array $b) => $a['date'] <=> $b['date']);
+
         $travelDeduction = $this->calculator->calculateAnnualDeduction($trips, $query->year);
         $remoteWorkDeduction = round((float) $remoteWorkDays * $dailyAllowance, 2);
         $mealDeduction = round(array_sum($mealEntries), 2);
+
+        $trips = $this->addPerTripDeduction($trips, $query->year);
 
         return [
             'personId' => $query->personId,
@@ -99,5 +103,40 @@ final readonly class GetExpensesSummaryQueryHandler implements QueryHandlerInter
             ],
             'total' => round($travelDeduction + $remoteWorkDeduction + $tollTotal + $mealDeduction + $parkingTotal, 2),
         ];
+    }
+
+    /**
+     * @param array<array-key, array{distanceKm: float, vehiclePower: int|null, vehicleType?: string, isElectric?: bool, ...}> $trips
+     *
+     * @return array<array-key, array{distanceKm: float, vehiclePower: int|null, vehicleType?: string, isElectric?: bool, deduction: float, ...}>
+     */
+    private function addPerTripDeduction(array $trips, int $year): array
+    {
+        /** @var array<string, float> $bucketKm */
+        $bucketKm = [];
+        foreach ($trips as $trip) {
+            $key = ($trip['vehicleType'] ?? 'car').'|'.($trip['vehiclePower'] ?? 0).'|'.(($trip['isElectric'] ?? false) ? '1' : '0');
+            $bucketKm[$key] = ($bucketKm[$key] ?? 0.0) + (float) $trip['distanceKm'];
+        }
+
+        /** @var array<string, float> $bucketDeduction */
+        $bucketDeduction = [];
+        foreach ($bucketKm as $key => $km) {
+            [$type, $power, $electric] = explode('|', $key);
+            $bucketDeduction[$key] = $this->calculator->calculateAnnualDeduction(
+                [['vehicleType' => $type, 'vehiclePower' => (int) $power, 'isElectric' => '1' === $electric, 'distanceKm' => $km]],
+                $year,
+            );
+        }
+
+        $result = [];
+        foreach ($trips as $trip) {
+            $key = ($trip['vehicleType'] ?? 'car').'|'.($trip['vehiclePower'] ?? 0).'|'.(($trip['isElectric'] ?? false) ? '1' : '0');
+            $km = $bucketKm[$key];
+            $trip['deduction'] = $km > 0 ? round((float) $trip['distanceKm'] / $km * $bucketDeduction[$key], 2) : 0.0;
+            $result[] = $trip;
+        }
+
+        return $result;
     }
 }
