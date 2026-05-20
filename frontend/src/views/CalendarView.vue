@@ -127,12 +127,13 @@
               </span>
             </div>
 
-            <!-- Mobile : points colorés -->
-            <div v-if="cell.expenses.length" class="sm:hidden flex flex-wrap gap-0.5 mt-0.5">
-              <span
+            <!-- Mobile : points colorés (zone de tap élargie) -->
+            <div v-if="cell.expenses.length" class="sm:hidden flex flex-wrap gap-1 mt-1">
+              <button
                 v-for="e in cell.expenses" :key="e.id"
                 @click.stop="openDetail(e)"
-                :class="['w-1.5 h-1.5 rounded-full shrink-0', dotClass(e.type)]"
+                :class="['w-5 h-5 rounded-full shrink-0 flex items-center justify-center', dotClass(e.type)]"
+                :title="label(e)"
               />
             </div>
 
