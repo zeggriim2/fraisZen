@@ -162,12 +162,15 @@ import { ref, computed, watch, onMounted } from 'vue'
 import { usePersonStore } from '@/stores/personStore'
 import { useExpenseStore } from '@/stores/expenseStore'
 import { useAuthStore } from '@/stores/authStore'
+import { useToast } from '@/composables/useToast'
 import type { Expense, TravelExpense, TollExpense, MealExpense } from '@/types'
 import ExpenseModal from '@/components/expense/ExpenseModal.vue'
 import CsvImportModal from '@/components/expense/CsvImportModal.vue'
 import BulkTripModal from '@/components/expense/BulkTripModal.vue'
 import { ParkingExpense } from '@/types'
 import { getPublicHolidays } from '@/api/expenseApi'
+
+const { show: showToast } = useToast()
 
 const personStore = usePersonStore()
 const expenseStore = useExpenseStore()
@@ -298,8 +301,8 @@ function onDuplicate(e: Expense) {
   showModal.value = true
 }
 async function load() { await expenseStore.fetchByPeriod(from.value, to.value, personStore.activePerson?.id) }
-async function onCsvImported(count: number) { showCsvImport.value = false; await load(); if (count) alert(`${count} frais importés avec succès.`) }
-async function onBulkGenerated(count: number) { showBulkModal.value = false; await load(); if (count) alert(`${count} trajet${count > 1 ? 's' : ''} généré${count > 1 ? 's' : ''} avec succès.`) }
+async function onCsvImported(count: number) { showCsvImport.value = false; await load(); if (count) showToast(`${count} frais importés avec succès`) }
+async function onBulkGenerated(count: number) { showBulkModal.value = false; await load(); if (count) showToast(`${count} trajet${count > 1 ? 's' : ''} généré${count > 1 ? 's' : ''} avec succès`) }
 function prevMonth() { if (month.value === 0) { month.value = 11; year.value-- } else month.value-- }
 function nextMonth() { if (month.value === 11) { month.value = 0; year.value++ } else month.value++ }
 function goToday() { month.value = today.getMonth(); year.value = today.getFullYear() }

@@ -1,5 +1,6 @@
 <template>
   <div class="h-screen bg-gray-50 flex overflow-hidden">
+    <ToastContainer />
 
     <!-- Mobile overlay -->
     <Transition
@@ -165,6 +166,7 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { usePersonStore } from '@/stores/personStore'
 import { useAuthStore } from '@/stores/authStore'
+import ToastContainer from '@/components/ui/ToastContainer.vue'
 
 const personStore = usePersonStore()
 const authStore = useAuthStore()
