@@ -89,6 +89,7 @@
       </div>
 
       <!-- Calendrier -->
+      <p class="text-xs text-gray-400 mb-2 text-right">Cliquez sur un jour pour ajouter ou consulter une dépense</p>
       <div class="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
         <!-- En-têtes des jours -->
         <div class="grid grid-cols-7 border-b border-gray-200">
@@ -293,7 +294,7 @@ function label(e: Expense): string {
 function openModal(date: string) { selectedDate.value = date; selectedExpense.value = null; showModal.value = true }
 function openDetail(e: Expense) { selectedDate.value = e.date; selectedExpense.value = e; showModal.value = true }
 function closeModal() { showModal.value = false; selectedExpense.value = null; duplicateSource.value = null }
-async function onSaved() { closeModal(); await load() }
+async function onSaved() { closeModal(); await load(); showToast('Dépense enregistrée') }
 function onDuplicate(e: Expense) {
   showModal.value = false
   selectedDate.value = toDateStr(new Date())
