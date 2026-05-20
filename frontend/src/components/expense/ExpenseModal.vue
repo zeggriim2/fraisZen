@@ -307,6 +307,7 @@ import { useExpenseStore } from '@/stores/expenseStore'
 import { usePersonStore } from '@/stores/personStore'
 import { useAuthStore } from '@/stores/authStore'
 import { expenseApi } from '@/api/expenseApi'
+import { EXPENSE_TYPES, VEHICLE_TYPES, expenseBadgeClass, expenseIcon, vehicleLabel } from '@/utils/expense'
 import type { Expense, TravelExpense, TollExpense, MealExpense, ParkingExpense, VehicleType } from '@/types'
 import InfoRow from '@/components/ui/InfoRow.vue'
 import { useRouteDistance } from '@/composables/useRouteDistance'
@@ -512,30 +513,10 @@ function cancelEdit() {
   editing.value = false
 }
 
-const expenseTypes = [
-  { value: 'travel' as const, label: 'Trajet', icon: '🚗', activeClass: 'border-blue-500 bg-blue-50 text-blue-700' },
-  { value: 'remote_work' as const, label: 'Télétravail', icon: '🏠', activeClass: 'border-emerald-500 bg-emerald-50 text-emerald-700' },
-  { value: 'toll' as const, label: 'Péage', icon: '🛣️', activeClass: 'border-amber-500 bg-amber-50 text-amber-700' },
-  { value: 'meal' as const, label: 'Repas', icon: '🍽️', activeClass: 'border-orange-500 bg-orange-50 text-orange-700' },
-  { value: 'parking' as const, label: 'Parking', icon: '🅿️', activeClass: 'border-rose-500 bg-rose-50 text-rose-700' },
-]
-
-const vehicleTypes = [
-  { value: 'car' as VehicleType, label: 'Voiture', icon: '🚗' },
-  { value: 'motorcycle' as VehicleType, label: 'Moto', icon: '🏍️' },
-  { value: 'moped' as VehicleType, label: 'Cyclomoteur', icon: '🛵' },
-]
-
-function vehicleTypeLabel(vt: VehicleType): string {
-  return ({ car: 'Voiture', motorcycle: 'Moto', moped: 'Cyclomoteur' } as Record<VehicleType, string>)[vt] ?? vt
-}
-
-function badgeClass(type: string) {
-  return ({ travel: 'bg-blue-100 text-blue-700', remote_work: 'bg-emerald-100 text-emerald-700', toll: 'bg-amber-100 text-amber-700', meal: 'bg-orange-100 text-orange-700', parking: 'bg-rose-100 text-rose-700' } as Record<string, string>)[type] ?? ''
-}
-function expenseIcon(type: string) {
-  return ({ travel: '🚗', remote_work: '🏠', toll: '🛣️', meal: '🍽️', parking: '🅿️' } as Record<string, string>)[type] ?? '📌'
-}
+const expenseTypes = EXPENSE_TYPES
+const vehicleTypes = VEHICLE_TYPES
+const vehicleTypeLabel = vehicleLabel
+const badgeClass = expenseBadgeClass
 
 async function save() {
   error.value = ''
