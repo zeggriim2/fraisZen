@@ -28,9 +28,10 @@
         </span>
         <button v-if="personStore.activePerson" @click="showBulkModal = true"
           class="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-indigo-600 border border-indigo-200 rounded-lg hover:bg-indigo-50 shrink-0"
-          title="Générer des trajets sur une plage de dates">
+          title="Générer des trajets récurrents sur une plage de dates">
           <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-          <span class="hidden sm:inline">Générer</span>
+          <span class="hidden sm:inline">Trajets récurrents</span>
+          <span class="sm:hidden">Récurrents</span>
         </button>
         <button @click="showCsvImport = true"
           class="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 shrink-0"
@@ -69,23 +70,28 @@
 
     <template v-else>
 
-      <!-- Stats -->
-      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+      <!-- Stats du mois -->
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-2">
         <div class="bg-blue-50 border border-blue-200 rounded-xl p-4">
-          <p class="text-xs text-blue-600 font-semibold uppercase tracking-wide">Trajets</p>
+          <p class="text-xs text-blue-600 font-semibold uppercase tracking-wide">Trajets ce mois</p>
           <p class="text-2xl font-bold text-blue-700 mt-1">{{ stats.travelCount }}</p>
           <p class="text-xs text-blue-500 mt-1">{{ stats.travelKm.toFixed(0) }} km</p>
         </div>
         <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-4">
-          <p class="text-xs text-emerald-600 font-semibold uppercase tracking-wide">Télétravail</p>
+          <p class="text-xs text-emerald-600 font-semibold uppercase tracking-wide">Télétravail ce mois</p>
           <p class="text-2xl font-bold text-emerald-700 mt-1">{{ stats.remoteCount }}</p>
           <p class="text-xs text-emerald-500 mt-1">{{ stats.remoteTotalAmount.toFixed(2) }} €</p>
         </div>
         <div class="bg-amber-50 border border-amber-200 rounded-xl p-4">
-          <p class="text-xs text-amber-600 font-semibold uppercase tracking-wide">Péages</p>
+          <p class="text-xs text-amber-600 font-semibold uppercase tracking-wide">Péages ce mois</p>
           <p class="text-2xl font-bold text-amber-700 mt-1">{{ stats.tollCount }}</p>
           <p class="text-xs text-amber-500 mt-1">{{ stats.tollAmount.toFixed(2) }} €</p>
         </div>
+      </div>
+      <div class="flex justify-end mb-4">
+        <RouterLink to="/summary" class="text-xs text-indigo-600 hover:text-indigo-800 font-medium">
+          Voir le récapitulatif {{ year }} →
+        </RouterLink>
       </div>
 
       <!-- Légende (visible sur mobile où la sidebar est masquée) -->
