@@ -157,7 +157,7 @@
                 v-for="e in cell.expenses" :key="e.id"
                 @click.stop="openDetail(e)"
                 :class="['flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-medium truncate', badgeClass(e.type)]">
-                <span>{{ expenseIcon(e) }}</span>
+                <span>{{ getExpenseIcon(e) }}</span>
                 <span class="truncate">{{ label(e) }}</span>
               </div>
             </div>
@@ -178,6 +178,7 @@ import { usePersonStore } from '@/stores/personStore'
 import { useExpenseStore } from '@/stores/expenseStore'
 import { useAuthStore } from '@/stores/authStore'
 import { useToast } from '@/composables/useToast'
+import { EXPENSE_TYPES, expenseBadgeClass, expenseDotClass, expenseIcon } from '@/utils/expense'
 import type { Expense, TravelExpense, TollExpense, MealExpense } from '@/types'
 import ExpenseModal from '@/components/expense/ExpenseModal.vue'
 import CsvImportModal from '@/components/expense/CsvImportModal.vue'
@@ -187,13 +188,7 @@ import { getPublicHolidays } from '@/api/expenseApi'
 
 const { show: showToast } = useToast()
 
-const expenseTypes = [
-  { label: 'Trajet',      color: 'bg-blue-500' },
-  { label: 'Télétravail', color: 'bg-emerald-500' },
-  { label: 'Péage',       color: 'bg-amber-500' },
-  { label: 'Repas',       color: 'bg-orange-500' },
-  { label: 'Parking',     color: 'bg-rose-500' },
-]
+const expenseTypes = EXPENSE_TYPES.map(t => ({ label: t.label, color: t.dotClass }))
 
 const personStore = usePersonStore()
 const expenseStore = useExpenseStore()
@@ -278,30 +273,9 @@ const stats = computed(() => {
   }
 })
 
-function badgeClass(type: string) {
-  return ({
-    travel:      'bg-blue-100 text-blue-700',
-    remote_work: 'bg-emerald-100 text-emerald-700',
-    toll:        'bg-amber-100 text-amber-700',
-    meal:        'bg-orange-100 text-orange-700',
-    parking:     'bg-red-100 text-red-700',
-  } as Record<string, string>)[type] ?? ''
-}
-
-function dotClass(type: string) {
-  return ({
-    travel:      'bg-blue-500',
-    remote_work: 'bg-emerald-500',
-    toll:        'bg-amber-500',
-    meal:        'bg-orange-500',
-    parking:     'bg-rose-500',
-  } as Record<string, string>)[type] ?? 'bg-gray-400'
-}
-
-function expenseIcon(e: Expense) {
-  if (e.type === 'travel' && (e as TravelExpense).isElectric) return '⚡'
-  return ({ travel: '🚗', remote_work: '🏠', toll: '🛣️', meal: '🍽️', parking: '🅿️' } as Record<string, string>)[e.type] ?? '📌'
-}
+function badgeClass(type: string) { return expenseBadgeClass(type) }
+function dotClass(type: string) { return expenseDotClass(type) }
+function getExpenseIcon(e: Expense) { return expenseIcon(e.type, e.type === 'travel' ? (e as TravelExpense).isElectric : false) }
 
 function label(e: Expense): string {
   if (e.type === 'travel') { const t = e as TravelExpense; return t.arrival ? `→ ${t.arrival}` : `${t.distanceKm} km` }
