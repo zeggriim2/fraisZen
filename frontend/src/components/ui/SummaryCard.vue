@@ -21,6 +21,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import { fmtEur } from '@/utils/formatting'
 
 const props = defineProps<{
   icon: string
@@ -40,7 +41,5 @@ const palette: Record<string, { bg: string; text: string }> = {
 
 const colorBg   = computed(() => palette[props.color].bg)
 const colorText = computed(() => palette[props.color].text)
-const formattedAmount = computed(() =>
-  new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(props.amount)
-)
+const formattedAmount = computed(() => fmtEur(props.amount))
 </script>

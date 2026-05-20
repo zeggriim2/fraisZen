@@ -201,6 +201,7 @@ import { useExpenseStore } from '@/stores/expenseStore'
 import { useAuthStore } from '@/stores/authStore'
 import { expenseApi, type BaremeYear, type TrancheTaux } from '@/api/expenseApi'
 import type { ExpenseSummary } from '@/types'
+import { fmtEur } from '@/utils/formatting'
 
 const personStore = usePersonStore()
 const expenseStore = useExpenseStore()
@@ -222,7 +223,7 @@ const grossSalary = ref<number>(parseInt(localStorage.getItem('grossSalary') ?? 
 
 watch(grossSalary, v => localStorage.setItem('grossSalary', String(v)))
 
-const fmt = (v: number) => new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(v)
+const fmt = fmtEur
 
 // B — Comparaison forfait 10%
 const FORFAIT_CAP_2024 = 14171

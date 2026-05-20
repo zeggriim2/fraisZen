@@ -112,6 +112,7 @@ import { useRoute } from 'vue-router'
 import { usePersonStore } from '@/stores/personStore'
 import { expenseApi } from '@/api/expenseApi'
 import type { TravelExpense } from '@/types'
+import { fmtEur } from '@/utils/formatting'
 
 const MONTHS = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre']
 
@@ -179,7 +180,7 @@ function tripDeduction(t: TravelExpense): number {
 const totalKm = computed(() => filteredTrips.value.reduce((s, t) => s + t.distanceKm, 0))
 const totalDeduction = computed(() => filteredTrips.value.reduce((s, t) => s + tripDeduction(t), 0))
 
-const fmt = (v: number) => new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(v)
+const fmt = fmtEur
 
 async function load() {
   if (!personStore.activePerson) return
