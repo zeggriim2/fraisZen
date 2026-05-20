@@ -1,60 +1,166 @@
-# Symfony Docker
+# FraisZen — Frais réels d'impôt, sans la prise de tête
 
-A [Docker](https://www.docker.com/)-based installer and runtime for the [Symfony](https://symfony.com) web framework,
-with [FrankenPHP](https://frankenphp.dev) and [Caddy](https://caddyserver.com/) inside!
+[![CI](https://github.com/zeggriim2/fraisZen/actions/workflows/ci.yaml/badge.svg)](https://github.com/zeggriim2/fraisZen/actions/workflows/ci.yaml)
+[![CD — Production](https://github.com/zeggriim2/fraisZen/actions/workflows/cd-prod.yml/badge.svg)](https://github.com/zeggriim2/fraisZen/actions/workflows/cd-prod.yml)
+[![PHP 8.5](https://img.shields.io/badge/PHP-8.5-777BB4?logo=php)](https://www.php.net)
+[![Symfony 8](https://img.shields.io/badge/Symfony-8.0-black?logo=symfony)](https://symfony.com)
+[![Vue 3](https://img.shields.io/badge/Vue-3-4FC08D?logo=vue.js)](https://vuejs.org)
 
-Specially tailored for coding agents: ships with a [Dev Container](https://containers.dev/) configuration
-that lets [Claude Code](https://claude.ai/claude-code) (and other AI coding assistants) run in fully autonomous
-mode inside a sandboxed environment.
+**FraisZen** est une application web qui aide les salariés français à déclarer leurs frais professionnels réels aux impôts. Elle calcule automatiquement les indemnités kilométriques, suit les dépenses du quotidien et génère les documents nécessaires à la déclaration de revenus.
 
-![CI](https://github.com/dunglas/symfony-docker/workflows/CI/badge.svg)
+> Chaque année, des milliers de salariés laissent de l'argent sur la table en optant par défaut pour l'abattement forfaitaire de 10 %. FraisZen vous dit si les frais réels sont plus avantageux — et fait les calculs à votre place.
 
-## Getting Started
+---
 
-1. If not already done, [install Docker Compose](https://docs.docker.com/compose/install/) (v2.10+)
-2. Run `docker compose build --pull --no-cache` to build fresh images
-3. Run `docker compose up --wait` to set up and start a fresh Symfony project
-4. Open `https://localhost` in your favorite web browser and [accept the auto-generated TLS certificate](https://stackoverflow.com/a/15076602/1352334)
-5. Run `docker compose down --remove-orphans` to stop the Docker containers.
+## Fonctionnalités
 
-## Features
+### Saisie des dépenses
+- **Trajets domicile–travail** — barème kilométrique officiel (3 à 7 CV fiscaux), voiture ou moto, avec majoration +20 % pour les véhicules électriques
+- **Télétravail** — déduction forfaitaire par jour (2,70 €/jour en 2025)
+- **Péages, repas professionnels, parking** — saisie manuelle ou import automatique depuis un relevé bancaire CSV
+- **Trajets récurrents (favoris)** — définissez vos trajets habituels en une fois, réutilisez-les en un clic
+- **Calcul de distance automatique** — saisissez les adresses, la distance est calculée via OpenRouteService
+- **Génération en masse** — créez des dizaines de trajets récurrents en quelques secondes via le générateur calendaire
 
-- Production, development and CI ready
-- Just 1 service by default
-- Super-readable configuration
-- Blazing-fast performance thanks to [the worker mode of FrankenPHP](https://frankenphp.dev/docs/worker/)
-- [Installation of extra Docker Compose services](docs/extra-services.md) with Symfony Flex
-- Automatic HTTPS (in dev and prod)
-- HTTP/3 and [Early Hints](https://symfony.com/blog/new-in-symfony-6-3-early-hints) support
-- Real-time messaging thanks to a built-in [Mercure hub](https://symfony.com/doc/current/mercure.html)
-- [Vulcain](https://vulcain.rocks) support
-- Native [XDebug](docs/xdebug.md) integration
-- [Hot Reloading](https://frankenphp.dev/docs/hot-reload/)
-- [Dev Container](https://containers.dev/) support, optimized for AI coding agents
-- [AI coding agents](docs/agents.md) with sandboxing out of the box
-- Rootless, slim production image
+### Analyse & intelligence
+- **Seuil de rentabilité** — comparaison automatique frais réels vs forfait 10 % avec indication du gain fiscal
+- **Comparaison inter-annuelle** — visualisez l'évolution de vos déductions sur 5 ans
+- **Foyer fiscal multi-personnes** — gérez les dépenses de plusieurs membres du foyer depuis un seul compte
 
-**Enjoy!**
+### Export & déclaration
+- **Export PDF formaté** — document prêt à joindre à votre dossier, avec barème appliqué et récapitulatif par catégorie
+- **Export CSV** — fichier compatible Excel avec le détail de chaque trajet
+- **Aide Cerfa 2042** — affichage direct de la case à renseigner (1AK ou 1BK selon le déclarant)
 
-## Docs
+### Administration
+- Interface d'administration dédiée (gestion des utilisateurs, export global)
+- Abonnement via Stripe avec gestion automatique des accès
 
-1. [Options available](docs/options.md)
-2. [Using Symfony Docker with an existing project](docs/existing-project.md)
-3. [Support for extra services](docs/extra-services.md)
-4. [Deploying in production](docs/production.md)
-5. [Debugging with Xdebug](docs/xdebug.md)
-6. [TLS Certificates](docs/tls.md)
-7. [Using MySQL instead of PostgreSQL](docs/mysql.md)
-8. [Using Alpine Linux instead of Debian](docs/alpine.md)
-9. [Using a Makefile](docs/makefile.md)
-10. [Updating the template](docs/updating.md)
-11. [Troubleshooting](docs/troubleshooting.md)
-12. [Using AI Coding Agents](docs/agents.md)
+---
 
-## License
+## Stack technique
 
-Symfony Docker is available under the MIT License.
+| Couche | Technologies |
+|--------|-------------|
+| **Backend** | PHP 8.5 · Symfony 8 · FrankenPHP (Caddy) · Doctrine ORM 3 · MySQL 8 |
+| **Frontend** | Vue 3 (Composition API) · Vite · Pinia · Tailwind CSS · TypeScript |
+| **Architecture** | DDD + CQRS (command.bus / query.bus via Symfony Messenger) |
+| **Tests** | Pest PHP (unit) · Playwright (browser) |
+| **CI/CD** | GitHub Actions → Docker image (GHCR) → déploiement VPS sur tag |
+| **PDF** | dompdf · templates Twig |
+| **Auth** | JWT (LexikJWTAuthenticationBundle) · reset password |
+| **Paiement** | Stripe (webhooks · SubscriptionMiddleware) |
 
-## Credits
+---
 
-Created by [Kévin Dunglas](https://dunglas.dev), co-maintained by [Maxime Helias](https://twitter.com/maxhelias) and sponsored by [Les-Tilleuls.coop](https://les-tilleuls.coop).
+## Démarrage rapide (développement)
+
+### Prérequis
+
+- [Docker](https://www.docker.com/) + Docker Compose v2.10+
+- [Node.js](https://nodejs.org/) 20+ (pour le frontend en dehors de Docker)
+
+### Installation
+
+```bash
+# 1. Cloner le dépôt
+git clone git@github.com:zeggriim2/fraisZen.git
+cd fraisZen
+
+# 2. Construire les images et démarrer les conteneurs
+make start
+
+# 3. Charger les données de test
+make fixtures
+
+# 4. Démarrer le serveur de développement frontend (dans un autre terminal)
+cd frontend && npm install && npm run dev
+```
+
+L'application est accessible sur **https://localhost** (certificat TLS auto-signé).
+
+### Comptes de test
+
+| Email | Mot de passe | Rôle | Abonnement |
+|-------|-------------|------|-----------|
+| `admin@fraisreel.fr` | `Admin1234!` | Admin | actif |
+| `alice@example.com` | `Test1234!` | Utilisateur | actif |
+| `bob@example.com` | `Test1234!` | Utilisateur | actif |
+| `carol@example.com` | `Test1234!` | Utilisateur | aucun (→ 402) |
+
+---
+
+## Commandes disponibles
+
+```bash
+make start          # build + démarrage des conteneurs
+make up             # démarrage sans rebuild
+make down           # arrêt des conteneurs
+make logs           # logs en temps réel
+make bash           # shell dans le conteneur FrankenPHP
+
+make fixtures       # reset BDD + jeu de données complet
+make cc             # vider le cache Symfony
+make sf c='...'     # exécuter une commande bin/console
+make composer c='...'  # exécuter une commande composer
+
+make test           # tests unitaires Pest
+make test-browser   # tests Playwright (navigateur)
+make analyse        # lint + PHPStan + Psalm + TypeScript + Dockerfile
+```
+
+---
+
+## Architecture
+
+Le projet suit une architecture **DDD + CQRS** avec des contextes bornés indépendants.
+
+```
+src/
+├── Auth/           # JWT, inscription, reset password
+├── Person/         # Agrégat Person (lié à un User)
+├── Expense/        # Toutes les dépenses + export PDF/CSV
+│   ├── Domain/     # Entités, Value Objects, barème kilométrique
+│   ├── Application/
+│   │   ├── Command/   # Handlers write (créer, modifier, supprimer)
+│   │   └── Query/     # Handlers read (résumé, liste)
+│   └── Infrastructure/
+│       ├── Http/      # Contrôleurs minces (→ bus)
+│       └── Persistence/  # Repositories Doctrine
+├── Billing/        # Stripe, SubscriptionMiddleware
+├── Admin/          # Dashboard admin
+└── SharedKernel/   # CommandBusInterface, QueryBusInterface
+```
+
+**Hiérarchie des dépenses (Single Table Inheritance) :**
+`Expense` (base) → `TravelExpense` · `RemoteWorkExpense` · `TollExpense` · `MealExpense` · `ParkingExpense`
+
+---
+
+## Tests
+
+```bash
+make test              # tests unitaires (Pest)
+make test-browser      # tests navigateur (Playwright)
+make analyse           # analyse statique complète
+```
+
+La CI vérifie à chaque push : PHP CS Fixer · PHPStan (niveau 5) · Psalm · TypeScript · Hadolint · tests Pest · tests Playwright.
+
+---
+
+## Déploiement
+
+Le déploiement en production est déclenché automatiquement à la création d'un tag Git :
+
+```bash
+git tag V1.x.x && git push origin V1.x.x
+```
+
+Le workflow GitHub Actions construit l'image Docker, la pousse sur GitHub Container Registry (`ghcr.io`) et la déploie sur le VPS via SSH.
+
+---
+
+## Licence
+
+MIT — voir [LICENSE](LICENSE).
