@@ -175,21 +175,19 @@
             </div>
           </div>
 
-          <div class="flex items-center justify-between p-3 rounded-xl border border-gray-200 bg-gray-50">
-            <div><p class="text-sm font-medium text-gray-700">Aller-retour</p><p class="text-xs text-gray-500 mt-0.5">La distance saisie sera multipliée par 2</p></div>
-            <button type="button" @click="form.roundTrip = !form.roundTrip"
-              :class="['relative inline-flex h-6 w-11 items-center rounded-full transition-colors', form.roundTrip ? 'bg-blue-600' : 'bg-gray-300']">
-              <span :class="['inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform', form.roundTrip ? 'translate-x-6' : 'translate-x-1']" />
-            </button>
-          </div>
+          <ToggleField
+            label="Aller-retour"
+            description="La distance saisie sera multipliée par 2"
+            v-model="form.roundTrip"
+          />
 
-          <div v-if="form.vehicleType === 'car'" class="flex items-center justify-between p-3 rounded-xl border border-gray-200 bg-gray-50">
-            <div><p class="text-sm font-medium text-gray-700">Véhicule électrique</p><p class="text-xs text-gray-500 mt-0.5">Majoration de +20 % sur l'indemnité calculée</p></div>
-            <button type="button" @click="form.isElectric = !form.isElectric"
-              :class="['relative inline-flex h-6 w-11 items-center rounded-full transition-colors', form.isElectric ? 'bg-emerald-600' : 'bg-gray-300']">
-              <span :class="['inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform', form.isElectric ? 'translate-x-6' : 'translate-x-1']" />
-            </button>
-          </div>
+          <ToggleField
+            v-if="form.vehicleType === 'car'"
+            label="Véhicule électrique"
+            description="Majoration de +20 % sur l'indemnité calculée"
+            v-model="form.isElectric"
+            active-color="bg-emerald-600"
+          />
 
           <!-- Save as favorite -->
           <div v-if="form.departure && form.arrival && !showSaveFavorite">
@@ -310,6 +308,7 @@ import { expenseApi } from '@/api/expenseApi'
 import { EXPENSE_TYPES, VEHICLE_TYPES, expenseBadgeClass, expenseIcon, vehicleLabel } from '@/utils/expense'
 import type { Expense, TravelExpense, TollExpense, MealExpense, ParkingExpense, VehicleType } from '@/types'
 import InfoRow from '@/components/ui/InfoRow.vue'
+import ToggleField from '@/components/ui/ToggleField.vue'
 import { useRouteDistance } from '@/composables/useRouteDistance'
 import { useFavoriteRoutes } from '@/composables/useFavoriteRoutes'
 import AddressAutocompleteInput from '@/components/ui/AddressAutocompleteInput.vue'

@@ -124,16 +124,14 @@
             </div>
           </div>
 
-          <div v-if="form.vehicleType === 'car'" class="flex items-center justify-between p-3 rounded-xl border border-gray-200 bg-gray-50 mt-3">
-            <div>
-              <p class="text-sm font-medium text-gray-700">Véhicule électrique</p>
-              <p class="text-xs text-gray-500 mt-0.5">Majoration de +20 % sur l'indemnité calculée</p>
-            </div>
-            <button type="button" @click="form.isElectric = !form.isElectric"
-              :class="['relative inline-flex h-6 w-11 items-center rounded-full transition-colors', form.isElectric ? 'bg-emerald-600' : 'bg-gray-300']">
-              <span :class="['inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform', form.isElectric ? 'translate-x-6' : 'translate-x-1']" />
-            </button>
-          </div>
+          <ToggleField
+            v-if="form.vehicleType === 'car'"
+            label="Véhicule électrique"
+            description="Majoration de +20 % sur l'indemnité calculée"
+            v-model="form.isElectric"
+            active-color="bg-emerald-600"
+            class="mt-3"
+          />
         </section>
 
         <!-- Aperçu des dates -->
@@ -185,6 +183,7 @@ import { ref, computed, watch, onMounted } from 'vue'
 import { expenseApi, getPublicHolidays } from '@/api/expenseApi'
 import { personApi } from '@/api/personApi'
 import type { FavoriteRoute } from '@/types'
+import ToggleField from '@/components/ui/ToggleField.vue'
 
 const props = defineProps<{
   personId: string
