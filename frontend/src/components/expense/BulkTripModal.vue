@@ -1,22 +1,9 @@
 <template>
-  <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
-    <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" @click="$emit('close')" />
+  <BaseModal @close="$emit('close')">
+    <template #title>Trajets récurrents</template>
+    <template #subtitle>Créez plusieurs trajets d'un coup sur une plage de dates</template>
 
-    <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col">
-      <!-- Header -->
-      <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-        <div>
-          <h2 class="text-base font-semibold text-gray-900">Générer des trajets</h2>
-          <p class="text-xs text-gray-400 mt-0.5">Créez plusieurs trajets d'un coup sur une plage de dates</p>
-        </div>
-        <button @click="$emit('close')" class="text-gray-400 hover:text-gray-600 transition-colors">
-          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
-      </div>
-
-      <div class="overflow-y-auto flex-1 px-6 py-5 space-y-5">
+    <div class="space-y-5">
 
         <!-- Étape 1 : plage de dates -->
         <section>
@@ -161,8 +148,10 @@
         <p v-if="error" class="text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2">{{ error }}</p>
       </div>
 
-      <!-- Footer -->
-      <div class="px-6 py-4 border-t border-gray-100 flex items-center justify-between gap-3">
+    </div>
+
+    <template #footer>
+      <div class="flex items-center justify-between gap-3">
         <button @click="$emit('close')"
           class="px-4 py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
           Annuler
@@ -174,8 +163,8 @@
           {{ generating ? 'Génération…' : `Générer ${previewDates.length} trajet${previewDates.length > 1 ? 's' : ''}` }}
         </button>
       </div>
-    </div>
-  </div>
+    </template>
+  </BaseModal>
 </template>
 
 <script setup lang="ts">
@@ -184,6 +173,7 @@ import { expenseApi, getPublicHolidays } from '@/api/expenseApi'
 import { personApi } from '@/api/personApi'
 import type { FavoriteRoute } from '@/types'
 import ToggleField from '@/components/ui/ToggleField.vue'
+import BaseModal from '@/components/ui/BaseModal.vue'
 
 const props = defineProps<{
   personId: string

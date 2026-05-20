@@ -1,16 +1,8 @@
 <template>
-  <div class="fixed inset-0 z-50 flex items-center justify-center p-4" @click.self="$emit('close')">
-    <div class="absolute inset-0 bg-black/40 backdrop-blur-sm"></div>
-    <div class="relative bg-white rounded-2xl shadow-xl w-full max-w-md max-h-[90vh] flex flex-col">
+  <BaseModal max-width="md" @close="$emit('close')">
+    <template #title>{{ person ? 'Modifier' : 'Nouvelle personne' }}</template>
 
-      <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200">
-        <h2 class="text-lg font-semibold text-gray-900">{{ person ? 'Modifier' : 'Nouvelle personne' }}</h2>
-        <button @click="$emit('close')" class="p-2 rounded-lg hover:bg-gray-100">
-          <svg class="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-        </button>
-      </div>
-
-      <div class="flex-1 overflow-y-auto px-6 py-5 space-y-4">
+    <div class="space-y-4">
         <!-- Identity fields -->
         <div class="grid grid-cols-2 gap-4">
           <div>
@@ -175,16 +167,17 @@
         </div>
 
         <p v-if="error" class="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg">{{ error }}</p>
-      </div>
+    </div>
 
-      <div class="px-6 py-4 border-t border-gray-200 flex gap-3">
+    <template #footer>
+      <div class="flex gap-3">
         <button @click="$emit('close')" class="flex-1 px-4 py-2 border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50">Fermer</button>
         <button @click="save" :disabled="saving" class="flex-1 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 rounded-lg text-sm font-medium text-white">
           {{ saving ? 'Enregistrement…' : 'Enregistrer' }}
         </button>
       </div>
-    </div>
-  </div>
+    </template>
+  </BaseModal>
 </template>
 
 <script setup lang="ts">
@@ -193,6 +186,7 @@ import { usePersonStore } from '@/stores/personStore'
 import { useFavoriteRouteStore } from '@/stores/favoriteRouteStore'
 import type { Person, VehicleType } from '@/types'
 import AddressAutocompleteInput from '@/components/ui/AddressAutocompleteInput.vue'
+import BaseModal from '@/components/ui/BaseModal.vue'
 
 const props = defineProps<{ person?: Person | null }>()
 const emit = defineEmits<{ close: []; saved: [] }>()
