@@ -44,9 +44,19 @@
             </button>
           </div>
         </div>
-        <h3 class="font-semibold text-gray-900">{{ p.fullName }}</h3>
+        <div class="flex items-center gap-2 flex-wrap">
+          <h3 class="font-semibold text-gray-900">{{ p.fullName }}</h3>
+          <span v-if="store.activePerson?.id === p.id"
+            class="text-xs font-medium px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-700">
+            Actif
+          </span>
+        </div>
         <p v-if="p.email" class="text-sm text-gray-500 mt-0.5">{{ p.email }}</p>
-        <p class="text-xs text-gray-400 mt-2">Depuis le {{ fmt(p.createdAt) }}</p>
+        <button @click="store.setActive(p)"
+          v-if="store.activePerson?.id !== p.id"
+          class="mt-3 text-xs text-indigo-600 hover:text-indigo-800 font-medium">
+          Sélectionner →
+        </button>
       </div>
     </div>
 
