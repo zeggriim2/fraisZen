@@ -88,6 +88,13 @@
         </div>
       </div>
 
+      <!-- Légende (visible sur mobile où la sidebar est masquée) -->
+      <div class="lg:hidden flex flex-wrap gap-x-4 gap-y-1 mb-3">
+        <span v-for="t in expenseTypes" :key="t.label" class="flex items-center gap-1.5 text-xs text-gray-500">
+          <span :class="['w-2.5 h-2.5 rounded-full shrink-0', t.color]"></span>{{ t.label }}
+        </span>
+      </div>
+
       <!-- Calendrier -->
       <p class="text-xs text-gray-400 mb-2 text-right">Cliquez sur un jour pour ajouter ou consulter une dépense</p>
       <div class="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
@@ -173,6 +180,14 @@ import { ParkingExpense } from '@/types'
 import { getPublicHolidays } from '@/api/expenseApi'
 
 const { show: showToast } = useToast()
+
+const expenseTypes = [
+  { label: 'Trajet',      color: 'bg-blue-500' },
+  { label: 'Télétravail', color: 'bg-emerald-500' },
+  { label: 'Péage',       color: 'bg-amber-500' },
+  { label: 'Repas',       color: 'bg-orange-500' },
+  { label: 'Parking',     color: 'bg-rose-500' },
+]
 
 const personStore = usePersonStore()
 const expenseStore = useExpenseStore()
