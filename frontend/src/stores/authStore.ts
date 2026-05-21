@@ -43,6 +43,7 @@ export const useAuthStore = defineStore('auth', () => {
     token.value = null
     user.value = null
     localStorage.removeItem('jwt_token')
+    sessionStorage.removeItem('jwt_token')
   }
 
   return { token, user, isAuthenticated, login, register, fetchMe, updateProfile, updatePassword, deleteAccount, logout }

@@ -61,6 +61,8 @@ Analyse les changements stagés et propose un message de commit au format **Karm
 - Scope = module/contexte concerné (ex: `expense`, `auth`, `person`, `billing`)
 - Corps uniquement si le "pourquoi" n'est pas évident depuis le titre
 - Pas de point final sur la ligne de titre
+- Je ne veux pas que tu mets '
+  Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>' dans le message de commit
 
 Affiche le message proposé à l'utilisateur et demande confirmation ou modification.
 
