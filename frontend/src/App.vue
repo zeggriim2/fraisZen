@@ -208,7 +208,6 @@ onMounted(async () => {
   const impToken = urlParams.get('impersonate_token')
   if (impToken) {
     sessionStorage.setItem('jwt_token', impToken)
-    localStorage.removeItem('jwt_token')
     authStore.token = impToken
     window.history.replaceState({}, '', window.location.pathname)
   }
