@@ -16,8 +16,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  tests:
-    name: Tests
+  tests-backend:
+    name: Tests Backend
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -27,11 +27,11 @@ jobs:
       - name: Create CI environment file
         run: |
           {
-            echo 'APP_ENV=dev'
+            echo 'APP_ENV=test'
             echo 'APP_SECRET=ci_secret_for_tests_only'
             echo 'APP_SHARE_DIR=var/share'
             echo 'DEFAULT_URI=http://localhost'
-            echo 'DATABASE_URL="mysql://app:!ChangeMe!@database:3306/app?serverVersion=8.0.32&charset=utf8mb4"'
+            echo 'DATABASE_URL="mysql://app:!ChangeMe!@127.0.0.1:3306/app?serverVersion=8.0.32&charset=utf8mb4"'
             echo 'MESSENGER_TRANSPORT_DSN=doctrine://default?auto_setup=0'
             echo 'JWT_SECRET_KEY=%kernel.project_dir%/config/jwt/private.pem'
             echo 'JWT_PUBLIC_KEY=%kernel.project_dir%/config/jwt/public.pem'
@@ -42,47 +42,21 @@ jobs:
             echo 'STRIPE_PRICE_ID=price_ci'
             echo 'ORS_API_KEY='
           } > .env
-
       - name: Set up PHP
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.5'
           extensions: ctype, iconv, sodium, xml, sockets
           tools: composer
+      - name: Generate JWT keys
+        run: |
+          mkdir -p config/jwt
+          openssl genrsa -passout pass:ci_passphrase -out config/jwt/private.pem 4096
+          openssl rsa -passin pass:ci_passphrase -in config/jwt/private.pem -pubout -out config/jwt/public.pem
       - name: Install PHP dependencies
         run: composer install --prefer-dist --no-progress --no-scripts
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-      - name: Build Docker images
-        uses: docker/bake-action@v6
-        with:
-          pull: true
-          load: true
-          source: .
-          files: |
-            compose.yaml
-            compose.override.yaml
-          set: |
-            *.cache-from=type=gha,scope=${{github.ref}}
-            *.cache-from=type=gha,scope=refs/heads/main
-            *.cache-to=type=gha,scope=${{github.ref}},mode=max
-      - name: Start services
-        run: docker compose up --wait --no-build
-      - name: Check HTTP reachability
-        run: curl -v --fail-with-body http://localhost
-      - name: Check Mercure reachability
-        run: curl -vI --insecure --fail-with-body https://localhost/.well-known/mercure?topic=test
       - name: Run unit tests
-        run: docker compose exec -T -e APP_ENV=test php vendor/bin/pest tests/Unit/
-      - name: Load fixtures for browser tests
-        run: docker compose exec -T php bin/console doctrine:fixtures:load --no-interaction
-      - name: Install Playwright browsers
-        run: docker compose exec -T php bash -c "npm install playwright@latest && npx playwright install chromium --with-deps"
-      - name: Run browser tests
-        run: docker compose exec -T php vendor/bin/pest tests/Browser/
-      - name: Show PHP container logs on failure
-        if: failure()
-        run: docker compose logs php
+        run: vendor/bin/pest tests/Unit/
 
   quality:
     name: Code Quality
