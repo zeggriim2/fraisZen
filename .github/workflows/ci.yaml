@@ -72,6 +72,14 @@ jobs:
         run: curl -v --fail-with-body http://localhost
       - name: Check Mercure reachability
         run: curl -vI --insecure --fail-with-body https://localhost/.well-known/mercure?topic=test
+      - name: Run unit tests
+        run: docker compose exec -T -e APP_ENV=test php vendor/bin/pest tests/Unit/
+      - name: Load fixtures for browser tests
+        run: docker compose exec -T php bin/console doctrine:fixtures:load --no-interaction
+      - name: Install Playwright browsers
+        run: docker compose exec -T php bash -c "npm install playwright@latest && npx playwright install chromium --with-deps"
+      - name: Run browser tests
+        run: docker compose exec -T php vendor/bin/pest tests/Browser/
       - name: Show PHP container logs on failure
         if: failure()
         run: docker compose logs php
