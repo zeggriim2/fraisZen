@@ -4,9 +4,10 @@ declare(strict_types=1);
 
 namespace App\Expense\Infrastructure\Http;
 
+use App\Auth\Domain\Entity\User;
 use App\Expense\Domain\Entity\ParkingExpense;
 use App\Expense\Domain\Repository\ExpenseRepositoryInterface;
-use App\Expense\Domain\ValueObject\ExpenseId;
+use App\SharedKernel\Infrastructure\Security\OwnershipGuard;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
@@ -23,6 +24,7 @@ final class ReceiptController extends AbstractController
 
     public function __construct(
         private readonly ExpenseRepositoryInterface $repository,
+        private readonly OwnershipGuard $ownershipGuard,
         string $shareDir,
     ) {
         $this->receiptsDir = rtrim($shareDir, '/').'/receipts';
@@ -31,7 +33,7 @@ final class ReceiptController extends AbstractController
     #[Route('', name: 'upload', methods: [Request::METHOD_POST])]
     public function upload(string $id, Request $request): JsonResponse
     {
-        $expense = $this->repository->findById(ExpenseId::fromString($id));
+        $expense = $this->ownershipGuard->assertExpenseBelongsToUser($id, $this->currentUserId());
 
         if (!$expense instanceof ParkingExpense) {
             return $this->json(['error' => 'Receipt upload only available for parking expenses'], Response::HTTP_UNPROCESSABLE_ENTITY);
@@ -64,7 +66,7 @@ final class ReceiptController extends AbstractController
     #[Route('', name: 'download', methods: [Request::METHOD_GET])]
     public function download(string $id): Response
     {
-        $expense = $this->repository->findById(ExpenseId::fromString($id));
+        $expense = $this->ownershipGuard->assertExpenseBelongsToUser($id, $this->currentUserId());
 
         if (!$expense instanceof ParkingExpense || null === $expense->receiptFilename()) {
             return $this->json(['error' => 'No receipt found'], Response::HTTP_NOT_FOUND);
@@ -84,7 +86,7 @@ final class ReceiptController extends AbstractController
     #[Route('', name: 'delete', methods: [Request::METHOD_DELETE])]
     public function delete(string $id): JsonResponse
     {
-        $expense = $this->repository->findById(ExpenseId::fromString($id));
+        $expense = $this->ownershipGuard->assertExpenseBelongsToUser($id, $this->currentUserId());
 
         if (!$expense instanceof ParkingExpense) {
             return $this->json(['error' => 'Not a parking expense'], Response::HTTP_UNPROCESSABLE_ENTITY);
@@ -99,5 +101,15 @@ final class ReceiptController extends AbstractController
         $this->repository->save($expense);
 
         return $this->json(null, Response::HTTP_NO_CONTENT);
+    }
+
+    private function currentUserId(): string
+    {
+        $user = $this->getUser();
+        if (!$user instanceof User) {
+            throw $this->createAccessDeniedException();
+        }
+
+        return $user->id()->value();
     }
 }
