@@ -16,6 +16,7 @@ use App\Expense\Application\Command\UpdateExpense\UpdateExpenseCommand;
 use App\Expense\Application\Export\SummaryExporterRegistry;
 use App\Expense\Application\Query\GetExpensesByPeriod\GetExpensesByPeriodQuery;
 use App\Expense\Application\Query\GetExpensesSummary\GetExpensesSummaryQuery;
+use App\Expense\Application\Tax\TaxDeductionComparisonCalculator;
 use App\Person\Domain\Repository\PersonRepositoryInterface;
 use App\Person\Domain\ValueObject\PersonId;
 use App\SharedKernel\Application\Bus\CommandBusInterface;
@@ -39,6 +40,7 @@ final class ExpenseController extends AbstractController
         private readonly FiscalConfigRepositoryInterface $fiscalConfigRepository,
         private readonly SummaryExporterRegistry $exporters,
         private readonly PersonRepositoryInterface $personRepository,
+        private readonly TaxDeductionComparisonCalculator $taxComparisonCalculator,
     ) {
     }
 
@@ -102,6 +104,29 @@ final class ExpenseController extends AbstractController
             'Content-Type' => $result->mimeType,
             'Content-Disposition' => 'attachment; filename="'.$result->filename.'"',
         ]);
+    }
+
+    #[Route('/comparison', name: 'comparison', methods: [Request::METHOD_GET])]
+    public function comparison(Request $request): JsonResponse
+    {
+        $personId = $request->query->get('personId', '');
+        $year = (int) $request->query->get('year', (int) date('Y'));
+        $taxableSalary = (float) $request->query->get('taxableSalary', 0);
+
+        if (empty($personId)) {
+            return $this->json(['error' => 'personId is required'], Response::HTTP_BAD_REQUEST);
+        }
+        if ($taxableSalary <= 0.0) {
+            return $this->json(['error' => 'taxableSalary must be greater than zero'], Response::HTTP_BAD_REQUEST);
+        }
+
+        $summary = $this->queryBus->ask(new GetExpensesSummaryQuery($personId, $year));
+        $comparison = $this->taxComparisonCalculator->compare($taxableSalary, (float) $summary['total']);
+
+        return $this->json(array_merge([
+            'personId' => $personId,
+            'year' => $year,
+        ], $comparison));
     }
 
     #[Route('/summary', name: 'summary', methods: [Request::METHOD_GET])]

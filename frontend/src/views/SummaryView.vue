@@ -51,13 +51,13 @@
       <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 mb-6">
         <p class="text-sm font-semibold text-gray-700 mb-3">Comparaison avec le forfait 10 %</p>
         <div class="flex flex-wrap items-center gap-3">
-          <label class="text-sm text-gray-500 whitespace-nowrap">Salaire brut annuel :</label>
-          <input v-model.number="grossSalary" type="number" min="0" step="100" placeholder="ex : 35 000"
+          <label class="text-sm text-gray-500 whitespace-nowrap">Revenus salariaux imposables :</label>
+          <input v-model.number="taxableSalary" type="number" min="0" step="100" placeholder="ex : 35 000"
             class="w-40 px-3 py-1.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300" />
-          <span v-if="grossSalary > 0" :class="['text-sm font-medium px-3 py-1.5 rounded-lg', forfaitComparison.favorable ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-amber-50 text-amber-700 border border-amber-200']">
-            {{ forfaitComparison.label }}
+          <span v-if="comparison" :class="['text-sm font-medium px-3 py-1.5 rounded-lg', comparison.recommendedOption === 'real_expenses' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-amber-50 text-amber-700 border border-amber-200']">
+            {{ comparison.label }}
           </span>
-          <span v-else class="text-xs text-gray-400">Renseignez votre salaire pour comparer</span>
+          <span v-else class="text-xs text-gray-400">Renseignez vos revenus imposables pour comparer</span>
         </div>
       </div>
 
@@ -200,7 +200,7 @@ import { usePersonStore } from '@/stores/personStore'
 import { useExpenseStore } from '@/stores/expenseStore'
 import { useAuthStore } from '@/stores/authStore'
 import { expenseApi, type BaremeYear, type TrancheTaux } from '@/api/expenseApi'
-import type { ExpenseSummary } from '@/types'
+import type { ExpenseSummary, TaxDeductionComparison } from '@/types'
 import { fmtEur } from '@/utils/formatting'
 
 const personStore = usePersonStore()
@@ -219,21 +219,26 @@ const pdfLoading = ref(false)
 const csvLoading = ref(false)
 const summary = ref<ExpenseSummary | null>(null)
 const multiYearData = ref<(ExpenseSummary | null)[]>([])
-const grossSalary = ref<number>(parseInt(localStorage.getItem('grossSalary') ?? '0') || 0)
+const taxableSalary = ref<number>(parseInt(localStorage.getItem('taxableSalary') ?? localStorage.getItem('grossSalary') ?? '0') || 0)
+const comparison = ref<TaxDeductionComparison | null>(null)
 
-watch(grossSalary, v => localStorage.setItem('grossSalary', String(v)))
+watch(taxableSalary, () => {
+  localStorage.setItem('taxableSalary', String(taxableSalary.value))
+  loadComparison()
+})
 
 const fmt = fmtEur
 
-// B — Comparaison forfait 10%
-const FORFAIT_CAP_2024 = 14171
-const forfaitComparison = computed(() => {
-  if (!summary.value || grossSalary.value <= 0) return { favorable: true, label: '' }
-  const forfait = Math.min(grossSalary.value * 0.10, FORFAIT_CAP_2024)
-  const diff = summary.value.total - forfait
-  if (diff > 0) return { favorable: true, label: `Frais réels avantageux : +${fmt(diff)} vs forfait 10 %` }
-  return { favorable: false, label: `Forfait 10 % plus avantageux de ${fmt(Math.abs(diff))}` }
-})
+// B — Comparaison forfait 10 % calculée côté backend
+async function loadComparison() {
+  comparison.value = null
+  if (!personStore.activePerson || taxableSalary.value <= 0) return
+  try {
+    comparison.value = await expenseApi.getComparison(personStore.activePerson.id, selectedYear.value, taxableSalary.value)
+  } catch {
+    comparison.value = null
+  }
+}
 
 // E — Détail barème (taux chargés depuis l'API pour refléter la configuration BDD)
 const baremeYear = ref<BaremeYear | null>(null)
@@ -295,6 +300,7 @@ async function load() {
     ])
     summary.value = expenseStore.summary
     baremeYear.value = bareme
+    loadComparison()
     loadMultiYear()
   } finally { loading.value = false }
 }
