@@ -54,6 +54,10 @@ final class CsvSummaryExporter implements SummaryExporterInterface
         ], ';', '"', '\\');
         fputcsv($handle, ['TOTAL DÉDUCTIBLE', '', number_format($data['total'], 2, ',', ' ')], ';', '"', '\\');
         fputcsv($handle, [], ';', '"', '\\');
+        fputcsv($handle, ['Aide déclaration'], ';', '"', '\\');
+        fputcsv($handle, ['Montant à reporter si choix frais réels', 'Case 1AK déclarant 1 / 1BK déclarant 2', number_format($data['total'], 2, ',', ' ')], ';', '"', '\\');
+        fputcsv($handle, ['Note', 'Estimation indicative : vérifiez les remboursements employeur et conservez les justificatifs.', ''], ';', '"', '\\');
+        fputcsv($handle, [], ';', '"', '\\');
 
         if (!empty($data['travel']['trips'])) {
             fputcsv($handle, ['Détail des trajets'], ';', '"', '\\');

@@ -203,6 +203,16 @@ table {
   color: #9ca3af;
   text-align: center;
 }
+.notice {
+  margin: 0 20px 20px;
+  padding: 10px 12px;
+  border: 1px solid #fbbf24;
+  background: #fffbeb;
+  color: #92400e;
+  font-size: 10px;
+  line-height: 1.45;
+  border-radius: 4px;
+}
 </style>
 </head>
 <body>
@@ -221,6 +231,12 @@ table {
     Année fiscale <strong>{{ year }}</strong> &nbsp;·&nbsp;
     Barème kilométrique officiel {{ year }}
   </div>
+</div>
+
+<div class="notice">
+  <strong>Important :</strong> ce document est une aide au récapitulatif des frais réels.
+  Il ne remplace pas un conseil fiscal personnalisé. Vérifiez les remboursements employeur,
+  les règles applicables à votre situation et conservez vos justificatifs en cas de contrôle fiscal.
 </div>
 
 {# ─── Tableau récapitulatif par catégorie ─────────────────── #}
@@ -274,6 +290,24 @@ table {
     <tr class="total-row">
       <td colspan="2">Total déductible {{ year }}</td>
       <td class="amount">{{ data.total|number_format(2, ',', ' ') }}&nbsp;€</td>
+    </tr>
+  </table>
+</div>
+
+<div class="section">
+  <div class="section-header">Aide déclaration</div>
+  <table class="summary-table">
+    <tr>
+      <td>Montant total à reporter si vous choisissez les frais réels</td>
+      <td class="amount"><strong>{{ data.total|number_format(2, ',', ' ') }}&nbsp;€</strong></td>
+    </tr>
+    <tr>
+      <td>Déclarant 1</td>
+      <td class="amount">Case 1AK</td>
+    </tr>
+    <tr>
+      <td>Déclarant 2</td>
+      <td class="amount">Case 1BK</td>
     </tr>
   </table>
 </div>
