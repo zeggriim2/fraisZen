@@ -18,9 +18,6 @@ class ParkingExpense extends Expense
     #[ORM\Column(name: 'parking_location', type: Types::STRING, length: 255, nullable: true)]
     private ?string $location = null;
 
-    #[ORM\Column(name: 'receipt_filename', type: Types::STRING, length: 255, nullable: true)]
-    private ?string $receiptFilename = null;
-
     public function __construct(
         ExpenseId $id,
         string $personId,
@@ -36,7 +33,6 @@ class ParkingExpense extends Expense
         parent::__construct($id, $personId, $date, $description);
         $this->parkingAmount = (string) $parkingAmount;
         $this->location = $location;
-        $this->receiptFilename = null;
     }
 
     public function type(): ExpenseType
@@ -59,11 +55,6 @@ class ParkingExpense extends Expense
         return $this->location;
     }
 
-    public function receiptFilename(): ?string
-    {
-        return $this->receiptFilename;
-    }
-
     public function setParkingAmount(float $amount): void
     {
         if ($amount < 0.0) {
@@ -80,19 +71,12 @@ class ParkingExpense extends Expense
         $this->touch();
     }
 
-    public function setReceiptFilename(?string $filename): void
-    {
-        $this->receiptFilename = $filename;
-        $this->touch();
-    }
-
     /** @return array<string, mixed> */
     public function toArray(): array
     {
         return array_merge($this->baseArray(), [
             'parkingAmount' => $this->parkingAmount(),
             'location' => $this->location,
-            'receiptFilename' => $this->receiptFilename,
         ]);
     }
 }

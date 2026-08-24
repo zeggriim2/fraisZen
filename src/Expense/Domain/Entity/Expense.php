@@ -37,6 +37,12 @@ abstract class Expense
     #[ORM\Column(type: Types::STRING, length: 255, nullable: true)]
     protected ?string $description;
 
+    #[ORM\Column(name: 'receipt_filename', type: Types::STRING, length: 255, nullable: true)]
+    protected ?string $receiptFilename = null;
+
+    #[ORM\Column(name: 'receipt_mime_type', type: Types::STRING, length: 100, nullable: true)]
+    protected ?string $receiptMimeType = null;
+
     #[ORM\Column(type: Types::DATETIME_IMMUTABLE)]
     protected \DateTimeImmutable $createdAt;
 
@@ -83,6 +89,23 @@ abstract class Expense
         $this->updatedAt = new \DateTimeImmutable();
     }
 
+    public function receiptFilename(): ?string
+    {
+        return $this->receiptFilename;
+    }
+
+    public function receiptMimeType(): ?string
+    {
+        return $this->receiptMimeType;
+    }
+
+    public function setReceipt(?string $filename, ?string $mimeType): void
+    {
+        $this->receiptFilename = $filename;
+        $this->receiptMimeType = $mimeType;
+        $this->touch();
+    }
+
     protected function touch(): void
     {
         $this->updatedAt = new \DateTimeImmutable();
@@ -106,6 +129,8 @@ abstract class Expense
             'date' => $this->date->format('Y-m-d'),
             'description' => $this->description,
             'amount' => $this->amount(),
+            'receiptFilename' => $this->receiptFilename,
+            'receiptMimeType' => $this->receiptMimeType,
             'createdAt' => $this->createdAt->format('Y-m-d H:i:s'),
         ];
     }

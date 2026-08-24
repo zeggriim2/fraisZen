@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Expense\Infrastructure\Http;
 
-use App\Expense\Domain\Entity\ParkingExpense;
 use App\Expense\Domain\Repository\ExpenseRepositoryInterface;
 use App\Expense\Domain\ValueObject\ExpenseId;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -32,17 +31,24 @@ final class ReceiptController extends AbstractController
     public function upload(string $id, Request $request): JsonResponse
     {
         $expense = $this->repository->findById(ExpenseId::fromString($id));
-
-        if (!$expense instanceof ParkingExpense) {
-            return $this->json(['error' => 'Receipt upload only available for parking expenses'], Response::HTTP_UNPROCESSABLE_ENTITY);
+        if (null === $expense) {
+            return $this->json(['error' => 'Expense not found'], Response::HTTP_NOT_FOUND);
         }
 
         $file = $request->files->get('receipt');
         if (!$file instanceof UploadedFile) {
             return $this->json(['error' => 'No file uploaded'], Response::HTTP_BAD_REQUEST);
         }
-        if (!in_array($file->getMimeType(), ['application/pdf', 'application/x-pdf'], true)) {
-            return $this->json(['error' => 'Only PDF files are accepted'], Response::HTTP_UNPROCESSABLE_ENTITY);
+        $mimeType = $file->getMimeType();
+        $allowedMimeTypes = [
+            'application/pdf' => 'pdf',
+            'application/x-pdf' => 'pdf',
+            'image/jpeg' => 'jpg',
+            'image/png' => 'png',
+            'image/webp' => 'webp',
+        ];
+        if (!is_string($mimeType) || !array_key_exists($mimeType, $allowedMimeTypes)) {
+            return $this->json(['error' => 'Only PDF, JPG, PNG and WEBP files are accepted'], Response::HTTP_UNPROCESSABLE_ENTITY);
         }
         if ($file->getSize() > 10 * 1024 * 1024) {
             return $this->json(['error' => 'File too large (max 10 MB)'], Response::HTTP_UNPROCESSABLE_ENTITY);
@@ -54,29 +60,43 @@ final class ReceiptController extends AbstractController
             }
         }
 
-        $file->move($this->receiptsDir, $id.'.pdf');
-        $expense->setReceiptFilename($file->getClientOriginalName());
+        foreach (glob($this->receiptsDir.'/'.$id.'.*') ?: [] as $previousFile) {
+            if (is_file($previousFile)) {
+                unlink($previousFile);
+            }
+        }
+
+        $extension = $allowedMimeTypes[$mimeType];
+        $file->move($this->receiptsDir, $id.'.'.$extension);
+        $expense->setReceipt($file->getClientOriginalName(), $mimeType);
         $this->repository->save($expense);
 
-        return $this->json(['receiptFilename' => $expense->receiptFilename()]);
+        return $this->json([
+            'receiptFilename' => $expense->receiptFilename(),
+            'receiptMimeType' => $expense->receiptMimeType(),
+        ]);
     }
 
     #[Route('', name: 'download', methods: [Request::METHOD_GET])]
     public function download(string $id): Response
     {
         $expense = $this->repository->findById(ExpenseId::fromString($id));
+        if (null === $expense) {
+            return $this->json(['error' => 'Expense not found'], Response::HTTP_NOT_FOUND);
+        }
 
-        if (!$expense instanceof ParkingExpense || null === $expense->receiptFilename()) {
+        if (null === $expense->receiptFilename()) {
             return $this->json(['error' => 'No receipt found'], Response::HTTP_NOT_FOUND);
         }
 
-        $path = $this->receiptsDir.'/'.$id.'.pdf';
-        if (!file_exists($path)) {
+        $matches = glob($this->receiptsDir.'/'.$id.'.*') ?: [];
+        $path = $matches[0] ?? null;
+        if (!is_string($path) || !file_exists($path)) {
             return $this->json(['error' => 'File not found on disk'], Response::HTTP_NOT_FOUND);
         }
 
         return new BinaryFileResponse($path, Response::HTTP_OK, [
-            'Content-Type' => 'application/pdf',
+            'Content-Type' => $expense->receiptMimeType() ?? 'application/octet-stream',
             'Content-Disposition' => 'inline; filename="'.addslashes($expense->receiptFilename()).'"',
         ]);
     }
@@ -85,17 +105,17 @@ final class ReceiptController extends AbstractController
     public function delete(string $id): JsonResponse
     {
         $expense = $this->repository->findById(ExpenseId::fromString($id));
-
-        if (!$expense instanceof ParkingExpense) {
-            return $this->json(['error' => 'Not a parking expense'], Response::HTTP_UNPROCESSABLE_ENTITY);
+        if (null === $expense) {
+            return $this->json(['error' => 'Expense not found'], Response::HTTP_NOT_FOUND);
         }
 
-        $path = $this->receiptsDir.'/'.$id.'.pdf';
-        if (file_exists($path)) {
-            unlink($path);
+        foreach (glob($this->receiptsDir.'/'.$id.'.*') ?: [] as $path) {
+            if (is_file($path)) {
+                unlink($path);
+            }
         }
 
-        $expense->setReceiptFilename(null);
+        $expense->setReceipt(null, null);
         $this->repository->save($expense);
 
         return $this->json(null, Response::HTTP_NO_CONTENT);

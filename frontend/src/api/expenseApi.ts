@@ -48,7 +48,7 @@ export const expenseApi = {
   uploadReceipt: (id: string, file: File) => {
     const form = new FormData()
     form.append('receipt', file)
-    return http.post<{ receiptFilename: string }>(`/expenses/${id}/receipt`, form, {
+    return http.post<{ receiptFilename: string; receiptMimeType: string }>(`/expenses/${id}/receipt`, form, {
       headers: { 'Content-Type': 'multipart/form-data' },
     }).then(r => r.data)
   },

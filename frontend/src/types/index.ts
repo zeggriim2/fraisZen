@@ -19,6 +19,8 @@ export interface BaseExpense {
   date: string
   description: string | null
   amount: number
+  receiptFilename: string | null
+  receiptMimeType: string | null
   createdAt: string
 }
 
@@ -56,7 +58,6 @@ export interface ParkingExpense extends BaseExpense {
   type: 'parking'
   parkingAmount: number
   location: string | null
-  receiptFilename: string | null
 }
 
 export type Expense = TravelExpense | RemoteWorkExpense | TollExpense | MealExpense | ParkingExpense
