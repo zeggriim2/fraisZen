@@ -69,8 +69,8 @@
     >
       <div class="px-6 py-5 border-b border-gray-200 flex items-center justify-between">
         <div>
-          <h1 class="text-lg font-bold text-gray-900">Frais Réels</h1>
-          <p class="text-xs text-gray-500 mt-0.5">Déclaration d'impôts</p>
+          <h1 class="text-lg font-bold text-gray-900">FraisZen</h1>
+          <p class="text-xs text-gray-500 mt-0.5">Frais réels, sans prise de tête</p>
         </div>
         <button @click="sidebarOpen = false" class="lg:hidden p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors">
           <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>

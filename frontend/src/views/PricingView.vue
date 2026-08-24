@@ -39,7 +39,7 @@
             <span class="text-4xl font-bold text-gray-900">43,09 €</span>
             <span class="text-gray-400 mb-1">/an</span>
           </div>
-          <p class="mt-2 text-sm text-gray-400">soit 3,59 € / mois — 2 mois offerts</p>
+          <p class="mt-2 text-sm text-gray-400">soit 3,59 € / mois — environ 10 % de réduction</p>
           <ul class="mt-6 space-y-2 flex-1">
             <li v-for="f in features" :key="f" class="flex items-start gap-2 text-sm text-gray-600">
               <span class="text-indigo-500 font-bold shrink-0">✓</span>{{ f }}
