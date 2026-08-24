@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Expense\Infrastructure\Http;
 
 use App\Admin\Domain\Repository\FiscalConfigRepositoryInterface;
+use App\Auth\Domain\Entity\User;
 use App\Expense\Application\Command\BulkCreateTravelExpense\BulkCreateTravelExpenseCommand;
 use App\Expense\Application\Command\CreateMealExpense\CreateMealExpenseCommand;
 use App\Expense\Application\Command\CreateParkingExpense\CreateParkingExpenseCommand;
@@ -20,6 +21,7 @@ use App\Person\Domain\Repository\PersonRepositoryInterface;
 use App\Person\Domain\ValueObject\PersonId;
 use App\SharedKernel\Application\Bus\CommandBusInterface;
 use App\SharedKernel\Application\Bus\QueryBusInterface;
+use App\SharedKernel\Infrastructure\Security\OwnershipGuard;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -39,6 +41,7 @@ final class ExpenseController extends AbstractController
         private readonly FiscalConfigRepositoryInterface $fiscalConfigRepository,
         private readonly SummaryExporterRegistry $exporters,
         private readonly PersonRepositoryInterface $personRepository,
+        private readonly OwnershipGuard $ownershipGuard,
     ) {
     }
 
@@ -60,8 +63,24 @@ final class ExpenseController extends AbstractController
         $from = $request->query->get('from', date('Y-m-01'));
         $to = $request->query->get('to', date('Y-m-t'));
         $personId = $request->query->get('personId') ?: null;
+        $userId = $this->currentUserId();
 
-        return $this->json($this->queryBus->ask(new GetExpensesByPeriodQuery($from, $to, $personId)));
+        if (null !== $personId) {
+            $this->ownershipGuard->assertPersonBelongsToUser($personId, $userId);
+
+            return $this->json($this->queryBus->ask(new GetExpensesByPeriodQuery($from, $to, $personId)));
+        }
+
+        $expenses = [];
+        foreach ($this->personRepository->findAllByUserId($userId) as $person) {
+            $expenses = array_merge(
+                $expenses,
+                $this->queryBus->ask(new GetExpensesByPeriodQuery($from, $to, $person->id()->value())),
+            );
+        }
+        usort($expenses, static fn (array $a, array $b) => ($a['date'] ?? '') <=> ($b['date'] ?? ''));
+
+        return $this->json($expenses);
     }
 
     #[Route('/summary/pdf', name: 'summaryPdf', methods: [Request::METHOD_GET])]
@@ -73,6 +92,7 @@ final class ExpenseController extends AbstractController
         if (empty($personId)) {
             return new Response('personId is required', Response::HTTP_BAD_REQUEST);
         }
+        $this->ownershipGuard->assertPersonBelongsToUser($personId, $this->currentUserId());
 
         $data = $this->queryBus->ask(new GetExpensesSummaryQuery($personId, $year));
         $person = $this->personRepository->findById(PersonId::fromString($personId));
@@ -94,6 +114,7 @@ final class ExpenseController extends AbstractController
         if (empty($personId)) {
             return new Response('personId is required', Response::HTTP_BAD_REQUEST);
         }
+        $this->ownershipGuard->assertPersonBelongsToUser($personId, $this->currentUserId());
 
         $data = $this->queryBus->ask(new GetExpensesSummaryQuery($personId, $year));
         $result = $this->exporters->get('csv')->export($data, $year);
@@ -113,6 +134,7 @@ final class ExpenseController extends AbstractController
         if (empty($personId)) {
             return $this->json(['error' => 'personId is required'], Response::HTTP_BAD_REQUEST);
         }
+        $this->ownershipGuard->assertPersonBelongsToUser($personId, $this->currentUserId());
 
         return $this->json($this->queryBus->ask(new GetExpensesSummaryQuery($personId, $year)));
     }
@@ -122,6 +144,11 @@ final class ExpenseController extends AbstractController
     {
         $data = json_decode($request->getContent(), true) ?? [];
         $type = $data['type'] ?? '';
+
+        if (empty($data['personId'])) {
+            return $this->json(['error' => 'personId is required'], Response::HTTP_BAD_REQUEST);
+        }
+        $this->ownershipGuard->assertPersonBelongsToUser((string) $data['personId'], $this->currentUserId());
 
         try {
             $command = match ($type) {
@@ -189,6 +216,7 @@ final class ExpenseController extends AbstractController
         if (empty($data['personId'])) {
             return $this->json(['error' => 'personId is required'], Response::HTTP_BAD_REQUEST);
         }
+        $this->ownershipGuard->assertPersonBelongsToUser((string) $data['personId'], $this->currentUserId());
 
         $count = $this->commandBus->dispatch(new BulkCreateTravelExpenseCommand(
             personId: $data['personId'],
@@ -210,6 +238,7 @@ final class ExpenseController extends AbstractController
     public function update(string $id, Request $request): JsonResponse
     {
         $fields = json_decode($request->getContent(), true) ?? [];
+        $this->ownershipGuard->assertExpenseBelongsToUser($id, $this->currentUserId());
 
         $this->commandBus->dispatch(new UpdateExpenseCommand($id, $fields));
 
@@ -219,8 +248,20 @@ final class ExpenseController extends AbstractController
     #[Route('/{id}', name: 'delete', requirements: ['id' => Requirement::UUID_V4], methods: [Request::METHOD_DELETE])]
     public function delete(string $id): JsonResponse
     {
+        $this->ownershipGuard->assertExpenseBelongsToUser($id, $this->currentUserId());
+
         $this->commandBus->dispatch(new DeleteExpenseCommand($id));
 
         return $this->json(null, Response::HTTP_NO_CONTENT);
+    }
+
+    private function currentUserId(): string
+    {
+        $user = $this->getUser();
+        if (!$user instanceof User) {
+            throw $this->createAccessDeniedException();
+        }
+
+        return $user->id()->value();
     }
 }
