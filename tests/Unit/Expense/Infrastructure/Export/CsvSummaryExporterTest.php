@@ -40,9 +40,12 @@ it('returns ExportResult with csv mimeType and correct filename', function () us
     expect($result->filename)->toBe('frais-reels-2025.csv');
 });
 
-it('includes year and trip data in the csv content', function () use ($data) {
+it('includes declaration guidance and fiscal disclaimer in csv content', function () use ($data) {
     $result = (new CsvSummaryExporter())->export($data, 2025);
 
+    expect($result->content)->toContain('Aide déclaration');
+    expect($result->content)->toContain('Case 1AK déclarant 1 / 1BK déclarant 2');
+    expect($result->content)->toContain('Estimation indicative');
     expect($result->content)->toContain('2025');
     expect($result->content)->toContain('Paris');
     expect($result->content)->toContain('Lyon');

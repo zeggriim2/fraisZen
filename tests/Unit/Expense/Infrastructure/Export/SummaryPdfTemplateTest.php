@@ -62,3 +62,14 @@ it('renders meal and parking sections when entries exist', function () use ($dat
     expect($html)->toContain('Repas');
     expect($html)->toContain('Parking');
 });
+
+it('renders fiscal disclaimer and declaration help in the PDF template', function () use ($data) {
+    $twig = makeTwig();
+    $html = $twig->render('expense/summary_pdf.html.twig', ['data' => $data, 'year' => 2025]);
+
+    expect($html)->toContain('ne remplace pas un conseil fiscal personnalisé');
+    expect($html)->toContain('Aide déclaration');
+    expect($html)->toContain('Case 1AK');
+    expect($html)->toContain('Case 1BK');
+    expect($html)->toContain('415,80');
+});
