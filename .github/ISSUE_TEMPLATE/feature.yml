@@ -1,0 +1,38 @@
+name: Feature
+description: Demander une évolution fonctionnelle
+title: "[Feature] "
+labels:
+  - enhancement
+body:
+  - type: textarea
+    id: need
+    attributes:
+      label: Besoin utilisateur
+      description: Quel problème utilisateur veut-on résoudre ?
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: Solution proposée
+      description: Décris l’approche souhaitée si tu l’as déjà.
+    validations:
+      required: false
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Critères d’acceptation
+      value: |
+        - [ ] 
+        - [ ] Tests ajoutés ou adaptés
+        - [ ] `make test` passe
+        - [ ] `make analyse` passe
+    validations:
+      required: true
+  - type: textarea
+    id: risks
+    attributes:
+      label: Risques / contraintes
+      description: RGPD, fiscalité, UX, paiement, compatibilité, migration, sécurité.
+    validations:
+      required: false
