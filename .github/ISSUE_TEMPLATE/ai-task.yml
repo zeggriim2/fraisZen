@@ -1,0 +1,61 @@
+name: Tâche pour Agent IA
+description: Demander à l’Agent Dev FraisZen de traiter une tâche cadrée
+title: "[AI Task] "
+labels:
+  - ready-for-dev
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Utilise ce template pour une tâche que l’Agent Dev peut traiter automatiquement.
+        Si la tâche demande une décision métier/fiscale/RGPD, précise clairement les règles attendues.
+  - type: textarea
+    id: objective
+    attributes:
+      label: Objectif
+      description: Que doit produire la tâche ?
+      placeholder: Ajouter...
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Contexte
+      description: Donne les liens, fichiers, comportements actuels et contraintes.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Critères d’acceptation
+      description: Checklist vérifiable par l’agent et par Lilian.
+      value: |
+        - [ ] 
+        - [ ] Tests ajoutés ou adaptés
+        - [ ] `make test` passe
+        - [ ] `make analyse` passe
+    validations:
+      required: true
+  - type: textarea
+    id: security
+    attributes:
+      label: Sécurité / RGPD / fiscalité
+      description: Précise les règles sensibles si la tâche touche utilisateurs, justificatifs, revenus, calculs fiscaux ou paiements.
+      value: |
+        - Ownership utilisateur : 
+        - Données sensibles : 
+        - Impact fiscal/RGPD : 
+    validations:
+      required: false
+  - type: dropdown
+    id: kind
+    attributes:
+      label: Type de branche attendu
+      options:
+        - feat
+        - fix
+        - chore
+        - docs
+        - refactor
+    validations:
+      required: true
