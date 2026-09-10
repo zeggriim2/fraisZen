@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace App\Person\Infrastructure\Http\Person;
 
+use App\Auth\Domain\Entity\User;
 use App\Person\Application\Command\UpdatePerson\UpdatePersonCommand;
 use App\Person\Application\Query\GetPersonById\GetPersonByIdQuery;
 use App\SharedKernel\Application\Bus\CommandBusInterface;
 use App\SharedKernel\Application\Bus\QueryBusInterface;
+use App\SharedKernel\Infrastructure\Security\OwnershipGuard;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -20,11 +22,14 @@ class UpdateController extends AbstractController
     public function __construct(
         private readonly CommandBusInterface $commandBus,
         private readonly QueryBusInterface $queryBus,
+        private readonly OwnershipGuard $ownershipGuard,
     ) {
     }
 
     public function __invoke(string $id, Request $request): JsonResponse
     {
+        $this->ownershipGuard->assertPersonBelongsToUser($id, $this->currentUserId());
+
         $data = json_decode($request->getContent(), true) ?? [];
 
         $this->commandBus->dispatch(new UpdatePersonCommand(
@@ -36,5 +41,15 @@ class UpdateController extends AbstractController
         ));
 
         return $this->json($this->queryBus->ask(new GetPersonByIdQuery($id)));
+    }
+
+    private function currentUserId(): string
+    {
+        $user = $this->getUser();
+        if (!$user instanceof User) {
+            throw $this->createAccessDeniedException();
+        }
+
+        return $user->id()->value();
     }
 }

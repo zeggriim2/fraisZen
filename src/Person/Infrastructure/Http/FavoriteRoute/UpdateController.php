@@ -10,6 +10,7 @@ use App\Person\Application\Query\GetFavoriteRoutesByPerson\GetFavoriteRoutesByPe
 use App\Person\Application\Query\GetPersonById\GetPersonByIdQuery;
 use App\SharedKernel\Application\Bus\CommandBusInterface;
 use App\SharedKernel\Application\Bus\QueryBusInterface;
+use App\SharedKernel\Infrastructure\Security\OwnershipGuard;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -23,6 +24,7 @@ class UpdateController extends AbstractController
     public function __construct(
         private readonly CommandBusInterface $commandBus,
         private readonly QueryBusInterface $queryBus,
+        private readonly OwnershipGuard $ownershipGuard,
     ) {
     }
 
@@ -31,6 +33,7 @@ class UpdateController extends AbstractController
         if (!$this->personBelongsToUser($personId)) {
             return $this->json(['error' => 'Not found.'], Response::HTTP_NOT_FOUND);
         }
+        $this->ownershipGuard->assertFavoriteRouteBelongsToUser($id, $personId, $this->currentUserId());
         $data = json_decode($request->getContent(), true) ?? [];
         $this->commandBus->dispatch(new UpdateFavoriteRouteCommand(
             id: $id,
@@ -60,5 +63,13 @@ class UpdateController extends AbstractController
         $user = $this->getUser();
 
         return ($person['userId'] ?? null) === $user->id()->value();
+    }
+
+    private function currentUserId(): string
+    {
+        /** @var User $user */
+        $user = $this->getUser();
+
+        return $user->id()->value();
     }
 }
