@@ -7,6 +7,7 @@ namespace App\Expense\Infrastructure\Http;
 use App\Auth\Domain\Entity\User;
 use App\Expense\Domain\Entity\ParkingExpense;
 use App\Expense\Domain\Repository\ExpenseRepositoryInterface;
+use App\SharedKernel\Infrastructure\Security\OwnershipGuard;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
@@ -14,7 +15,6 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
-use App\SharedKernel\Infrastructure\Security\OwnershipGuard;
 use Symfony\Component\Routing\Requirement\Requirement;
 
 #[Route('/api/expenses/{id}/receipt', name: 'receipt_', requirements: ['id' => Requirement::UUID_V4])]
