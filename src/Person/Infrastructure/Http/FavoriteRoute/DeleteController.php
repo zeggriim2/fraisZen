@@ -9,6 +9,7 @@ use App\Person\Application\Command\DeleteFavoriteRoute\DeleteFavoriteRouteComman
 use App\Person\Application\Query\GetPersonById\GetPersonByIdQuery;
 use App\SharedKernel\Application\Bus\CommandBusInterface;
 use App\SharedKernel\Application\Bus\QueryBusInterface;
+use App\SharedKernel\Infrastructure\Security\OwnershipGuard;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
@@ -21,6 +22,7 @@ class DeleteController extends AbstractController
     public function __construct(
         private readonly CommandBusInterface $commandBus,
         private readonly QueryBusInterface $queryBus,
+        private readonly OwnershipGuard $ownershipGuard,
     ) {
     }
 
@@ -29,6 +31,7 @@ class DeleteController extends AbstractController
         if (!$this->personBelongsToUser($personId)) {
             return $this->json(['error' => 'Not found.'], Response::HTTP_NOT_FOUND);
         }
+        $this->ownershipGuard->assertFavoriteRouteBelongsToUser($id, $personId, $this->currentUserId());
         $this->commandBus->dispatch(new DeleteFavoriteRouteCommand($id));
 
         return $this->json(null, Response::HTTP_NO_CONTENT);
@@ -46,5 +49,13 @@ class DeleteController extends AbstractController
         $user = $this->getUser();
 
         return ($person['userId'] ?? null) === $user->id()->value();
+    }
+
+    private function currentUserId(): string
+    {
+        /** @var User $user */
+        $user = $this->getUser();
+
+        return $user->id()->value();
     }
 }
