@@ -12,6 +12,13 @@
 
 ---
 
+## Documentation
+
+- [Documentation fonctionnelle](docs/functional-documentation.md) — proposition de valeur, parcours utilisateur, fonctionnalités existantes et roadmap.
+- [Documentation technique](docs/technical-documentation.md) — architecture, stack, API, Docker, qualité, sécurité et conventions de contribution.
+
+---
+
 ## Fonctionnalités
 
 ### Saisie des dépenses
