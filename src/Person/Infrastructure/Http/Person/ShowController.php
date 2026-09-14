@@ -7,7 +7,7 @@ namespace App\Person\Infrastructure\Http\Person;
 use App\Auth\Domain\Entity\User;
 use App\Person\Application\Query\GetPersonById\GetPersonByIdQuery;
 use App\SharedKernel\Application\Bus\QueryBusInterface;
-use App\SharedKernel\Infrastructure\Security\OwnershipGuard;
+use App\SharedKernel\Infrastructure\Security\OwnershipGuardInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -19,7 +19,7 @@ class ShowController extends AbstractController
 {
     public function __construct(
         private readonly QueryBusInterface $queryBus,
-        private readonly OwnershipGuard $ownershipGuard,
+        private readonly OwnershipGuardInterface $ownershipGuard,
     ) {
     }
 

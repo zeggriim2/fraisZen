@@ -9,7 +9,7 @@ use App\Person\Application\Command\UpdatePerson\UpdatePersonCommand;
 use App\Person\Application\Query\GetPersonById\GetPersonByIdQuery;
 use App\SharedKernel\Application\Bus\CommandBusInterface;
 use App\SharedKernel\Application\Bus\QueryBusInterface;
-use App\SharedKernel\Infrastructure\Security\OwnershipGuard;
+use App\SharedKernel\Infrastructure\Security\OwnershipGuardInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -22,7 +22,7 @@ class UpdateController extends AbstractController
     public function __construct(
         private readonly CommandBusInterface $commandBus,
         private readonly QueryBusInterface $queryBus,
-        private readonly OwnershipGuard $ownershipGuard,
+        private readonly OwnershipGuardInterface $ownershipGuard,
     ) {
     }
 

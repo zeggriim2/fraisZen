@@ -7,7 +7,7 @@ namespace App\Expense\Infrastructure\Http;
 use App\Auth\Domain\Entity\User;
 use App\Expense\Domain\Entity\ParkingExpense;
 use App\Expense\Domain\Repository\ExpenseRepositoryInterface;
-use App\SharedKernel\Infrastructure\Security\OwnershipGuard;
+use App\SharedKernel\Infrastructure\Security\OwnershipGuardInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
@@ -24,7 +24,7 @@ final class ReceiptController extends AbstractController
 
     public function __construct(
         private readonly ExpenseRepositoryInterface $repository,
-        private readonly OwnershipGuard $ownershipGuard,
+        private readonly OwnershipGuardInterface $ownershipGuard,
         string $shareDir,
     ) {
         $this->receiptsDir = rtrim($shareDir, '/').'/receipts';
