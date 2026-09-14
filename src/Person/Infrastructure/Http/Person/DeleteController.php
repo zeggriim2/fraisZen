@@ -7,7 +7,7 @@ namespace App\Person\Infrastructure\Http\Person;
 use App\Auth\Domain\Entity\User;
 use App\Person\Application\Command\DeletePerson\DeletePersonCommand;
 use App\SharedKernel\Application\Bus\CommandBusInterface;
-use App\SharedKernel\Infrastructure\Security\OwnershipGuard;
+use App\SharedKernel\Infrastructure\Security\OwnershipGuardInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
@@ -19,7 +19,7 @@ class DeleteController extends AbstractController
 {
     public function __construct(
         private readonly CommandBusInterface $commandBus,
-        private readonly OwnershipGuard $ownershipGuard,
+        private readonly OwnershipGuardInterface $ownershipGuard,
     ) {
     }
 

@@ -15,7 +15,7 @@ use App\Person\Domain\Repository\PersonRepositoryInterface;
 use App\Person\Domain\ValueObject\FavoriteRouteId;
 use App\Person\Domain\ValueObject\PersonId;
 
-final readonly class OwnershipGuard
+final readonly class OwnershipGuard implements OwnershipGuardInterface
 {
     public function __construct(
         private PersonRepositoryInterface $personRepository,

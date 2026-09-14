@@ -94,6 +94,8 @@ it('autorise l’accès à une personne appartenant à l’utilisateur connecté
         makeFavoriteRouteRepositoryForGuard([]),
     );
 
+    expect($guard)->toBeInstanceOf(\App\SharedKernel\Infrastructure\Security\OwnershipGuardInterface::class);
+
     $guard->assertPersonBelongsToUser($personId, 'user-1');
 
     expect(true)->toBeTrue();
