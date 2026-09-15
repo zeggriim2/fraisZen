@@ -72,6 +72,20 @@ export interface ExpenseSummary {
   total: number
 }
 
+export interface TaxDeductionComparison {
+  personId: string
+  year: number
+  taxableSalary: number
+  realExpensesTotal: number
+  standardDeductionRate: number
+  standardDeductionCap: number
+  standardDeduction: number
+  difference: number
+  recommendedOption: 'real_expenses' | 'standard_deduction'
+  label: string
+  warnings: string[]
+}
+
 export interface TripData {
   distanceKm: number
   vehiclePower: number | null
