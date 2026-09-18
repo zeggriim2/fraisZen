@@ -19,7 +19,7 @@ it('navigue vers la page récapitulatif', function (): void {
         ->type('input[type="password"]', TEST_PASSWORD)
         ->press('Se connecter')
         ->waitForText('Calendrier')
-        ->click('a[href="/summary"]')
+        ->click('aside nav a[href="/summary"]')
         ->waitForText('Récapitulatif fiscal')
         ->assertPathIs('/summary')
         ->assertNoSmoke();
