@@ -1,8 +1,10 @@
 <template>
-  <BaseModal max-width="md" @close="$emit('close')">
-    <template #title>{{ person ? 'Modifier' : 'Nouvelle personne' }}</template>
+  <BaseModal max-width="wide" @close="$emit('close')">
+    <template #title>{{ person ? person.fullName : 'Nouvelle personne' }}</template>
 
-    <div class="space-y-4">
+    <div v-if="person" class="profile-tabs"><button @click="activeTab = 'identity'" :class="{active:activeTab === 'identity'}" :aria-pressed="activeTab === 'identity'"><AppIcon name="users" />Informations du profil</button><button @click="activeTab = 'routes'" :class="{active:activeTab === 'routes'}" :aria-pressed="activeTab === 'routes'"><AppIcon name="repeat" />Trajets habituels</button></div>
+    <div class="person-editor space-y-4">
+      <section v-show="activeTab === 'identity'" class="profile-identity space-y-4"><div class="form-intro"><span class="eyebrow">INFORMATIONS PERSONNELLES</span><h3>Un profil à votre image.</h3><p>Ces informations identifient la personne associée aux frais.</p></div>
         <!-- Identity fields -->
         <div class="grid grid-cols-2 gap-4">
           <div>
@@ -27,16 +29,17 @@
           </div>
           <button
             type="button"
-            @click="form.favorite = !form.favorite"
+            @click="form.favorite = !form.favorite" :aria-pressed="form.favorite" aria-label="Profil favori"
             :class="['text-2xl leading-none transition-colors', form.favorite ? 'text-yellow-400 hover:text-yellow-500' : 'text-gray-300 hover:text-yellow-300']"
           >★</button>
         </div>
 
+      </section>
         <!-- Favorite routes (edit mode only) -->
-        <div v-if="person" class="space-y-3 pt-1">
+        <div v-if="person" v-show="activeTab === 'routes'" class="route-manager space-y-3">
           <div class="flex items-center justify-between">
-            <label class="text-sm font-medium text-gray-700">Trajets favoris</label>
-            <button @click="showAddRoute = !showAddRoute" class="text-xs text-indigo-600 hover:text-indigo-800 font-medium">
+            <div ref="routeHeading" tabindex="-1" class="form-intro"><span class="eyebrow">VOS ITINÉRAIRES</span><h3>Moins de saisie, plus de simplicité.</h3><p>Réutilisez ces trajets lors de vos déclarations de frais.</p></div>
+            <button @click="showAddRoute = !showAddRoute; editingRouteId = null; routeError = ''" class="quiet-button">
               {{ showAddRoute ? '✕ Annuler' : '+ Ajouter' }}
             </button>
           </div>
@@ -64,7 +67,7 @@
               </div>
               <div v-if="newRoute.vehicleType === 'car'" class="flex items-end pb-0.5">
                 <label class="flex items-center gap-2 cursor-pointer text-xs text-gray-700">
-                  <button type="button" @click="newRoute.isElectric = !newRoute.isElectric"
+                  <button type="button" @click="newRoute.isElectric = !newRoute.isElectric" role="switch" :aria-checked="newRoute.isElectric" aria-label="Véhicule électrique"
                     :class="['relative inline-flex h-5 w-9 items-center rounded-full transition-colors shrink-0', newRoute.isElectric ? 'bg-emerald-500' : 'bg-gray-300']">
                     <span :class="['inline-block h-3 w-3 transform rounded-full bg-white shadow transition-transform', newRoute.isElectric ? 'translate-x-5' : 'translate-x-1']" />
                   </button>
@@ -74,7 +77,7 @@
             </div>
             <div class="flex items-center justify-between">
               <label class="flex items-center gap-2 cursor-pointer text-xs text-gray-700">
-                <button type="button" @click="newRoute.roundTrip = !newRoute.roundTrip"
+                <button type="button" @click="newRoute.roundTrip = !newRoute.roundTrip" role="switch" :aria-checked="newRoute.roundTrip" aria-label="Aller-retour"
                   :class="['relative inline-flex h-5 w-9 items-center rounded-full transition-colors shrink-0', newRoute.roundTrip ? 'bg-blue-500' : 'bg-gray-300']">
                   <span :class="['inline-block h-3 w-3 transform rounded-full bg-white shadow transition-transform', newRoute.roundTrip ? 'translate-x-5' : 'translate-x-1']" />
                 </button>
@@ -115,7 +118,7 @@
                   </div>
                   <div v-if="editForm.vehicleType === 'car'" class="flex items-end pb-0.5">
                     <label class="flex items-center gap-2 cursor-pointer text-xs text-gray-700">
-                      <button type="button" @click="editForm.isElectric = !editForm.isElectric"
+                      <button type="button" @click="editForm.isElectric = !editForm.isElectric" role="switch" :aria-checked="editForm.isElectric" aria-label="Véhicule électrique"
                         :class="['relative inline-flex h-5 w-9 items-center rounded-full transition-colors shrink-0', editForm.isElectric ? 'bg-emerald-500' : 'bg-gray-300']">
                         <span :class="['inline-block h-3 w-3 transform rounded-full bg-white shadow transition-transform', editForm.isElectric ? 'translate-x-5' : 'translate-x-1']" />
                       </button>
@@ -125,7 +128,7 @@
                 </div>
                 <div class="flex items-center justify-between">
                   <label class="flex items-center gap-2 cursor-pointer text-xs text-gray-700">
-                    <button type="button" @click="editForm.roundTrip = !editForm.roundTrip"
+                    <button type="button" @click="editForm.roundTrip = !editForm.roundTrip" role="switch" :aria-checked="editForm.roundTrip" aria-label="Aller-retour"
                       :class="['relative inline-flex h-5 w-9 items-center rounded-full transition-colors shrink-0', editForm.roundTrip ? 'bg-blue-500' : 'bg-gray-300']">
                       <span :class="['inline-block h-3 w-3 transform rounded-full bg-white shadow transition-transform', editForm.roundTrip ? 'translate-x-5' : 'translate-x-1']" />
                     </button>
@@ -142,37 +145,38 @@
               </div>
 
               <!-- Display row -->
-              <div v-else class="flex items-center gap-2 px-3 py-2 rounded-lg bg-gray-50 border border-gray-200">
-                <span class="text-xs">⭐</span>
+              <div v-else class="saved-route-card">
+                <span class="overview-icon blue"><AppIcon name="car" /></span>
                 <div class="flex-1 min-w-0">
                   <p class="text-xs font-medium text-gray-800 truncate">{{ route.name }}</p>
-                  <p class="text-xs text-gray-500 truncate">{{ route.departure }} → {{ route.arrival }}</p>
+                  <p class="route-itinerary"><span>{{ route.departure }}</span><span aria-hidden="true">→</span><span>{{ route.arrival }}</span></p><div class="route-tags"><span>{{ route.roundTrip ? 'Aller-retour' : 'Aller simple' }}</span><span>{{ vehicleTypes.find(v => v.value === route.vehicleType)?.label }}</span><span v-if="route.vehiclePower">{{ route.vehiclePower }} CV</span><span v-if="route.isElectric">Électrique</span></div>
                 </div>
                 <span class="text-xs text-gray-400 shrink-0">{{ vehicleIcon(route.vehicleType, route.isElectric) }}</span>
-                <button @click="startEdit(route)" class="p-0.5 text-gray-300 hover:text-blue-500 shrink-0" title="Modifier">
+                <button @click="startEdit(route)" class="p-0.5 text-gray-600 hover:text-blue-500 shrink-0" title="Modifier">
                   <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                 </button>
-                <button @click="deleteRoute(route.id)" class="p-0.5 text-gray-300 hover:text-red-500 shrink-0" title="Supprimer">
+                <button @click="deleteRoute(route.id)" class="p-0.5 text-gray-600 hover:text-red-500 shrink-0" title="Supprimer">
                   <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                 </button>
               </div>
 
             </template>
           </div>
-          <p v-else-if="!showAddRoute" class="text-xs text-gray-400">Aucun trajet favori pour cette personne.</p>
+          <p v-else-if="!showAddRoute" class="route-empty">Aucun trajet enregistré. Ajoutez votre premier itinéraire habituel.</p>
         </div>
 
         <div v-else class="text-xs text-gray-400 pt-1">
           Les trajets favoris seront disponibles après la création de la personne.
         </div>
 
+        <p v-if="routeError && !showAddRoute && !editingRouteId" role="alert" class="text-sm text-red-700">{{ routeError }}</p>
         <p v-if="error" class="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg">{{ error }}</p>
     </div>
 
     <template #footer>
       <div class="flex gap-3">
         <button @click="$emit('close')" class="flex-1 px-4 py-2 border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50">Fermer</button>
-        <button @click="save" :disabled="saving" class="flex-1 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 rounded-lg text-sm font-medium text-white">
+        <button v-if="activeTab === 'identity'" @click="save" :disabled="saving" class="flex-1 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 rounded-lg text-sm font-medium text-white">
           {{ saving ? 'Enregistrement…' : 'Enregistrer' }}
         </button>
       </div>
@@ -181,19 +185,21 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, nextTick } from 'vue'
 import { usePersonStore } from '@/stores/personStore'
 import { useFavoriteRouteStore } from '@/stores/favoriteRouteStore'
 import type { Person, VehicleType } from '@/types'
 import AddressAutocompleteInput from '@/components/ui/AddressAutocompleteInput.vue'
+import AppIcon from '@/components/ui/AppIcon.vue'
 import BaseModal from '@/components/ui/BaseModal.vue'
 
-const props = defineProps<{ person?: Person | null }>()
+const props = defineProps<{ person?: Person | null; initialTab?: 'identity' | 'routes' }>()
 const emit = defineEmits<{ close: []; saved: [] }>()
 
 const personStore = usePersonStore()
 const routeStore = useFavoriteRouteStore()
 
+const activeTab = ref<'identity' | 'routes'>(props.person ? props.initialTab ?? 'identity' : 'identity')
 const saving = ref(false)
 const error = ref('')
 const form = ref({
@@ -204,6 +210,7 @@ const form = ref({
 })
 
 // Route management
+const routeHeading = ref<HTMLElement | null>(null)
 const showAddRoute = ref(false)
 const savingRoute = ref(false)
 const routeError = ref('')
@@ -227,7 +234,7 @@ function vehicleIcon(type: string, isElectric = false): string {
 }
 
 onMounted(async () => {
-  if (props.person) await routeStore.fetchByPerson(props.person.id)
+  if (props.person) { routeStore.reset(); try { await routeStore.fetchByPerson(props.person.id) } catch { routeError.value = 'Impossible de charger les trajets.' } }
 })
 
 async function saveNewRoute() {
@@ -248,6 +255,7 @@ async function saveNewRoute() {
     })
     newRoute.value = freshRoute()
     showAddRoute.value = false
+    await nextTick(); routeHeading.value?.focus()
   } catch {
     routeError.value = 'Une erreur est survenue.'
   } finally {
@@ -256,6 +264,7 @@ async function saveNewRoute() {
 }
 
 function startEdit(route: typeof routeStore.routes[number]) {
+  showAddRoute.value = false
   editingRouteId.value = route.id
   routeError.value = ''
   editForm.value = {
@@ -291,6 +300,7 @@ async function saveEditRoute(id: string) {
       roundTrip: editForm.value.roundTrip,
     })
     editingRouteId.value = null
+    await nextTick(); routeHeading.value?.focus()
   } catch {
     routeError.value = 'Une erreur est survenue.'
   } finally {
@@ -300,7 +310,7 @@ async function saveEditRoute(id: string) {
 
 async function deleteRoute(id: string) {
   if (!props.person) return
-  await routeStore.remove(props.person.id, id)
+  try { await routeStore.remove(props.person.id, id) } catch { routeError.value = 'Impossible de supprimer ce trajet.' }
 }
 
 async function save() {

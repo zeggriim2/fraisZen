@@ -1,66 +1,22 @@
 <template>
-  <div class="p-4 sm:p-6">
-    <div class="flex items-center justify-between mb-6">
-      <h2 class="text-xl font-semibold text-gray-900">Personnes</h2>
-      <button @click="openCreate" class="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700">
-        + Ajouter
-      </button>
+  <div class="workspace-page">
+    <div class="workspace-title"><div><span class="eyebrow">VOTRE FOYER FISCAL</span><h2>À chacun son espace.</h2><p>Profils, préférences et trajets habituels : tout commence ici.</p></div><button class="primary-action" @click="openCreate">＋ Ajouter une personne</button></div>
+    <div class="directory-toolbar"><div class="directory-search"><AppIcon name="users" /><input v-model="search" aria-label="Rechercher une personne" placeholder="Rechercher un nom ou un email…" /></div><div class="segmented-control"><button @click="favoritesOnly = false" :class="{active:!favoritesOnly}" :aria-pressed="!favoritesOnly">Tous · {{ store.persons.length }}</button><button @click="favoritesOnly = true" :class="{active:favoritesOnly}" :aria-pressed="favoritesOnly">Favoris · {{ store.persons.filter(p => p.favorite).length }}</button></div></div>
+    <p v-if="store.loading" role="status" class="empty-workspace">Chargement des profils…</p>
+    <p v-else-if="store.error" role="alert" class="empty-workspace text-red-700">{{ store.error }} <button class="quiet-button" @click="store.fetchAll">Réessayer</button></p>
+    <div v-else-if="!store.persons.length" class="empty-workspace"><AppIcon name="users" /><h3>Votre premier profil</h3><p>Ajoutez une personne pour commencer à organiser ses frais.</p><button class="primary-action" @click="openCreate">Créer un profil ↗</button></div>
+    <div v-else-if="!visiblePersons.length" class="empty-workspace"><h3>Aucun profil trouvé</h3><p>Essayez un autre nom ou affichez tous les profils.</p><button class="quiet-button" @click="search = ''; favoritesOnly = false">Réinitialiser les filtres</button></div>
+    <div v-else class="person-directory">
+      <article v-for="p in visiblePersons" :key="p.id" class="person-card" :class="{'is-current':store.activePerson?.id === p.id}">
+        <div class="person-card-top"><span class="person-monogram">{{ initials(p) }}</span><button class="icon-button" @click="store.toggleFavorite(p.id)" :aria-label="p.favorite ? `Retirer ${p.fullName} des favoris` : `Ajouter ${p.fullName} aux favoris`" :aria-pressed="p.favorite"><span :class="p.favorite ? 'text-amber-600' : 'text-gray-400'">{{ p.favorite ? '★' : '☆' }}</span></button></div>
+        <h3>{{ p.fullName }}</h3><p class="person-email">{{ p.email || 'Aucun email renseigné' }}</p>
+        <div class="person-current"><span v-if="store.activePerson?.id === p.id" class="status-pill"><span class="category-dot bg-emerald-500" />Profil sélectionné</span><button v-else class="quiet-button" @click="store.setActive(p)">Utiliser ce profil ↗</button></div>
+        <button class="person-routes-link" @click="openEdit(p,'routes')"><span class="overview-icon blue"><AppIcon name="repeat" /></span><span><strong>Trajets habituels</strong><small>Gérer ses itinéraires favoris</small></span><span class="ml-auto">↗</span></button>
+        <footer><button @click="openEdit(p)">Modifier le profil</button><button class="text-red-700" @click="confirmRemove(p)" :aria-label="`Supprimer ${p.fullName}`">Supprimer</button></footer>
+      </article>
+      <button class="add-person-card" @click="openCreate"><span>＋</span><strong>Un nouveau profil</strong><small>Ajoutez un membre de votre foyer</small></button>
     </div>
-
-    <div v-if="store.persons.length === 0" class="flex flex-col items-center justify-center py-24 text-center">
-      <div class="w-24 h-24 rounded-full bg-indigo-50 flex items-center justify-center mb-6">
-        <svg class="w-12 h-12 text-indigo-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"/>
-        </svg>
-      </div>
-      <h3 class="text-lg font-semibold text-gray-900 mb-2">Aucune personne ajoutée</h3>
-      <p class="text-sm text-gray-500 mb-6 max-w-xs">Ajoutez les membres de votre foyer fiscal pour commencer à saisir des frais déductibles.</p>
-      <button @click="openCreate" class="flex items-center gap-2 px-5 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-medium hover:bg-indigo-700 transition-colors shadow-sm">
-        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
-        Ajouter une personne
-      </button>
-    </div>
-
-    <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-      <div
-        v-for="p in store.persons" :key="p.id"
-        :class="['bg-white rounded-2xl border p-5 shadow-sm transition-colors', p.favorite ? 'border-yellow-200 bg-yellow-50/30' : 'border-gray-200']"
-      >
-        <div class="flex items-start justify-between mb-3">
-          <div class="w-12 h-12 rounded-xl bg-indigo-100 flex items-center justify-center text-xl font-bold text-indigo-600">
-            {{ initials(p) }}
-          </div>
-          <div class="flex gap-1 items-center">
-            <button
-              @click="store.toggleFavorite(p.id)"
-              :title="p.favorite ? 'Retirer des favoris' : 'Ajouter aux favoris'"
-              :class="['text-xl leading-none p-1 rounded-lg transition-colors', p.favorite ? 'text-yellow-400 hover:text-yellow-500' : 'text-gray-300 hover:text-yellow-300 hover:bg-gray-50']"
-            >★</button>
-            <button @click="openEdit(p)" class="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100">
-              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
-            </button>
-            <button @click="confirmRemove(p)" class="p-1.5 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50">
-              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-            </button>
-          </div>
-        </div>
-        <div class="flex items-center gap-2 flex-wrap">
-          <h3 class="font-semibold text-gray-900">{{ p.fullName }}</h3>
-          <span v-if="store.activePerson?.id === p.id"
-            class="text-xs font-medium px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-700">
-            Actif
-          </span>
-        </div>
-        <p v-if="p.email" class="text-sm text-gray-500 mt-0.5">{{ p.email }}</p>
-        <button @click="store.setActive(p)"
-          v-if="store.activePerson?.id !== p.id"
-          class="mt-3 text-xs text-indigo-600 hover:text-indigo-800 font-medium">
-          Sélectionner →
-        </button>
-      </div>
-    </div>
-
-    <PersonModal v-if="showModal" :person="editing" @close="closeModal" @saved="onSaved" />
+    <PersonModal v-if="showModal" :person="editing" :initial-tab="initialTab" @close="closeModal" @saved="onSaved" />
 
     <ConfirmModal
       v-if="pendingRemove"
@@ -77,13 +33,18 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { usePersonStore } from '@/stores/personStore'
 import type { Person } from '@/types'
+import AppIcon from '@/components/ui/AppIcon.vue'
 import PersonModal from '@/components/person/PersonModal.vue'
 import ConfirmModal from '@/components/ui/ConfirmModal.vue'
 
 const store = usePersonStore()
+const search = ref('')
+const favoritesOnly = ref(false)
+const initialTab = ref<'identity' | 'routes'>('identity')
+const visiblePersons = computed(() => store.persons.filter(p => (!favoritesOnly.value || p.favorite) && `${p.fullName} ${p.email ?? ''}`.toLocaleLowerCase('fr').includes(search.value.toLocaleLowerCase('fr'))))
 const showModal = ref(false)
 const editing = ref<Person | null>(null)
 const pendingRemove = ref<Person | null>(null)
@@ -91,8 +52,8 @@ const pendingRemove = ref<Person | null>(null)
 const initials = (p: Person) => (p.firstName[0] + p.lastName[0]).toUpperCase()
 const fmt = (d: string) => new Date(d).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
 
-function openCreate() { editing.value = null; showModal.value = true }
-function openEdit(p: Person) { editing.value = p; showModal.value = true }
+function openCreate() { initialTab.value = 'identity'; editing.value = null; showModal.value = true }
+function openEdit(p: Person, tab: 'identity' | 'routes' = 'identity') { initialTab.value = tab; editing.value = p; showModal.value = true }
 function closeModal() { showModal.value = false; editing.value = null }
 async function onSaved() { closeModal(); await store.fetchAll() }
 function confirmRemove(p: Person) { pendingRemove.value = p }

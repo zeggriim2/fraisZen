@@ -1,41 +1,42 @@
 <template>
-  <div class="p-6">
-    <div class="flex items-center gap-3 mb-6">
+  <div class="workspace-page admin-workspace">
+    <AdminSectionNav />
+    <div class="workspace-title account-heading">
       <RouterLink to="/admin/users" class="text-gray-400 hover:text-gray-200 text-sm">← Retour</RouterLink>
       <span class="text-gray-600">/</span>
-      <h2 class="text-xl font-bold text-gray-100">{{ user?.email }}</h2>
+      <h2 class="break-all">{{ user?.email }}</h2>
     </div>
 
     <div v-if="loading" class="text-gray-400 text-sm">Chargement…</div>
 
-    <div v-else-if="user" class="space-y-6">
+    <div v-else-if="user" class="account-detail-grid">
       <!-- Compte -->
-      <div class="bg-gray-800 rounded-xl border border-gray-700 p-5">
-        <h3 class="text-sm font-semibold text-gray-300 mb-4">Informations du compte</h3>
-        <div class="grid grid-cols-2 gap-4 text-sm">
+      <div class="bg-white rounded-2xl border border-gray-200 p-6 overflow-x-auto">
+        <h3 class="text-sm font-semibold text-gray-700 mb-4">Informations du compte</h3>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm break-words">
           <div>
             <p class="text-xs text-gray-500 mb-1">Email</p>
-            <p class="text-gray-200">{{ user.email }}</p>
+            <p class="text-gray-800">{{ user.email }}</p>
           </div>
           <div>
             <p class="text-xs text-gray-500 mb-1">Inscription</p>
-            <p class="text-gray-200">{{ formatDate(user.createdAt) }}</p>
+            <p class="text-gray-800">{{ formatDate(user.createdAt) }}</p>
           </div>
           <div>
             <p class="text-xs text-gray-500 mb-1">Rôles</p>
-            <p class="text-gray-200">{{ user.roles.join(', ') }}</p>
+            <p class="text-gray-800">{{ user.roles.join(', ') }}</p>
           </div>
           <div>
             <p class="text-xs text-gray-500 mb-1">Année fiscale par défaut</p>
-            <p class="text-gray-200">{{ user.defaultYear ?? '—' }}</p>
+            <p class="text-gray-800">{{ user.defaultYear ?? '—' }}</p>
           </div>
         </div>
       </div>
 
       <!-- Abonnement -->
-      <div class="bg-gray-800 rounded-xl border border-gray-700 p-5">
-        <h3 class="text-sm font-semibold text-gray-300 mb-4">Abonnement</h3>
-        <div class="flex items-end gap-4">
+      <div class="bg-white rounded-2xl border border-gray-200 p-6 overflow-x-auto">
+        <h3 class="text-sm font-semibold text-gray-700 mb-4">Abonnement</h3>
+        <div class="flex flex-wrap items-end gap-4">
           <div>
             <p class="text-xs text-gray-500 mb-1">Statut actuel</p>
             <span :class="['px-2 py-0.5 rounded-full text-xs font-medium', statusClass(user.subscriptionStatus)]">
@@ -44,7 +45,7 @@
           </div>
           <div class="flex-1">
             <label class="text-xs text-gray-500 block mb-1">Modifier le statut</label>
-            <select v-model="newStatus" class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-sm text-gray-200 focus:outline-none focus:border-indigo-500">
+            <select v-model="newStatus" class="w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-lg text-sm text-gray-800 focus:outline-none focus:border-indigo-500">
               <option value="active">Actif</option>
               <option value="canceled">Annulé</option>
               <option value="inactive">Inactif</option>
@@ -62,12 +63,12 @@
       </div>
 
       <!-- Personnes -->
-      <div class="bg-gray-800 rounded-xl border border-gray-700 p-5">
-        <h3 class="text-sm font-semibold text-gray-300 mb-4">Personnes ({{ user.persons.length }})</h3>
+      <div class="account-people bg-white rounded-2xl border border-gray-200 p-6 overflow-x-auto">
+        <h3 class="text-sm font-semibold text-gray-700 mb-4">Personnes ({{ user.persons.length }})</h3>
         <div v-if="user.persons.length === 0" class="text-gray-500 text-sm">Aucune personne</div>
-        <table v-else class="w-full text-sm">
+        <table v-else class="admin-table w-full text-sm">
           <thead>
-            <tr class="border-b border-gray-700">
+            <tr class="border-b border-gray-200">
               <th class="text-left pb-2 text-xs text-gray-500">Nom</th>
               <th class="text-left pb-2 text-xs text-gray-500">Email</th>
               <th class="text-left pb-2 text-xs text-gray-500">Dépenses</th>
@@ -75,8 +76,8 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="p in user.persons" :key="p.id" class="border-b border-gray-700/50">
-              <td class="py-2 text-gray-200">{{ p.fullName }}</td>
+            <tr v-for="p in user.persons" :key="p.id" class="border-b border-gray-200/50">
+              <td class="py-2 text-gray-800">{{ p.fullName }}</td>
               <td class="py-2 text-gray-400">{{ p.email ?? '—' }}</td>
               <td class="py-2 text-gray-400">{{ p.expenseCount }}</td>
               <td class="py-2 text-gray-400">{{ formatDate(p.createdAt) }}</td>
@@ -86,19 +87,19 @@
       </div>
 
       <!-- Actions -->
-      <div class="bg-gray-800 rounded-xl border border-gray-700 p-5">
-        <h3 class="text-sm font-semibold text-gray-300 mb-4">Actions</h3>
-        <div class="flex gap-3">
+      <div class="account-actions bg-white rounded-2xl border border-gray-200 p-6 overflow-x-auto">
+        <h3 class="text-sm font-semibold text-gray-700 mb-4">Actions</h3>
+        <div class="flex flex-wrap gap-3">
           <button
             @click="impersonate"
             :disabled="impersonating"
-            class="px-4 py-2 bg-gray-700 text-gray-200 text-sm rounded-lg hover:bg-gray-600 disabled:opacity-50 transition-colors"
+            class="px-4 py-2 bg-gray-100 text-gray-800 text-sm rounded-lg hover:bg-gray-200 disabled:opacity-50 transition-colors"
           >
             {{ impersonating ? 'Génération…' : '🔑 Se connecter en tant que cet utilisateur' }}
           </button>
           <button
             @click="confirmDelete"
-            class="px-4 py-2 bg-red-900/50 text-red-400 text-sm rounded-lg hover:bg-red-900 transition-colors"
+            class="px-4 py-2 bg-red-50 text-red-700 text-sm rounded-lg hover:bg-red-900 transition-colors"
           >
             Supprimer le compte
           </button>
@@ -110,6 +111,7 @@
 </template>
 
 <script setup lang="ts">
+import AdminSectionNav from '@/components/ui/AdminSectionNav.vue'
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { adminApi, type AdminUserDetail } from '@/api/adminApi'
@@ -173,10 +175,10 @@ async function confirmDelete() {
 
 function statusClass(status: string | null) {
   return ({
-    active: 'bg-emerald-900/50 text-emerald-400',
-    canceled: 'bg-red-900/50 text-red-400',
-    past_due: 'bg-amber-900/50 text-amber-400',
-  } as Record<string, string>)[status ?? ''] ?? 'bg-gray-700 text-gray-400'
+    active: 'bg-emerald-50 text-emerald-700',
+    canceled: 'bg-red-50 text-red-700',
+    past_due: 'bg-amber-50 text-amber-700',
+  } as Record<string, string>)[status ?? ''] ?? 'bg-gray-100 text-gray-400'
 }
 
 function statusLabel(status: string | null) {

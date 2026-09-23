@@ -2,13 +2,13 @@
   <Teleport to="body">
     <div class="fixed inset-0 z-50 flex items-center justify-center p-4" @click.self="onBackdropClick">
       <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" @click="onBackdropClick" />
-      <div :class="['relative bg-white rounded-2xl shadow-xl w-full flex flex-col max-h-[90vh]', maxWidthClass]">
+      <div ref="dialog" role="dialog" aria-modal="true" :aria-labelledby="titleId" tabindex="-1" @keydown="handleKeydown" :class="['modal-surface relative bg-white rounded-2xl shadow-xl w-full flex flex-col max-h-[90vh]', maxWidthClass]">
 
         <!-- Header -->
         <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 shrink-0">
           <slot name="header">
             <div>
-              <h2 class="text-lg font-semibold text-gray-900">
+              <h2 :id="titleId" class="text-lg font-semibold text-gray-900">
                 <slot name="title" />
               </h2>
               <p v-if="$slots.subtitle" class="text-sm text-gray-500 mt-0.5">
@@ -16,7 +16,7 @@
               </p>
             </div>
           </slot>
-          <button @click="$emit('close')" class="p-2 rounded-lg hover:bg-gray-100 shrink-0 ml-4">
+          <button aria-label="Fermer la fenêtre" @click="$emit('close')" class="p-2 rounded-lg hover:bg-gray-100 shrink-0 ml-4">
             <svg class="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
             </svg>
@@ -39,15 +39,34 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref, onMounted, onUnmounted, useId } from 'vue'
 
 const props = withDefaults(defineProps<{
-  maxWidth?: 'sm' | 'md' | 'lg' | 'xl'
+  maxWidth?: 'sm' | 'md' | 'lg' | 'xl' | 'wide'
   closeOnBackdrop?: boolean
 }>(), {
   maxWidth: 'lg',
   closeOnBackdrop: true,
 })
+
+const dialog = ref<HTMLElement | null>(null)
+const titleId = useId()
+let previousFocus: HTMLElement | null = null
+onMounted(() => {
+  previousFocus = document.activeElement as HTMLElement | null
+  dialog.value?.focus()
+})
+onUnmounted(() => { previousFocus?.focus() })
+function handleKeydown(event: KeyboardEvent) {
+  if (event.key === 'Escape') { event.stopPropagation(); emit('close'); return }
+  if (event.key !== 'Tab') return
+  const elements = Array.from(dialog.value?.querySelectorAll<HTMLElement>('button:not(:disabled), a[href], input:not(:disabled), select:not(:disabled), textarea:not(:disabled), [tabindex="0"]') ?? []).filter(el => el.getClientRects().length > 0)
+  const first = elements[0]
+  const last = elements[elements.length - 1]
+  if (!first) { event.preventDefault(); return }
+  if (event.shiftKey && (document.activeElement === first || document.activeElement === dialog.value)) { event.preventDefault(); last.focus() }
+  else if (!event.shiftKey && (document.activeElement === last || document.activeElement === dialog.value)) { event.preventDefault(); first.focus() }
+}
 
 const emit = defineEmits<{ close: [] }>()
 
@@ -56,6 +75,7 @@ const maxWidthClass = computed(() => ({
   md: 'max-w-md',
   lg: 'max-w-lg',
   xl: 'max-w-2xl',
+  wide: 'max-w-4xl',
 }[props.maxWidth]))
 
 function onBackdropClick() {

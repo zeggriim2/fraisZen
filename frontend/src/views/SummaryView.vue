@@ -1,7 +1,7 @@
 <template>
-  <div class="p-4 sm:p-6">
-    <div class="flex items-center justify-between mb-6">
-      <h2 class="text-xl font-semibold text-gray-900">Récapitulatif fiscal</h2>
+  <div class="workspace-page">
+    <div class="workspace-title">
+      <div><span class="eyebrow">VOTRE BILAN ANNUEL</span><h2>Chaque frais compte.</h2><p>Votre récapitulatif fiscal, prêt à être exporté.</p></div>
       <div class="flex items-center gap-3">
         <select v-model="selectedYear" class="rounded-lg border-gray-300 shadow-sm text-sm">
           <option v-for="y in years" :key="y" :value="y">{{ y }}</option>
@@ -9,11 +9,11 @@
         <template v-if="summary && personStore.activePerson">
           <button @click="downloadCsv" :disabled="csvLoading"
             class="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 transition-colors">
-            <span>📊</span>{{ csvLoading ? 'Génération…' : 'CSV' }}
+            <AppIcon name="chart" />{{ csvLoading ? 'Génération…' : 'CSV' }}
           </button>
           <button @click="downloadPdf" :disabled="pdfLoading"
             class="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-indigo-600 border border-indigo-200 rounded-lg hover:bg-indigo-50 disabled:opacity-50 transition-colors">
-            <span>📄</span>{{ pdfLoading ? 'Génération…' : 'PDF' }}
+            <AppIcon name="receipt" />{{ pdfLoading ? 'Génération…' : 'PDF' }}
           </button>
         </template>
       </div>
@@ -34,17 +34,9 @@
     </div>
 
     <template v-else-if="summary">
-      <!-- Total hero -->
-      <div class="bg-gradient-to-br from-indigo-600 via-indigo-700 to-violet-700 rounded-2xl p-6 text-white mb-4 shadow-lg">
-        <p class="text-indigo-200 text-sm font-medium">Total déductible {{ summary.year }}</p>
-        <p class="text-5xl font-bold mt-2 tracking-tight">{{ fmt(summary.total) }}</p>
-        <div class="flex items-center justify-between mt-3">
-          <p class="text-indigo-200 text-sm">{{ personStore.activePerson?.fullName }}</p>
-          <div class="flex items-center gap-4 text-xs text-indigo-300">
-            <span>🚗 {{ summary.travel.totalKm.toFixed(0) }} km</span>
-            <span>🏠 {{ summary.remoteWork.days }} j.</span>
-          </div>
-        </div>
+      <div class="report-overview">
+        <section class="report-total"><span>FRAIS DÉDUCTIBLES · {{ summary.year }}</span><strong>{{ fmt(summary.total) }}</strong><p>{{ personStore.activePerson?.fullName }}</p><footer><span>{{ summary.travel.totalKm.toFixed(0) }} km parcourus</span><span>{{ summary.remoteWork.days }} jours de télétravail</span></footer></section>
+        <section class="report-breakdown"><h3>La répartition de vos frais</h3><div class="distribution-bar" role="img" aria-label="Répartition des déductions par catégorie"><span v-for="item in distribution" :key="item.label" :class="item.color" :style="{width: `${item.percent}%`}" /></div><p v-if="!summary.total" class="text-sm text-gray-500 mb-4">Vos premiers frais apparaîtront ici.</p><div class="distribution-legend"><div v-for="item in distribution" :key="item.label"><span :class="['category-dot',item.color]" /><span>{{ item.label }}</span><strong>{{ fmt(item.amount) }}</strong></div></div></section>
       </div>
 
       <!-- Comparaison forfait 10% -->
@@ -62,7 +54,7 @@
       </div>
 
       <!-- Cards -->
-      <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
+      <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 mb-8">
         <SummaryCard icon="🚗" title="Trajets" subtitle="Barème kilométrique" :amount="summary.travel.deduction" color="blue">
           <template #details>
             <div class="flex justify-between text-sm"><span class="text-gray-500">Trajets</span><span class="font-medium">{{ summary.travel.trips.length }}</span></div>
@@ -151,7 +143,7 @@
       </div>
 
       <!-- Multi-années -->
-      <div v-if="multiYearData.some(y => y)" class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+      <div v-if="multiYearData.some(y => y)" class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-x-auto">
         <div class="px-5 py-4 border-b border-gray-100 font-semibold text-gray-900">Évolution pluriannuelle</div>
         <table class="w-full text-sm">
           <thead>
@@ -195,6 +187,7 @@
 
 <script setup lang="ts">
 import { ref, watch, onMounted, computed } from 'vue'
+import AppIcon from '@/components/ui/AppIcon.vue'
 import SummaryCard from '@/components/ui/SummaryCard.vue'
 import { usePersonStore } from '@/stores/personStore'
 import { useExpenseStore } from '@/stores/expenseStore'
@@ -223,6 +216,17 @@ const grossSalary = ref<number>(parseInt(localStorage.getItem('grossSalary') ?? 
 
 watch(grossSalary, v => localStorage.setItem('grossSalary', String(v)))
 
+const distribution = computed(() => {
+  const s = summary.value
+  if (!s) return []
+  return [
+    { label: 'Trajets', amount: s.travel.deduction, color: 'bg-blue-500' },
+    { label: 'Télétravail', amount: s.remoteWork.deduction, color: 'bg-emerald-500' },
+    { label: 'Péages', amount: s.toll.deduction, color: 'bg-amber-500' },
+    { label: 'Repas', amount: s.meal.deduction, color: 'bg-orange-500' },
+    { label: 'Parking', amount: s.parking.deduction, color: 'bg-rose-500' },
+  ].map(item => ({ ...item, percent: s.total > 0 ? item.amount / s.total * 100 : 0 }))
+})
 const fmt = fmtEur
 
 // B — Comparaison forfait 10%
