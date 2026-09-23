@@ -1,6 +1,6 @@
 <template>
-  <div class="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl border border-gray-200 shadow-sm w-full max-w-sm p-8">
+  <div class="auth-page min-h-screen bg-gray-50 flex items-center justify-center p-4">
+    <div class="auth-card bg-white rounded-2xl border border-gray-200 shadow-sm w-full max-w-sm p-8">
       <div class="mb-8 text-center">
         <h1 class="text-2xl font-bold text-gray-900">Nouveau mot de passe</h1>
         <p class="text-sm text-gray-500 mt-1">Choisissez un nouveau mot de passe pour votre compte.</p>

@@ -29,6 +29,7 @@
 ###< phpunit/phpunit ###
 
 node_modules
+/public/app/
 .superpowers/
 .worktrees/
 

@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-gray-50 flex items-center justify-center p-6">
+  <div class="auth-page pricing-page min-h-screen bg-gray-50 flex items-center justify-center p-6">
     <div class="max-w-2xl w-full">
       <div class="text-center mb-10">
         <h1 class="text-3xl font-bold text-gray-900">Choisissez votre offre</h1>

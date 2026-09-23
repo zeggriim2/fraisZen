@@ -73,6 +73,23 @@
   .modal-surface > div { padding-left:16px; padding-right:16px; }
 }
 
+/* 2026 direction: compact analytics workspace, inspired by the supplied references. */
+.workspace-page { padding:28px 26px 44px; }
+.workspace-title h2 { font-weight:600; letter-spacing:-1.5px; }
+.primary-action { border-radius:12px; padding:11px 17px; font-weight:600; box-shadow:0 4px 12px rgb(16 12 13 / .12); }
+.primary-action:hover { background:rgb(var(--accent-600)); }
+.month-overview > div { padding:17px; border-color:rgb(var(--gray-200)); border-radius:16px; box-shadow:0 8px 20px rgb(23 16 18 / .025); }
+.calendar-panel,.day-panel { border-color:rgb(var(--gray-200)); border-radius:18px; box-shadow:0 12px 32px rgb(23 16 18 / .035); }
+.calendar-day.selected { border-color:rgb(var(--accent-300)); background:rgb(var(--accent-50)); box-shadow:0 0 0 1px rgb(var(--accent-300) / .3); }
+.today .day-selector > span:first-child { background:rgb(var(--accent-500)); box-shadow:0 3px 8px rgb(var(--accent-500) / .3); }
+.routine-panel { background:linear-gradient(135deg,rgb(var(--accent-50)),rgb(var(--surface))); border-color:rgb(var(--accent-200)); }
+.routine-panel > svg { color:rgb(var(--accent-500)); }
+.report-total { border-radius:18px; background:linear-gradient(145deg,rgb(var(--gray-900)),#5b172f); color:#fff; }
+.report-breakdown,.person-card,.admin-card { border-color:rgb(var(--gray-200)); border-radius:18px; box-shadow:0 10px 28px rgb(23 16 18 / .03); }
+.directory-toolbar,.admin-section-nav { border-color:rgb(var(--gray-200)); border-radius:14px; }
+
+@media (max-width:639px) { .workspace-page { padding:20px 12px 32px; } }
+
 /* Profile directory and administration */
 .directory-toolbar { display:flex; align-items:center; gap:16px; justify-content:space-between; padding:14px; background:rgb(var(--surface)); border:1px solid rgb(var(--gray-100)); border-radius:16px; margin-bottom:22px; }
 .directory-search { display:flex; align-items:center; gap:12px; flex:1; min-width:0; padding-left:8px; color:rgb(var(--gray-400)); }

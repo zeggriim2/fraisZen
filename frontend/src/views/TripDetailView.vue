@@ -1,7 +1,7 @@
 <template>
-  <div class="p-4 sm:p-6">
+  <div class="workspace-page trips-workspace">
     <!-- Header -->
-    <div class="flex items-center gap-3 mb-6">
+    <div class="workspace-title flex items-center gap-3 mb-6">
       <router-link to="/summary" class="text-gray-400 hover:text-gray-600 text-lg leading-none">←</router-link>
       <h2 class="text-xl font-semibold text-gray-900">Détail des trajets</h2>
       <span v-if="personStore.activePerson" class="text-sm text-gray-400">— {{ personStore.activePerson.fullName }}</span>
