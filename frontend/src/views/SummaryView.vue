@@ -7,11 +7,11 @@
           <option v-for="y in years" :key="y" :value="y">{{ y }}</option>
         </select>
         <template v-if="summary && personStore.activePerson">
-          <button @click="downloadCsv" :disabled="csvLoading"
+          <button @click="downloadCsv" :disabled="!declarationReady || csvLoading"
             class="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 transition-colors">
             <AppIcon name="chart" />{{ csvLoading ? 'Génération…' : 'CSV' }}
           </button>
-          <button @click="downloadPdf" :disabled="pdfLoading"
+          <button @click="downloadPdf" :disabled="!declarationReady || pdfLoading"
             class="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-indigo-600 border border-indigo-200 rounded-lg hover:bg-indigo-50 disabled:opacity-50 transition-colors">
             <AppIcon name="receipt" />{{ pdfLoading ? 'Génération…' : 'PDF' }}
           </button>
@@ -83,31 +83,18 @@
         </SummaryCard>
       </div>
 
-      <!-- Guide Cerfa -->
-      <div class="bg-white rounded-2xl border border-emerald-200 shadow-sm p-5 mb-4">
-        <div class="flex items-start gap-3">
-          <div class="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center text-xl shrink-0">🧾</div>
-          <div class="flex-1">
-            <p class="font-semibold text-gray-900 text-sm mb-1">Aide au remplissage — Déclaration {{ summary.year + 1 }} · revenus {{ summary.year }}</p>
-            <p class="text-xs text-gray-500 mb-3">Reportez les montants suivants dans votre déclaration de revenus {{ summary.year + 1 }} (formulaire 2042).</p>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div class="bg-emerald-50 rounded-xl p-3 border border-emerald-100">
-                <p class="text-xs font-semibold text-emerald-700 uppercase tracking-wide mb-1">Déclarant 1 — Case 1AK</p>
-                <p class="text-xl font-bold text-emerald-700">{{ fmt(summary.total) }}</p>
-                <p class="text-xs text-gray-500 mt-1">Frais réels déductibles (remplace l'abattement 10 %)</p>
-              </div>
-              <div class="bg-gray-50 rounded-xl p-3 border border-gray-200">
-                <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Déclarant 2 — Case 1BK</p>
-                <p class="text-sm text-gray-400 italic mt-2">Reporter le montant du second déclarant</p>
-                <p class="text-xs text-gray-400 mt-1">Si foyer fiscal avec conjoint/partenaire</p>
-              </div>
-            </div>
-            <p class="text-xs text-amber-600 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2 mt-3">
-              Conservez tous vos justificatifs (relevés kilométriques, tickets de péage, notes de repas) en cas de contrôle fiscal.
-            </p>
-          </div>
-        </div>
-      </div>
+      <DeclarationAssistant
+        v-model:tax-case="taxCase"
+        :person-name="personStore.activePerson?.fullName ?? ''"
+        :year="summary.year"
+        :total="summary.total"
+        :ready="declarationReady"
+        :missing="declarationMissing"
+        :pdf-loading="pdfLoading"
+        :csv-loading="csvLoading"
+        @download-pdf="downloadPdf"
+        @download-csv="downloadCsv"
+      />
 
       <!-- Erreur barème kilométrique -->
       <div v-if="baremeError" class="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-4 flex items-start gap-3">
@@ -189,6 +176,7 @@
 import { ref, watch, onMounted, computed } from 'vue'
 import AppIcon from '@/components/ui/AppIcon.vue'
 import SummaryCard from '@/components/ui/SummaryCard.vue'
+import DeclarationAssistant from '@/components/expense/DeclarationAssistant.vue'
 import { usePersonStore } from '@/stores/personStore'
 import { useExpenseStore } from '@/stores/expenseStore'
 import { useAuthStore } from '@/stores/authStore'
@@ -213,8 +201,24 @@ const csvLoading = ref(false)
 const summary = ref<ExpenseSummary | null>(null)
 const multiYearData = ref<(ExpenseSummary | null)[]>([])
 const grossSalary = ref<number>(parseInt(localStorage.getItem('grossSalary') ?? '0') || 0)
+const taxCase = ref('1AK')
 
 watch(grossSalary, v => localStorage.setItem('grossSalary', String(v)))
+watch(taxCase, value => {
+  if (personStore.activePerson) localStorage.setItem(`taxCase:${personStore.activePerson.id}`, value)
+})
+
+const declarationMissing = computed(() => {
+  if (!summary.value) return ['Le récapitulatif annuel est indisponible.']
+  const missing: string[] = []
+  if (summary.value.year >= now) {
+    missing.push(`L’année ${summary.value.year} doit être terminée. Ces frais seront déclarables pendant la campagne ${summary.value.year + 1}.`)
+  }
+  if (summary.value.total <= 0) missing.push('Ajoutez au moins une dépense déductible avant de générer le dossier.')
+  if (summary.value.travel.trips.length > 0 && !baremeYear.value) missing.push(`Le barème kilométrique ${selectedYear.value} doit être configuré.`)
+  return missing
+})
+const declarationReady = computed(() => declarationMissing.value.length === 0)
 
 const distribution = computed(() => {
   const s = summary.value
@@ -287,6 +291,7 @@ const baremeBreakdown = computed(() => {
 
 async function load() {
   if (!personStore.activePerson) return
+  taxCase.value = localStorage.getItem(`taxCase:${personStore.activePerson.id}`) ?? '1AK'
   loading.value = true; summary.value = null; baremeError.value = null; baremeYear.value = null
   try {
     const [, bareme] = await Promise.all([
@@ -318,7 +323,7 @@ async function downloadCsv() {
   if (!personStore.activePerson) return
   csvLoading.value = true
   try {
-    const blob = await expenseApi.downloadCsv(personStore.activePerson.id, selectedYear.value)
+    const blob = await expenseApi.downloadCsv(personStore.activePerson.id, selectedYear.value, taxCase.value)
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url; a.download = `frais-reels-${selectedYear.value}.csv`; a.click()
@@ -331,7 +336,7 @@ async function downloadPdf() {
   if (!personStore.activePerson) return
   pdfLoading.value = true
   try {
-    const blob = await expenseApi.downloadPdf(personStore.activePerson.id, selectedYear.value)
+    const blob = await expenseApi.downloadPdf(personStore.activePerson.id, selectedYear.value, taxCase.value)
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url; a.download = `frais-reels-${selectedYear.value}.pdf`; a.click()

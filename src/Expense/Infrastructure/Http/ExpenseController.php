@@ -17,6 +17,7 @@ use App\Expense\Application\Command\UpdateExpense\UpdateExpenseCommand;
 use App\Expense\Application\Export\SummaryExporterRegistry;
 use App\Expense\Application\Query\GetExpensesByPeriod\GetExpensesByPeriodQuery;
 use App\Expense\Application\Query\GetExpensesSummary\GetExpensesSummaryQuery;
+use App\Expense\Domain\Enum\DeclarationTaxCase;
 use App\Person\Domain\Repository\PersonRepositoryInterface;
 use App\Person\Domain\ValueObject\PersonId;
 use App\SharedKernel\Application\Bus\CommandBusInterface;
@@ -96,7 +97,7 @@ final class ExpenseController extends AbstractController
 
         $data = $this->queryBus->ask(new GetExpensesSummaryQuery($personId, $year));
         $person = $this->personRepository->findById(PersonId::fromString($personId));
-        $data['personName'] = $person?->fullName() ?? '';
+        $data = $this->withDeclarationContext($data, $person?->fullName() ?? '', (string) $request->query->get('taxCase', DeclarationTaxCase::DeclarantOne->value));
         $result = $this->exporters->get('pdf')->export($data, $year);
 
         return new Response($result->content, Response::HTTP_OK, [
@@ -117,6 +118,8 @@ final class ExpenseController extends AbstractController
         $this->ownershipGuard->assertPersonBelongsToUser($personId, $this->currentUserId());
 
         $data = $this->queryBus->ask(new GetExpensesSummaryQuery($personId, $year));
+        $person = $this->personRepository->findById(PersonId::fromString($personId));
+        $data = $this->withDeclarationContext($data, $person?->fullName() ?? '', (string) $request->query->get('taxCase', DeclarationTaxCase::DeclarantOne->value));
         $result = $this->exporters->get('csv')->export($data, $year);
 
         return new Response($result->content, Response::HTTP_OK, [
@@ -263,5 +266,30 @@ final class ExpenseController extends AbstractController
         }
 
         return $user->id()->value();
+    }
+
+    /**
+     * @param array<string, mixed> $data
+     *
+     * @return array<string, mixed>
+     */
+    private function withDeclarationContext(array $data, string $personName, string $taxCase): array
+    {
+        $taxCase = DeclarationTaxCase::tryFrom(strtoupper(trim($taxCase)))
+            ?? DeclarationTaxCase::DeclarantOne;
+
+        $total = (float) ($data['total'] ?? 0);
+        $year = (int) ($data['year'] ?? date('Y'));
+        $data['personName'] = $personName;
+        $data['taxCase'] = $taxCase->value;
+        $data['declarationText'] = sprintf(
+            'Frais réels de %s pour les revenus %d : %s € à reporter en case %s. Le détail des frais professionnels et des calculs figure dans ce dossier.',
+            $personName,
+            $year,
+            number_format($total, 2, ',', ' '),
+            $taxCase->value,
+        );
+
+        return $data;
     }
 }

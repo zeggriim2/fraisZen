@@ -549,6 +549,15 @@
     border-radius: 11px;
     border-color: rgb(var(--gray-200));
 }
+.trip-filter-select {
+    appearance: none;
+    -webkit-appearance: none;
+    min-height: 40px;
+    padding-right: 14px !important;
+    background-image: none !important;
+    background-color: rgb(var(--surface));
+    cursor: pointer;
+}
 .admin-workspace .bg-indigo-600,
 .settings-workspace .bg-indigo-600,
 .pricing-page .bg-indigo-600 {

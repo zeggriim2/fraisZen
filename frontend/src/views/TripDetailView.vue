@@ -15,18 +15,18 @@
       <!-- Filtres -->
       <div class="flex flex-wrap gap-3 mb-6">
         <select v-model="selectedYear" @change="load"
-          class="rounded-lg border-gray-300 shadow-sm text-sm px-3 py-2">
+          class="trip-filter-select rounded-lg border-gray-300 shadow-sm text-sm px-3 py-2">
           <option v-for="y in years" :key="y" :value="y">{{ y }}</option>
         </select>
 
         <select v-model="selectedMonth"
-          class="rounded-lg border-gray-300 shadow-sm text-sm px-3 py-2">
+          class="trip-filter-select rounded-lg border-gray-300 shadow-sm text-sm px-3 py-2">
           <option :value="0">Tous les mois</option>
           <option v-for="(label, i) in MONTHS" :key="i + 1" :value="i + 1">{{ label }}</option>
         </select>
 
         <select v-model="selectedCv"
-          class="rounded-lg border-gray-300 shadow-sm text-sm px-3 py-2">
+          class="trip-filter-select rounded-lg border-gray-300 shadow-sm text-sm px-3 py-2">
           <option :value="0">Toutes puissances</option>
           <option v-for="cv in [3, 4, 5, 6, 7]" :key="cv" :value="cv">{{ cv }} CV</option>
         </select>
