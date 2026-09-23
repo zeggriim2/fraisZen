@@ -26,6 +26,9 @@ $data = [
     'meal' => ['entries' => 5, 'homeMealValue' => 4.15, 'deduction' => 73.70],
     'parking' => ['entries' => 2, 'deduction' => 12.0],
     'total' => 415.80,
+    'personName' => 'Camille Martin',
+    'taxCase' => '1BK',
+    'declarationText' => 'Frais réels de Camille Martin pour les revenus 2025 : 415,80 € à reporter en case 1BK.',
 ];
 
 it('returns format csv', function () {
@@ -46,4 +49,12 @@ it('includes year and trip data in the csv content', function () use ($data) {
     expect($result->content)->toContain('2025');
     expect($result->content)->toContain('Paris');
     expect($result->content)->toContain('Lyon');
+});
+
+it('includes the declaration context in the csv content', function () use ($data) {
+    $result = (new CsvSummaryExporter())->export($data, 2025);
+
+    expect($result->content)->toContain('Camille Martin');
+    expect($result->content)->toContain('1BK');
+    expect($result->content)->toContain('Texte à joindre');
 });

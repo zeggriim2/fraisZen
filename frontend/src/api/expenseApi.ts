@@ -29,10 +29,10 @@ export const expenseApi = {
   create: (data: CreateExpenseDto) => http.post('/expenses', data),
   update: (id: string, data: UpdateExpenseDto) => http.patch(`/expenses/${id}`, data),
   remove: (id: string) => http.delete(`/expenses/${id}`),
-  downloadPdf: (personId: string, year: number) =>
-    http.get('/expenses/summary/pdf', { params: { personId, year }, responseType: 'blob' }).then(r => r.data as Blob),
-  downloadCsv: (personId: string, year: number) =>
-    http.get('/expenses/summary/csv', { params: { personId, year }, responseType: 'blob' }).then(r => r.data as Blob),
+  downloadPdf: (personId: string, year: number, taxCase = '1AK') =>
+    http.get('/expenses/summary/pdf', { params: { personId, year, taxCase }, responseType: 'blob' }).then(r => r.data as Blob),
+  downloadCsv: (personId: string, year: number, taxCase = '1AK') =>
+    http.get('/expenses/summary/csv', { params: { personId, year, taxCase }, responseType: 'blob' }).then(r => r.data as Blob),
 
   getFiscalConfig: (year: number) =>
     http.get<{ year: number; remoteWorkDailyAllowance: number; homeMealValue: number }>(`/expenses/fiscal-config/${year}`).then(r => r.data),

@@ -67,6 +67,16 @@ body {
   color: #475569;
   border-bottom: 1px solid #e5e7eb;
 }
+.declaration-box {
+  margin: 0 20px 20px;
+  padding: 12px 14px;
+  border: 1px solid #f1a7c2;
+  border-left: 5px solid #d11e5e;
+  background: #fff4f7;
+  page-break-inside: avoid;
+}
+.declaration-box strong { color: #8f123f; }
+.declaration-box p { margin-top: 6px; line-height: 1.5; color: #4b3640; }
 
 /* ── Tables ──────────────────────────────────────────────── */
 table {
@@ -222,6 +232,13 @@ table {
     Barème kilométrique officiel {{ year }}
   </div>
 </div>
+
+{% if data.taxCase is defined %}
+<div class="declaration-box">
+  <strong>Déclaration {{ year + 1 }} — case {{ data.taxCase }} : {{ data.total|number_format(2, ',', ' ') }}&nbsp;€</strong>
+  {% if data.declarationText is defined %}<p><b>Texte à joindre :</b> {{ data.declarationText }}</p>{% endif %}
+</div>
+{% endif %}
 
 {# ─── Tableau récapitulatif par catégorie ─────────────────── #}
 <div class="summary-block">

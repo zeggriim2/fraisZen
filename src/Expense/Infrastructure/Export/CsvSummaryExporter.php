@@ -24,6 +24,15 @@ final class CsvSummaryExporter implements SummaryExporterInterface
         fwrite($handle, "\xEF\xBB\xBF");
 
         fputcsv($handle, ["Récapitulatif frais réels - $year"], ';', '"', '\\');
+        if (!empty($data['personName'])) {
+            fputcsv($handle, ['Personne', $data['personName']], ';', '"', '\\');
+        }
+        if (!empty($data['taxCase'])) {
+            fputcsv($handle, ['Case fiscale', $data['taxCase']], ';', '"', '\\');
+        }
+        if (!empty($data['declarationText'])) {
+            fputcsv($handle, ['Texte à joindre', $data['declarationText']], ';', '"', '\\');
+        }
         fputcsv($handle, [], ';', '"', '\\');
 
         fputcsv($handle, ['Catégorie', 'Détail', 'Déduction (€)'], ';', '"', '\\');

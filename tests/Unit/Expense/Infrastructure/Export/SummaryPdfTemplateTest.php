@@ -36,6 +36,9 @@ $data = [
     'meal' => ['entries' => 5, 'homeMealValue' => 4.15, 'deduction' => 73.70],
     'parking' => ['entries' => 2, 'deduction' => 12.0],
     'total' => 415.80,
+    'personName' => 'Camille Martin',
+    'taxCase' => '1BK',
+    'declarationText' => 'Frais réels de Camille Martin pour les revenus 2025 : 415,80 € à reporter en case 1BK.',
 ];
 
 it('renders the summary PDF template with year and total', function () use ($data) {
@@ -61,4 +64,13 @@ it('renders meal and parking sections when entries exist', function () use ($dat
 
     expect($html)->toContain('Repas');
     expect($html)->toContain('Parking');
+});
+
+it('renders the declaration case and explanatory text', function () use ($data) {
+    $twig = makeTwig();
+    $html = $twig->render('expense/summary_pdf.html.twig', ['data' => $data, 'year' => 2025]);
+
+    expect($html)->toContain('case 1BK');
+    expect($html)->toContain('Camille Martin');
+    expect($html)->toContain('Texte à joindre');
 });
