@@ -1,12 +1,13 @@
 <template>
-  <BaseModal @close="$emit('close')">
+  <BaseModal max-width="xl" @close="$emit('close')">
     <template #title>Trajets récurrents</template>
-    <template #subtitle>Créez plusieurs trajets d'un coup sur une plage de dates</template>
+    <template #subtitle>Vos habitudes, planifiées en quelques instants.</template>
 
-    <div class="space-y-5">
+    <div ref="stepHeading" tabindex="-1" class="workflow-steps" aria-label="Étapes de création"><span v-for="(label,index) in ['Votre rythme','Votre trajet','Vérification']" :key="label" :class="{active:step === index + 1, complete:step > index + 1}" :aria-current="step === index + 1 ? 'step' : undefined"><b>{{ step > index + 1 ? '✓' : index + 1 }}</b>{{ label }}</span></div>
+    <div class="recurring-form space-y-5">
 
         <!-- Étape 1 : plage de dates -->
-        <section>
+        <section v-show="step === 1">
           <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">1. Période</h3>
           <div class="grid grid-cols-2 gap-3">
             <div>
@@ -23,14 +24,15 @@
         </section>
 
         <!-- Étape 2 : jours de la semaine -->
-        <section>
+        <section v-show="step === 1">
           <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">2. Jours travaillés</h3>
           <div class="flex gap-2 flex-wrap">
             <button v-for="d in weekDays" :key="d.value"
               type="button"
+              :aria-pressed="form.weekDays.includes(d.value)"
               @click="toggleDay(d.value)"
               :class="[
-                'px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors',
+                'weekday-choice',
                 form.weekDays.includes(d.value)
                   ? 'bg-indigo-600 text-white border-indigo-600'
                   : 'bg-white text-gray-600 border-gray-200 hover:border-indigo-300'
@@ -42,8 +44,8 @@
         </section>
 
         <!-- Étape 3 : trajet -->
-        <section>
-          <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">3. Trajet</h3>
+        <section v-show="step === 2">
+          <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Votre itinéraire</h3>
 
           <!-- Sélecteur de trajet favori -->
           <div v-if="loadingRoutes" class="flex items-center gap-2 text-sm text-gray-400 py-2">
@@ -122,7 +124,8 @@
         </section>
 
         <!-- Aperçu des dates -->
-        <section v-if="previewDates.length || form.from">
+        <section v-show="step === 3">
+          <div class="recurring-preview"><span class="eyebrow">PRÊT À PLANIFIER</span><strong>{{ previewDates.length }} <small>trajets</small></strong><p>{{ form.departure || 'Départ' }} → {{ form.arrival || 'Arrivée' }}</p><div><span>{{ ((form.distanceKm || 0) * (form.roundTrip ? 2 : 1) * previewDates.length).toLocaleString('fr-FR') }} km au total</span><span>{{ form.roundTrip ? 'Aller-retour' : 'Aller simple' }}</span></div></div>
           <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">
             Aperçu
             <span class="ml-2 font-bold text-indigo-600">{{ previewDates.length }} trajets</span>
@@ -151,11 +154,12 @@
 
     <template #footer>
       <div class="flex items-center justify-between gap-3">
-        <button @click="$emit('close')"
+        <button @click="step > 1 ? step-- : $emit('close')"
           class="px-4 py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-          Annuler
+          {{ step > 1 ? '← Retour' : 'Annuler' }}
         </button>
-        <button @click="generate"
+        <button v-if="step < 3" class="primary-action" @click="step++" :disabled="step === 1 ? !previewDates.length : !canGenerate">Continuer →</button>
+        <button v-else @click="generate"
           :disabled="!canGenerate || generating"
           class="flex items-center gap-2 px-5 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50 transition-colors">
           <div v-if="generating" class="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin"></div>
@@ -167,7 +171,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, computed, watch, onMounted, nextTick } from 'vue'
 import { expenseApi, getPublicHolidays } from '@/api/expenseApi'
 import { personApi } from '@/api/personApi'
 import type { FavoriteRoute } from '@/types'
@@ -185,6 +189,10 @@ const emit = defineEmits<{
   close: []
   generated: [count: number]
 }>()
+
+const step = ref(1)
+const stepHeading = ref<HTMLElement | null>(null)
+watch(step, async () => { await nextTick(); stepHeading.value?.focus() })
 
 const weekDays = [
   { value: 1, label: 'Lun' },

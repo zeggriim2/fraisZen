@@ -1,13 +1,13 @@
 <template>
-  <div class="p-6 max-w-3xl">
-    <h2 class="text-xl font-bold text-gray-100 mb-1">Configuration fiscale</h2>
-    <p class="text-sm text-gray-400 mb-6">Barèmes fiscaux par année — télétravail (URSSAF) et repas (impots.gouv.fr).</p>
+  <div class="workspace-page admin-workspace">
+    <AdminSectionNav />
+    <div class="workspace-title"><div><span class="eyebrow">PARAMÈTRES ANNUELS</span><h2>Les bons repères pour chaque année.</h2><p>Télétravail et repas : gérez les montants utilisés dans les calculs.</p></div></div>
 
     <div v-if="loading" class="text-gray-400 text-sm">Chargement…</div>
 
     <div v-else class="space-y-3">
       <!-- Header -->
-      <div class="grid grid-cols-[4rem_1fr_1fr_auto_4rem] gap-4 px-5 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+      <div class="fiscal-columns">
         <span>Année</span>
         <span>Télétravail (€/jour)</span>
         <span>Repas domicile (€/repas)</span>
@@ -17,24 +17,24 @@
 
       <div
         v-for="row in rows" :key="row.year"
-        class="bg-gray-800 border border-gray-700 rounded-xl px-5 py-4 grid grid-cols-[4rem_1fr_1fr_auto_4rem] items-center gap-4"
+        class="fiscal-year-row"
       >
-        <span class="text-white font-semibold">{{ row.year }}</span>
+        <span class="text-gray-900 font-semibold">{{ row.year }}</span>
 
-        <div class="flex items-center gap-2">
-          <input
-            v-model.number="row.draftAllowance"
+        <div class="fiscal-field flex items-center gap-2">
+          <span class="fiscal-field-label">Télétravail</span><input
+            :aria-label="`Télétravail par jour ${row.year}`" v-model.number="row.draftAllowance"
             type="number" step="0.01" min="0"
-            class="w-24 bg-gray-700 border border-gray-600 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:border-indigo-500"
+            class="w-24 bg-gray-100 border border-gray-300 rounded-lg px-3 py-1.5 text-sm text-gray-900 focus:outline-none focus:border-indigo-500"
           />
           <span class="text-gray-400 text-xs">€/j</span>
         </div>
 
-        <div class="flex items-center gap-2">
+        <div class="fiscal-field flex items-center gap-2"><span class="fiscal-field-label">Repas domicile</span>
           <input
-            v-model.number="row.draftMeal"
+            :aria-label="`Repas domicile ${row.year}`" v-model.number="row.draftMeal"
             type="number" step="0.01" min="0"
-            class="w-24 bg-gray-700 border border-gray-600 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:border-indigo-500"
+            class="w-24 bg-gray-100 border border-gray-300 rounded-lg px-3 py-1.5 text-sm text-gray-900 focus:outline-none focus:border-indigo-500"
           />
           <span class="text-gray-400 text-xs">€/r</span>
         </div>
@@ -43,7 +43,7 @@
           @click="save(row)"
           :disabled="row.saving || (row.draftAllowance === row.savedAllowance && row.draftMeal === row.savedMeal)"
           class="px-4 py-1.5 text-sm font-medium rounded-lg transition-colors disabled:opacity-40"
-          :class="(row.draftAllowance !== row.savedAllowance || row.draftMeal !== row.savedMeal) ? 'bg-indigo-600 text-white hover:bg-indigo-500' : 'bg-gray-700 text-gray-400'"
+          :class="(row.draftAllowance !== row.savedAllowance || row.draftMeal !== row.savedMeal) ? 'bg-indigo-600 text-white hover:bg-indigo-500' : 'bg-gray-100 text-gray-400'"
         >
           {{ row.saving ? 'Enreg…' : 'Enregistrer' }}
         </button>
@@ -52,18 +52,18 @@
       </div>
 
       <!-- Add a new year -->
-      <div class="bg-gray-800 border border-dashed border-gray-600 rounded-xl px-5 py-4">
+      <div class="bg-white border border-dashed border-gray-300 rounded-xl px-5 py-4">
         <p class="text-xs text-gray-400 font-medium mb-3 uppercase tracking-wider">Ajouter une année</p>
         <div class="flex items-center gap-3 flex-wrap">
           <input v-model.number="newYear" type="number" placeholder="Année" min="2020" max="2099"
-            class="w-24 bg-gray-700 border border-gray-600 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:border-indigo-500" />
+            class="w-24 bg-gray-100 border border-gray-300 rounded-lg px-3 py-1.5 text-sm text-gray-900 focus:outline-none focus:border-indigo-500" />
           <div class="flex items-center gap-1">
             <input v-model.number="newAllowance" type="number" step="0.01" min="0" placeholder="€/jour télétravail"
-              class="w-36 bg-gray-700 border border-gray-600 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:border-indigo-500" />
+              class="w-36 bg-gray-100 border border-gray-300 rounded-lg px-3 py-1.5 text-sm text-gray-900 focus:outline-none focus:border-indigo-500" />
           </div>
           <div class="flex items-center gap-1">
             <input v-model.number="newMealValue" type="number" step="0.01" min="0" placeholder="€/repas domicile"
-              class="w-36 bg-gray-700 border border-gray-600 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:border-indigo-500" />
+              class="w-36 bg-gray-100 border border-gray-300 rounded-lg px-3 py-1.5 text-sm text-gray-900 focus:outline-none focus:border-indigo-500" />
           </div>
           <button
             @click="addYear"
@@ -80,6 +80,7 @@
 </template>
 
 <script setup lang="ts">
+import AdminSectionNav from '@/components/ui/AdminSectionNav.vue'
 import { ref, onMounted } from 'vue'
 import { adminApi, type FiscalConfig } from '@/api/adminApi'
 

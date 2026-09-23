@@ -1,23 +1,23 @@
 <template>
-  <div class="p-6 max-w-5xl">
-    <h2 class="text-xl font-bold text-gray-100 mb-1">Barèmes kilométriques</h2>
-    <p class="text-sm text-gray-400 mb-6">Taux officiels par année fiscale — voitures, motos, cyclomoteurs.</p>
+  <div class="workspace-page admin-workspace">
+    <AdminSectionNav />
+    <div class="workspace-title"><div><span class="eyebrow">DÉPLACEMENTS PROFESSIONNELS</span><h2>Un barème pour chaque trajet.</h2><p>Retrouvez les taux par année, véhicule et puissance fiscale.</p></div></div>
 
     <div v-if="loading" class="text-gray-400 text-sm">Chargement…</div>
 
     <div v-else class="space-y-3">
       <div
         v-for="row in rows" :key="row.year"
-        class="bg-gray-800 border border-gray-700 rounded-xl overflow-hidden"
+        class="rate-year-card"
       >
         <!-- Header ligne -->
         <div class="px-5 py-4 flex items-center justify-between">
-          <span class="text-white font-semibold text-lg">{{ row.year }}</span>
+          <span class="text-gray-900 font-semibold text-lg">{{ row.year }}</span>
           <div class="flex items-center gap-3">
             <span v-if="row.savedAt" class="text-xs text-emerald-400">✓ Enregistré</span>
             <button
-              @click="row.open = !row.open"
-              class="px-4 py-1.5 text-sm font-medium bg-gray-700 text-gray-200 rounded-lg hover:bg-gray-600 transition-colors"
+              @click="row.open = !row.open" :aria-expanded="row.open"
+              class="px-4 py-1.5 text-sm font-medium bg-gray-100 text-gray-800 rounded-lg hover:bg-gray-200 transition-colors"
             >
               {{ row.open ? 'Fermer' : 'Modifier' }}
             </button>
@@ -25,7 +25,7 @@
         </div>
 
         <!-- Éditeur dépliable -->
-        <div v-if="row.open" class="border-t border-gray-700 px-5 py-5 space-y-6">
+        <div v-if="row.open" class="rate-editor border-t border-gray-200 px-5 py-5 space-y-6">
 
           <!-- Voitures -->
           <div>
@@ -43,7 +43,7 @@
               v-for="cv in [3, 4, 5, 6, 7]" :key="cv"
               class="grid grid-cols-[4rem_1fr_1fr_1fr_1fr] gap-2 items-center mb-1.5"
             >
-              <span class="text-gray-300 text-sm font-medium">{{ cv }} CV</span>
+              <span class="text-gray-700 text-sm font-medium">{{ cv }} CV</span>
               <input v-model.number="row.draft.car[cv].rate1" type="number" step="0.001" :class="inputCls" />
               <input v-model.number="row.draft.car[cv].rate2" type="number" step="0.001" :class="inputCls" />
               <input v-model.number="row.draft.car[cv].fixed2" type="number" step="1" :class="inputCls" />
@@ -65,7 +65,7 @@
               v-for="[key, label] in motoGroups" :key="key"
               class="grid grid-cols-[6rem_1fr_1fr_1fr_1fr] gap-2 items-center mb-1.5"
             >
-              <span class="text-gray-300 text-sm">{{ label }}</span>
+              <span class="text-gray-700 text-sm">{{ label }}</span>
               <input v-model.number="row.draft.motorcycle[key].rate1" type="number" step="0.001" :class="inputCls" />
               <input v-model.number="row.draft.motorcycle[key].rate2" type="number" step="0.001" :class="inputCls" />
               <input v-model.number="row.draft.motorcycle[key].fixed2" type="number" step="1" :class="inputCls" />
@@ -84,7 +84,7 @@
               <span>&gt;6 000 km</span>
             </div>
             <div class="grid grid-cols-[6rem_1fr_1fr_1fr_1fr] gap-2 items-center">
-              <span class="text-gray-300 text-sm">Cyclo</span>
+              <span class="text-gray-700 text-sm">Cyclo</span>
               <input v-model.number="row.draft.moped.rate1" type="number" step="0.001" :class="inputCls" />
               <input v-model.number="row.draft.moped.rate2" type="number" step="0.001" :class="inputCls" />
               <input v-model.number="row.draft.moped.fixed2" type="number" step="1" :class="inputCls" />
@@ -94,17 +94,17 @@
 
           <!-- Multiplicateur électrique -->
           <div class="flex items-center gap-4">
-            <label class="text-sm text-gray-300 font-medium">Majoration véhicule électrique</label>
+            <label class="text-sm text-gray-700 font-medium">Majoration véhicule électrique</label>
             <input
               v-model.number="row.draft.electricMultiplier"
               type="number" step="0.01" min="1"
-              class="w-24 bg-gray-700 border border-gray-600 rounded-lg px-2 py-1.5 text-sm text-white focus:outline-none focus:border-indigo-500"
+              class="w-24 bg-gray-100 border border-gray-300 rounded-lg px-2 py-1.5 text-sm text-gray-900 focus:outline-none focus:border-indigo-500"
             />
             <span class="text-gray-500 text-xs">× (ex : 1.20 = +20 %)</span>
           </div>
 
           <!-- Bouton enregistrer -->
-          <div class="flex justify-end pt-2 border-t border-gray-700">
+          <div class="flex justify-end pt-2 border-t border-gray-200">
             <button
               @click="save(row)"
               :disabled="row.saving"
@@ -120,12 +120,13 @@
 </template>
 
 <script setup lang="ts">
+import AdminSectionNav from '@/components/ui/AdminSectionNav.vue'
 import { ref, onMounted } from 'vue'
 import { adminApi, type BaremeKilometrique, type BaremeRates } from '@/api/adminApi'
 
 const motoGroups: [number, string][] = [[1, '1-2 CV'], [3, '3-5 CV'], [6, '+5 CV']]
 
-const inputCls = 'w-full bg-gray-700 border border-gray-600 rounded-lg px-2 py-1.5 text-sm text-white focus:outline-none focus:border-indigo-500'
+const inputCls = 'w-full bg-gray-100 border border-gray-300 rounded-lg px-2 py-1.5 text-sm text-gray-900 focus:outline-none focus:border-indigo-500'
 
 interface Row {
   year: number

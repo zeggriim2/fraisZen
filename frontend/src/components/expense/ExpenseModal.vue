@@ -1,6 +1,6 @@
 <template>
-  <BaseModal @close="$emit('close')">
-    <template #title>{{ expense && !editing ? 'Détail' : expense ? 'Modifier' : 'Ajouter un frais' }}</template>
+  <BaseModal max-width="wide" @close="$emit('close')">
+    <template #title>{{ expense && !editing ? 'Détail' : expense ? 'Modifier' : 'Déclarer un frais' }}</template>
     <template #subtitle>{{ formattedDate }}</template>
 
     <!-- Detail view -->
@@ -60,7 +60,7 @@
       </div>
 
       <!-- Form -->
-      <div v-else class="flex-1 overflow-y-auto px-6 py-5 space-y-5">
+      <div v-else class="expense-composer space-y-5">
 
         <!-- Active person indicator with favorite toggle -->
         <div v-if="personStore.activePerson" class="flex items-center gap-2.5 px-3 py-2 rounded-xl bg-gray-50 border border-gray-200">
@@ -76,17 +76,19 @@
           >★</button>
         </div>
 
-        <div v-if="!expense">
-          <label class="block text-sm font-medium text-gray-700 mb-2">Type de frais</label>
-          <div class="grid grid-cols-5 gap-2">
-            <button v-for="t in expenseTypes" :key="t.value" @click="form.type = t.value"
-              :class="['flex flex-col items-center gap-1.5 p-3 rounded-xl border-2 text-xs font-medium transition-all',
+        <div class="expense-form-layout">
+        <aside v-if="!expense" class="expense-type-panel">
+          <label class="block text-sm font-medium text-gray-700 mb-2"><span class="step-index">01</span> Quel type de frais ?</label>
+          <div class="expense-type-list">
+            <button v-for="t in expenseTypes" :key="t.value" @click="form.type = t.value" :aria-pressed="form.type === t.value"
+              :class="['expense-type-option',
                 form.type === t.value ? t.activeClass : 'border-gray-200 text-gray-600 hover:border-gray-300']">
-              <span class="text-xl">{{ t.icon }}</span>{{ t.label }}
+              <AppIcon :name="typeIcons[t.value]" /><span>{{ t.label }}<small>{{ typeDescriptions[t.value] }}</small></span><span v-if="form.type === t.value" class="ml-auto">✓</span>
             </button>
           </div>
-        </div>
-
+        </aside>
+        <div class="expense-fields space-y-5">
+        <h3 class="form-section-title"><span class="step-index">{{ expense ? '01' : '02' }}</span> Les détails de votre frais</h3>
         <template v-if="form.type === 'travel'">
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-2">Type de véhicule</label>
@@ -276,7 +278,8 @@
           <label class="block text-sm font-medium text-gray-700 mb-1.5">Description (optionnel)</label>
           <input v-model="form.description" type="text" class="w-full rounded-lg border-gray-300 shadow-sm text-sm" placeholder="Motif, client…" />
         </div>
-        <p v-if="error" class="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg">{{ error }}</p>
+        <p v-if="error" role="alert" class="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg">{{ error }}</p>
+        </div></div>
     </div>
 
     <template v-if="!expense || editing" #footer>
@@ -297,6 +300,7 @@ import { usePersonStore } from '@/stores/personStore'
 import { useAuthStore } from '@/stores/authStore'
 import { expenseApi } from '@/api/expenseApi'
 import { EXPENSE_TYPES, VEHICLE_TYPES, expenseBadgeClass, expenseIcon, vehicleLabel } from '@/utils/expense'
+import AppIcon from '@/components/ui/AppIcon.vue'
 import BaseModal from '@/components/ui/BaseModal.vue'
 import type { Expense, TravelExpense, TollExpense, MealExpense, ParkingExpense, VehicleType } from '@/types'
 import InfoRow from '@/components/ui/InfoRow.vue'
@@ -312,6 +316,8 @@ const emit = defineEmits<{ close: []; saved: []; duplicate: [expense: Expense] }
 const expenseStore = useExpenseStore()
 const personStore = usePersonStore()
 const authStore = useAuthStore()
+const typeIcons: Record<string, string> = { travel: 'car', remote_work: 'home', toll: 'receipt', meal: 'receipt', parking: 'car' }
+const typeDescriptions: Record<string, string> = { travel: 'Vos déplacements professionnels', remote_work: 'Une journée à domicile', toll: 'Autoroutes et péages', meal: 'Vos repas professionnels', parking: 'Stationnement et parking' }
 const editing = ref(false)
 const saving = ref(false)
 const error = ref('')

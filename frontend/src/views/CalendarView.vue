@@ -1,174 +1,69 @@
 <template>
-  <div class="p-4 sm:p-6">
-
-    <!-- Header -->
-    <div class="flex flex-col sm:flex-row sm:items-center gap-3 mb-6">
-      <!-- Navigation mois / année -->
-      <div class="flex items-center gap-1.5 min-w-0">
-        <button @click="prevMonth" class="p-2 rounded-lg hover:bg-gray-100 shrink-0">
-          <svg class="w-5 h-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
-        </button>
-        <select v-model="month" class="text-base font-semibold text-gray-900 border-0 bg-transparent cursor-pointer focus:ring-0 capitalize min-w-0">
-          <option v-for="(name, i) in monthNames" :key="i" :value="i">{{ name }}</option>
-        </select>
-        <select v-model="year" class="text-base font-semibold text-gray-900 border-0 bg-transparent cursor-pointer focus:ring-0 w-20">
-          <option v-for="y in years" :key="y" :value="y">{{ y }}</option>
-        </select>
-        <button @click="nextMonth" class="p-2 rounded-lg hover:bg-gray-100 shrink-0">
-          <svg class="w-5 h-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-        </button>
-        <button @click="goToday" class="px-3 py-1.5 text-sm font-medium text-indigo-600 border border-indigo-200 rounded-lg hover:bg-indigo-50 shrink-0">
-          Aujourd'hui
-        </button>
-      </div>
-      <!-- Personne + import CSV -->
-      <div class="flex items-center gap-3 sm:ml-auto">
-        <span v-if="personStore.activePerson" class="text-sm text-gray-500 truncate">
-          <span class="font-medium text-gray-900">{{ personStore.activePerson.fullName }}</span>
-        </span>
-        <button v-if="personStore.activePerson" @click="showBulkModal = true"
-          class="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-indigo-600 border border-indigo-200 rounded-lg hover:bg-indigo-50 shrink-0"
-          title="Générer des trajets récurrents sur une plage de dates">
-          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-          <span class="hidden sm:inline">Trajets récurrents</span>
-          <span class="sm:hidden">Récurrents</span>
-        </button>
-        <button @click="showCsvImport = true"
-          class="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 shrink-0"
-          title="Importer depuis un relevé bancaire CSV">
-          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
-          <span class="hidden sm:inline">Import CSV</span>
-          <span class="sm:hidden">CSV</span>
-        </button>
-      </div>
+  <div class="workspace-page">
+    <div class="workspace-title">
+      <div><span class="eyebrow">MON QUOTIDIEN</span><h2>Un mois bien organisé.</h2><p>Vos déplacements et vos frais, au même endroit.</p></div>
+      <button v-if="personStore.activePerson" class="primary-action" @click="openModal(focusedDate)"><span aria-hidden="true">＋</span> Déclarer un frais</button>
     </div>
-
-    <!-- Modal génération de trajets en masse -->
-    <BulkTripModal v-if="showBulkModal && personStore.activePerson"
-      :person-id="personStore.activePerson.id"
-      :year="year"
-      :month="month"
-      :public-holidays="publicHolidays"
-      @close="showBulkModal = false"
-      @generated="onBulkGenerated"
-    />
-
-    <!-- État vide : aucune personne existante -->
-    <div v-if="!personStore.loading && personStore.persons.length === 0" class="flex flex-col items-center justify-center py-24 text-center">
-      <div class="w-24 h-24 rounded-full bg-indigo-50 flex items-center justify-center mb-6">
-        <svg class="w-12 h-12 text-indigo-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"/>
-        </svg>
-      </div>
-      <h3 class="text-lg font-semibold text-gray-900 mb-2">Bienvenue sur Frais Réels !</h3>
-      <p class="text-sm text-gray-500 mb-6 max-w-sm">Commencez par créer un profil pour la personne dont vous voulez déclarer les frais professionnels.</p>
-      <RouterLink to="/persons" class="flex items-center gap-2 px-5 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-medium hover:bg-indigo-700 transition-colors shadow-sm">
-        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
-        Créer mon premier profil
-      </RouterLink>
-    </div>
-
+    <div v-if="!personStore.loading && !personStore.persons.length" class="empty-workspace"><AppIcon name="users" /><h3>Votre espace commence ici</h3><p>Créez un profil pour ajouter vos premiers frais professionnels.</p><RouterLink to="/persons" class="primary-action">Créer mon profil ↗</RouterLink></div>
     <template v-else>
-
-      <!-- Stats du mois -->
-      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-2">
-        <div class="bg-blue-50 border border-blue-200 rounded-xl p-4">
-          <p class="text-xs text-blue-600 font-semibold uppercase tracking-wide">Trajets ce mois</p>
-          <p class="text-2xl font-bold text-blue-700 mt-1">{{ stats.travelCount }}</p>
-          <p class="text-xs text-blue-500 mt-1">{{ stats.travelKm.toFixed(0) }} km</p>
-        </div>
-        <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-4">
-          <p class="text-xs text-emerald-600 font-semibold uppercase tracking-wide">Télétravail ce mois</p>
-          <p class="text-2xl font-bold text-emerald-700 mt-1">{{ stats.remoteCount }}</p>
-          <p class="text-xs text-emerald-500 mt-1">{{ stats.remoteTotalAmount.toFixed(2) }} €</p>
-        </div>
-        <div class="bg-amber-50 border border-amber-200 rounded-xl p-4">
-          <p class="text-xs text-amber-600 font-semibold uppercase tracking-wide">Péages ce mois</p>
-          <p class="text-2xl font-bold text-amber-700 mt-1">{{ stats.tollCount }}</p>
-          <p class="text-xs text-amber-500 mt-1">{{ stats.tollAmount.toFixed(2) }} €</p>
-        </div>
+      <div class="month-overview">
+        <div><span class="overview-icon blue"><AppIcon name="car" /></span><div><span>Déplacements</span><strong>{{ stats.travelKm.toFixed(0) }} <small>km</small></strong></div><span class="overview-note">{{ stats.travelCount }} trajets</span></div>
+        <div><span class="overview-icon mint"><AppIcon name="home" /></span><div><span>Télétravail</span><strong>{{ stats.remoteCount }} <small>jours</small></strong></div><span class="overview-note">{{ stats.remoteTotalAmount.toFixed(2) }} €</span></div>
+        <div><span class="overview-icon peach"><AppIcon name="receipt" /></span><div><span>Péages</span><strong>{{ stats.tollAmount.toFixed(2) }} <small>€</small></strong></div><span class="overview-note">{{ stats.tollCount }} frais</span></div>
       </div>
-      <div class="flex justify-end mb-4">
-        <RouterLink to="/summary" class="text-xs text-indigo-600 hover:text-indigo-800 font-medium">
-          Voir le récapitulatif {{ year }} →
-        </RouterLink>
-      </div>
-
-      <!-- Légende (visible sur mobile où la sidebar est masquée) -->
-      <div class="lg:hidden flex flex-wrap gap-x-4 gap-y-1 mb-3">
-        <span v-for="t in expenseTypes" :key="t.label" class="flex items-center gap-1.5 text-xs text-gray-500">
-          <span :class="['w-2.5 h-2.5 rounded-full shrink-0', t.color]"></span>{{ t.label }}
-        </span>
-      </div>
-
-      <!-- Calendrier -->
-      <p class="text-xs text-gray-400 mb-2 text-right">Cliquez sur un jour pour ajouter ou consulter une dépense</p>
-      <div class="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
-        <!-- En-têtes des jours -->
-        <div class="grid grid-cols-7 border-b border-gray-200">
-          <div v-for="d in dayHeaders" :key="d.abbr"
-            class="py-2 sm:py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider">
-            <span class="sm:hidden">{{ d.letter }}</span>
-            <span class="hidden sm:inline">{{ d.abbr }}</span>
+      <div class="calendar-layout">
+        <section class="calendar-panel">
+          <div class="calendar-toolbar">
+            <div class="period-control"><button class="icon-button" :aria-label="viewMode === 'week' ? 'Semaine précédente' : 'Mois précédent'" @click="prevMonth"><AppIcon name="chevron-left" /></button><select aria-label="Mois" v-model="month"><option v-for="(name, i) in monthNames" :key="i" :value="i">{{ name }}</option></select><select aria-label="Année" v-model="year"><option v-for="y in years" :key="y" :value="y">{{ y }}</option></select><button class="icon-button" :aria-label="viewMode === 'week' ? 'Semaine suivante' : 'Mois suivant'" @click="nextMonth"><AppIcon name="chevron-right" /></button></div>
+            <div class="flex items-center gap-2 flex-wrap"><button class="quiet-button" @click="goToday">Aujourd’hui</button><div class="segmented-control" aria-label="Affichage du calendrier"><button :aria-pressed="viewMode === 'month'" :class="{active: viewMode === 'month'}" @click="viewMode = 'month'">Mois</button><button :aria-pressed="viewMode === 'week'" :class="{active: viewMode === 'week'}" @click="viewMode = 'week'">Semaine</button></div></div>
           </div>
-        </div>
-
-        <!-- Cellules -->
-        <div class="grid grid-cols-7">
-          <div
-            v-for="(cell, i) in cells" :key="i"
-            @click="cell.date && openModal(cell.date)"
-            :class="[
-              'min-h-10 sm:min-h-28 p-1 sm:p-2 border-b border-r border-gray-100 transition-colors cursor-pointer',
-              !cell.inMonth && 'bg-gray-50/50 opacity-40',
-              cell.isHoliday && cell.inMonth && 'bg-amber-50',
-              cell.isToday && 'bg-indigo-50/40',
-              cell.inMonth && !cell.isHoliday && 'hover:bg-gray-50',
-              cell.inMonth && cell.isHoliday && 'hover:bg-amber-100',
-            ]"
-          >
-            <!-- Numéro du jour + nom du jour férié (desktop) -->
-            <div class="flex items-start justify-between gap-1 mb-0.5 sm:mb-1">
-              <span :class="[
-                'inline-flex items-center justify-center rounded-full font-medium shrink-0',
-                'w-6 h-6 text-xs sm:w-7 sm:h-7 sm:text-sm',
-                cell.isToday ? 'bg-indigo-600 text-white' : 'text-gray-700',
-              ]">{{ cell.day }}</span>
-              <span v-if="cell.isHoliday && cell.inMonth"
-                class="hidden sm:block text-xs text-amber-600 font-medium truncate leading-tight mt-0.5"
-                :title="cell.holidayName ?? ''">
-                {{ cell.holidayName }}
-              </span>
-            </div>
-
-            <!-- Mobile : points colorés (zone de tap élargie) -->
-            <div v-if="cell.expenses.length" class="sm:hidden flex flex-wrap gap-1 mt-1">
-              <button
-                v-for="e in cell.expenses" :key="e.id"
-                @click.stop="openDetail(e)"
-                :class="['w-5 h-5 rounded-full shrink-0 flex items-center justify-center', dotClass(e.type)]"
-                :title="label(e)"
-              />
-            </div>
-
-            <!-- Desktop : badges avec texte -->
-            <div class="hidden sm:block space-y-0.5">
-              <div
-                v-for="e in cell.expenses" :key="e.id"
-                @click.stop="openDetail(e)"
-                :class="['flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-medium truncate', badgeClass(e.type)]">
-                <span>{{ getExpenseIcon(e) }}</span>
-                <span class="truncate">{{ label(e) }}</span>
+          <div class="category-filters"><button :class="{active:selectedCategory === 'all'}" @click="selectedCategory = 'all'" :aria-pressed="selectedCategory === 'all'">Tous les frais</button><button v-for="t in EXPENSE_TYPES" :key="t.value" :class="{active:selectedCategory === t.value}" :aria-pressed="selectedCategory === t.value" @click="selectedCategory = t.value"><span :class="['category-dot',t.dotClass]" />{{ t.label }}</button></div>
+          <p v-if="expenseStore.error" role="alert" class="text-sm text-red-700 px-5 py-2">{{ expenseStore.error }} <button class="underline" @click="load">Réessayer</button></p>
+          <p v-if="expenseStore.loading" role="status" class="text-xs text-gray-500 px-5 py-2">Chargement des frais…</p>
+          <div class="calendar-weekdays"><span v-for="d in dayHeaders" :key="d.abbr"><span class="sm:hidden">{{ d.letter }}</span><span class="hidden sm:inline">{{ d.abbr }}</span></span></div>
+          <div class="calendar-grid" :class="{'week-view':viewMode === 'week'}">
+            <div
+              v-for="(cell,i) in visibleCells"
+              :key="cell.date"
+              class="calendar-day"
+              :class="{outside:!cell.inMonth, weekend:i % 7 > 4, selected:cell.date === focusedDate, today:cell.isToday}"
+              role="gridcell"
+              :aria-label="`${cell.date} : ${cell.expenses.length} frais`"
+              :aria-selected="cell.date === focusedDate"
+              tabindex="0"
+              @click="focusDay(cell.date)"
+              @keydown.enter.prevent="focusDay(cell.date)"
+              @keydown.space.prevent="focusDay(cell.date)"
+            >
+              <div class="day-selector">
+                <span>{{ cell.day }}</span>
+                <button
+                  class="day-plus"
+                  :aria-label="`Ajouter un frais le ${cell.date}`"
+                  title="Ajouter un frais"
+                  @click.stop="openExpenseForDay(cell.date)"
+                >＋</button>
               </div>
+              <span v-if="cell.isHoliday" class="holiday-label" :title="cell.holidayName ?? ''">{{ cell.holidayName }}</span>
+              <button v-for="e in cell.expenses.slice(0,viewMode === 'week' ? 10 : 2)" :key="e.id" class="calendar-event" :class="badgeClass(e.type)" @click.stop="openDetail(e)" :title="label(e)"><span :class="['category-dot',dotClass(e.type)]" /><span class="event-label">{{ label(e) }}</span></button>
+              <button v-if="cell.expenses.length > (viewMode === 'week' ? 10 : 2)" class="more-events" @click.stop="focusDay(cell.date)">+{{ cell.expenses.length - (viewMode === 'week' ? 10 : 2) }} <span class="hidden sm:inline">frais</span></button>
             </div>
           </div>
-        </div>
+          <div class="calendar-bottom"><span>Sélectionnez un jour pour retrouver ses frais</span><RouterLink to="/summary">Récapitulatif annuel ↗</RouterLink></div>
+        </section>
+        <aside class="day-panel">
+          <div class="flex justify-between items-center"><span class="eyebrow">VOTRE JOURNÉE</span><span class="count-badge">{{ dayExpenses.length }} frais</span></div><h3>{{ focusedLabel }}</h3>
+          <div v-if="!dayExpenses.length" class="day-empty"><span class="day-empty-icon"><AppIcon name="calendar" /></span><p>Une journée à compléter</p><span>Aucun frais{{ selectedCategory !== 'all' ? ' de ce type' : '' }} enregistré.</span></div>
+          <div v-else class="day-expenses"><button v-for="e in dayExpenses" :key="e.id" @click="openDetail(e)"><span :class="['expense-mini-icon',badgeClass(e.type)]"><AppIcon :name="e.type === 'travel' ? 'car' : e.type === 'remote_work' ? 'home' : 'receipt'" /></span><span><strong>{{ EXPENSE_TYPES.find(t => t.value === e.type)?.label }}</strong><small>{{ label(e) }}</small></span><span class="ml-auto">↗</span></button></div>
+          <button class="quiet-button w-full justify-center" @click="openModal(focusedDate)">＋ Ajouter à cette journée</button>
+          <div class="routine-panel"><span class="eyebrow">GAGNEZ DU TEMPS</span><AppIcon name="repeat" /><h4>Un trajet.<br />Toute votre semaine.</h4><p>Préparez vos déplacements habituels en une seule fois.</p><button class="primary-action" @click="showBulkModal = true">Trajets récurrents ↗</button></div>
+          <button class="import-action" @click="showCsvImport = true"><AppIcon name="upload" /><span>Importer un relevé CSV</span><span class="ml-auto">↗</span></button>
+        </aside>
       </div>
-
-      <ExpenseModal v-if="showModal" :date="selectedDate!" :expense="selectedExpense" :prefill="duplicateSource" @close="closeModal" @saved="onSaved" @duplicate="onDuplicate" />
-      <CsvImportModal v-if="showCsvImport" @close="showCsvImport = false" @imported="onCsvImported" />
-
     </template>
+    <BulkTripModal v-if="showBulkModal && personStore.activePerson" :person-id="personStore.activePerson.id" :year="year" :month="month" :public-holidays="publicHolidays" @close="showBulkModal = false" @generated="onBulkGenerated" />
+    <ExpenseModal v-if="showModal" :date="selectedDate!" :expense="selectedExpense" :prefill="duplicateSource" @close="closeModal" @saved="onSaved" @duplicate="onDuplicate" />
+    <CsvImportModal v-if="showCsvImport" @close="showCsvImport = false" @imported="onCsvImported" />
   </div>
 </template>
 
@@ -178,17 +73,17 @@ import { usePersonStore } from '@/stores/personStore'
 import { useExpenseStore } from '@/stores/expenseStore'
 import { useAuthStore } from '@/stores/authStore'
 import { useToast } from '@/composables/useToast'
-import { EXPENSE_TYPES, expenseBadgeClass, expenseDotClass, expenseIcon } from '@/utils/expense'
+import { EXPENSE_TYPES, expenseBadgeClass, expenseDotClass } from '@/utils/expense'
 import type { Expense, TravelExpense, TollExpense, MealExpense } from '@/types'
 import ExpenseModal from '@/components/expense/ExpenseModal.vue'
 import CsvImportModal from '@/components/expense/CsvImportModal.vue'
 import BulkTripModal from '@/components/expense/BulkTripModal.vue'
+import AppIcon from '@/components/ui/AppIcon.vue'
 import { ParkingExpense } from '@/types'
 import { getPublicHolidays } from '@/api/expenseApi'
 
 const { show: showToast } = useToast()
 
-const expenseTypes = EXPENSE_TYPES.map(t => ({ label: t.label, color: t.dotClass }))
 
 const personStore = usePersonStore()
 const expenseStore = useExpenseStore()
@@ -237,6 +132,29 @@ function toDateStr(d: Date): string {
 const from = computed(() => toDateStr(new Date(year.value, month.value, 1)))
 const to = computed(() => toDateStr(new Date(year.value, month.value + 1, 0)))
 
+const viewMode = ref<'month' | 'week'>('month')
+const focusedDate = ref(toDateStr(new Date(year.value, month.value, Math.min(today.getDate(), new Date(year.value, month.value + 1, 0).getDate()))))
+const selectedCategory = ref('all')
+const filteredExpenses = computed(() => expenseStore.expenses.filter(e => selectedCategory.value === 'all' || e.type === selectedCategory.value))
+const dayExpenses = computed(() => filteredExpenses.value.filter(e => e.date === focusedDate.value))
+const focusedLabel = computed(() => new Date(focusedDate.value + 'T12:00:00').toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' }))
+const visibleCells = computed(() => {
+  if (viewMode.value === 'month') return cells.value
+  const index = cells.value.findIndex(c => c.date === focusedDate.value)
+  const start = index < 0 ? 0 : Math.floor(index / 7) * 7
+  return cells.value.slice(start, start + 7)
+})
+function focusDay(date: string) {
+  focusedDate.value = date
+  const selected = new Date(date + 'T12:00:00')
+  month.value = selected.getMonth()
+  year.value = selected.getFullYear()
+}
+function moveWeek(direction: number) {
+  const selected = new Date(focusedDate.value + 'T12:00:00')
+  selected.setDate(selected.getDate() + direction * 7)
+  focusDay(toDateStr(selected))
+}
 const cells = computed(() => {
   const first = new Date(year.value, month.value, 1)
   const last = new Date(year.value, month.value + 1, 0)
@@ -246,22 +164,22 @@ const cells = computed(() => {
 
   for (let i = 0; i < offset; i++) {
     const d = new Date(year.value, month.value, 1 - (offset - i))
-    result.push({ date: toDateStr(d), day: d.getDate(), inMonth: false, isToday: false, isHoliday: false, holidayName: null, expenses: [] as Expense[] })
+    result.push({ date: toDateStr(d), day: d.getDate(), inMonth: false, isToday: false, isHoliday: false, holidayName: null, expenses: filteredExpenses.value.filter(e => e.date === toDateStr(d)) })
   }
   for (let d = 1; d <= last.getDate(); d++) {
     const dateStr = toDateStr(new Date(year.value, month.value, d))
-    result.push({ date: dateStr, day: d, inMonth: true, isToday: dateStr === todayStr, isHoliday: !!publicHolidays.value[dateStr], holidayName: publicHolidays.value[dateStr] ?? null, expenses: expenseStore.expenses.filter(e => e.date === dateStr) })
+    result.push({ date: dateStr, day: d, inMonth: true, isToday: dateStr === todayStr, isHoliday: !!publicHolidays.value[dateStr], holidayName: publicHolidays.value[dateStr] ?? null, expenses: filteredExpenses.value.filter(e => e.date === dateStr) })
   }
   const total = Math.ceil(result.length / 7) * 7
   for (let n = 1; result.length < total; n++) {
     const d = new Date(year.value, month.value + 1, n)
-    result.push({ date: toDateStr(d), day: d.getDate(), inMonth: false, isToday: false, isHoliday: false, holidayName: null, expenses: [] as Expense[] })
+    result.push({ date: toDateStr(d), day: d.getDate(), inMonth: false, isToday: false, isHoliday: false, holidayName: null, expenses: filteredExpenses.value.filter(e => e.date === toDateStr(d)) })
   }
   return result
 })
 
 const stats = computed(() => {
-  const es = expenseStore.expenses
+  const es = expenseStore.expenses.filter(e => e.date >= from.value && e.date <= to.value)
   const remote = es.filter(e => e.type === 'remote_work')
   return {
     travelCount: es.filter(e => e.type === 'travel').length,
@@ -275,7 +193,6 @@ const stats = computed(() => {
 
 function badgeClass(type: string) { return expenseBadgeClass(type) }
 function dotClass(type: string) { return expenseDotClass(type) }
-function getExpenseIcon(e: Expense) { return expenseIcon(e.type, e.type === 'travel' ? (e as TravelExpense).isElectric : false) }
 
 function label(e: Expense): string {
   if (e.type === 'travel') { const t = e as TravelExpense; return t.arrival ? `→ ${t.arrival}` : `${t.distanceKm} km` }
@@ -287,6 +204,10 @@ function label(e: Expense): string {
 }
 
 function openModal(date: string) { selectedDate.value = date; selectedExpense.value = null; showModal.value = true }
+function openExpenseForDay(date: string) {
+  focusDay(date)
+  openModal(date)
+}
 function openDetail(e: Expense) { selectedDate.value = e.date; selectedExpense.value = e; showModal.value = true }
 function closeModal() { showModal.value = false; selectedExpense.value = null; duplicateSource.value = null }
 async function onSaved() { closeModal(); await load(); showToast('Dépense enregistrée') }
@@ -297,13 +218,20 @@ function onDuplicate(e: Expense) {
   duplicateSource.value = e
   showModal.value = true
 }
-async function load() { await expenseStore.fetchByPeriod(from.value, to.value, personStore.activePerson?.id) }
+async function load() {
+  const start = new Date(year.value, month.value, 1)
+  start.setDate(start.getDate() - (start.getDay() + 6) % 7)
+  const end = new Date(year.value, month.value + 1, 0)
+  end.setDate(end.getDate() + (7 - end.getDay()) % 7)
+  await expenseStore.fetchByPeriod(toDateStr(start), toDateStr(end), personStore.activePerson?.id)
+}
 async function onCsvImported(count: number) { showCsvImport.value = false; await load(); if (count) showToast(`${count} frais importés avec succès`) }
 async function onBulkGenerated(count: number) { showBulkModal.value = false; await load(); if (count) showToast(`${count} trajet${count > 1 ? 's' : ''} généré${count > 1 ? 's' : ''} avec succès`) }
-function prevMonth() { if (month.value === 0) { month.value = 11; year.value-- } else month.value-- }
-function nextMonth() { if (month.value === 11) { month.value = 0; year.value++ } else month.value++ }
-function goToday() { month.value = today.getMonth(); year.value = today.getFullYear() }
+function prevMonth() { if (viewMode.value === 'week') { moveWeek(-1); return } if (month.value === 0) { month.value = 11; year.value-- } else month.value-- }
+function nextMonth() { if (viewMode.value === 'week') { moveWeek(1); return } if (month.value === 11) { month.value = 0; year.value++ } else month.value++ }
+function goToday() { focusedDate.value = toDateStr(today); month.value = today.getMonth(); year.value = today.getFullYear() }
 
+watch([month, year], () => { if (!focusedDate.value.startsWith(`${year.value}-${String(month.value + 1).padStart(2, '0')}`)) focusedDate.value = toDateStr(new Date(year.value, month.value, 1)) })
 watch(year, loadHolidays, { immediate: true })
 watch([month, year, () => personStore.activePerson], load)
 onMounted(load)
