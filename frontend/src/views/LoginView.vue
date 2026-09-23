@@ -1,9 +1,10 @@
 <template>
-  <div class="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl border border-gray-200 shadow-sm w-full max-w-sm p-8">
+  <div class="auth-page">
+    <div class="auth-card">
       <div class="mb-8 text-center">
-        <h1 class="text-2xl font-bold text-gray-900">Frais Réels</h1>
-        <p class="text-sm text-gray-500 mt-1">Connectez-vous à votre compte</p>
+        <div class="auth-card-head"><span class="auth-brand">f.</span><ThemeToggle /></div>
+        <h1 class="text-2xl font-bold text-gray-900">Vos frais, enfin sous contrôle.</h1>
+        <p class="text-sm text-gray-500 mt-2">Préparez votre déclaration avec sérénité.</p>
       </div>
 
       <form @submit.prevent="submit" class="space-y-4">
@@ -45,6 +46,7 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/authStore'
+import ThemeToggle from '@/components/ui/ThemeToggle.vue'
 
 const authStore = useAuthStore()
 const router = useRouter()

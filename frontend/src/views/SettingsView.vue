@@ -1,6 +1,6 @@
 <template>
-  <div class="p-4 sm:p-8 max-w-2xl mx-auto space-y-8">
-    <h1 class="text-2xl font-bold text-gray-900">Paramètres</h1>
+  <div class="workspace-page settings-workspace max-w-3xl mx-auto space-y-6">
+    <div class="workspace-title"><div><span class="eyebrow">VOTRE ESPACE</span><h2>Paramètres</h2><p>Compte, sécurité, abonnement et préférences.</p></div></div>
 
     <!-- Compte -->
     <section class="bg-white rounded-2xl border border-gray-200 divide-y divide-gray-100">

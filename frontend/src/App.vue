@@ -1,5 +1,5 @@
 <template>
-  <div class="app-shell">
+  <div class="app-shell" :class="{ 'is-public': isPublicRoute }">
     <ToastContainer />
     <div v-if="sidebarOpen && !isPublicRoute" class="fixed inset-0 z-40 bg-black/40 lg:hidden" @click="sidebarOpen = false" />
     <aside v-if="!isPublicRoute" class="app-sidebar" :class="{ 'is-open': sidebarOpen }" @keydown.esc="sidebarOpen = false">
@@ -22,13 +22,12 @@
         <button @click="logout" class="nav-item w-full"><AppIcon name="logout" />Déconnexion</button>
       </div>
     </aside>
-    <main class="app-main">
+    <main class="app-main" :class="{ 'is-public': isPublicRoute }">
       <header v-if="!isPublicRoute" class="app-header">
         <button @click="sidebarOpen = !sidebarOpen" class="icon-button lg:hidden" aria-label="Ouvrir le menu" :aria-expanded="sidebarOpen"><AppIcon name="menu" /></button>
         <span class="text-sm text-gray-500">{{ isAdminRoute ? 'Espace administration' : 'Mes frais professionnels' }}</span>
         <div class="ml-auto flex items-center gap-4"><ThemeToggle /><div v-if="authStore.user" class="header-user"><span class="avatar">{{ authStore.user.email.charAt(0).toUpperCase() }}</span><span class="hidden md:block text-xs text-gray-600 max-w-48 truncate">{{ authStore.user.email }}</span></div></div>
       </header>
-      <div v-else class="public-theme"><ThemeToggle /></div>
       <RouterView />
     </main>
   </div>
@@ -63,6 +62,7 @@ function logout() {
 const nav = [
   { to: '/calendar', label: 'Calendrier', icon: 'calendar' },
   { to: '/summary', label: 'Récapitulatif', icon: 'chart' },
+  { to: '/trips', label: 'Gestion des trajets', icon: 'car' },
   { to: '/persons', label: 'Personnes', icon: 'users' },
   { to: '/settings', label: 'Paramètres', icon: 'settings' },
 ]
