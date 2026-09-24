@@ -18,5 +18,8 @@ const paths: Record<string, string> = {
  logout: 'M9 4H4v16h5m6-12 4 4-4 4m-7-4h11',
  sun: 'M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8m0-6v2m0 16v2M2 12h2m16 0h2M5 5l1 1m12 12 1 1M5 19l1-1M18 6l1-1',
  moon: 'M20.9 13a9 9 0 0 1-9.9-9.9A9 9 0 1 0 20.9 13Z',
+ alert: 'M12 3 2 21h20L12 3Zm0 6v5m0 3v.01',
+ check: 'm5 12 4 4L19 6',
+ search: 'm21 21-4.3-4.3M19 11a8 8 0 1 1-16 0 8 8 0 0 1 16 0Z',
 }
 </script>

@@ -67,7 +67,9 @@ function makeExpenseRepositoryForGuard(array $expensesById): ExpenseRepositoryIn
 
         public function findByPersonAndPeriod(string $personId, DateTimeImmutable $from, DateTimeImmutable $to): array { return []; }
 
-        public function findByPersonAndYear(string $personId, int $year): array { return []; }
+                public function findByPersonAndYear(string $personId, int $year): array { return []; }
+                public function findReceiptPage(string $personId, int $year, int $offset, int $limit, string $status = 'all', string $search = ''): array { return []; }
+                public function receiptVaultCounts(string $personId, int $year, string $status = 'all', string $search = ''): array { return ['total' => 0, 'withReceipt' => 0, 'missing' => 0, 'filtered' => 0]; }
 
         public function findByPeriod(DateTimeImmutable $from, DateTimeImmutable $to): array { return []; }
 

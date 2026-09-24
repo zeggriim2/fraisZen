@@ -42,8 +42,8 @@
             </template>
             <template v-else>
               <label class="cursor-pointer text-sm text-indigo-600 hover:text-indigo-800 flex items-center gap-1">
-                <span>📎</span>Attacher un PDF
-                <input type="file" accept=".pdf,application/pdf" class="sr-only" @change="(e) => attachReceiptToExisting(expense!.id, e)" />
+                <span>📎</span>Attacher un justificatif
+                <input type="file" accept=".pdf,.jpg,.jpeg,.png,.webp,application/pdf,image/jpeg,image/png,image/webp" class="sr-only" @change="(e) => attachReceiptToExisting(expense!.id, e)" />
               </label>
             </template>
           </div>
@@ -51,6 +51,21 @@
         <template v-else-if="expense.type === 'remote_work'">
           <InfoRow label="Indemnité" :value="`${expense.amount.toFixed(2)} €`" />
         </template>
+        <div v-if="expense.type !== 'parking'" class="flex items-center gap-3 py-1">
+          <span class="text-sm text-gray-500 w-32 shrink-0">Justificatif</span>
+          <template v-if="expense.receiptFilename">
+            <button @click="viewReceipt(expense.id)" class="text-sm text-indigo-600 hover:underline flex items-center gap-1">
+              <span>📎</span>{{ expense.receiptFilename }}
+            </button>
+            <button @click="removeReceipt(expense.id)" class="text-xs text-red-400 hover:text-red-600 ml-auto">Supprimer</button>
+          </template>
+          <template v-else>
+            <label class="cursor-pointer text-sm text-indigo-600 hover:text-indigo-800 flex items-center gap-1">
+              <span>📎</span>Attacher un justificatif
+              <input type="file" accept=".pdf,.jpg,.jpeg,.png,.webp,application/pdf,image/jpeg,image/png,image/webp" class="sr-only" @change="(e) => attachReceiptToExisting(expense!.id, e)" />
+            </label>
+          </template>
+        </div>
         <InfoRow v-if="expense.description" label="Description" :value="expense.description" />
         <div class="flex gap-3 pt-4">
           <button @click="startEdit" class="flex-1 px-4 py-2 bg-indigo-50 border border-indigo-100 rounded-lg text-sm font-medium text-indigo-600 hover:bg-indigo-100">Modifier</button>

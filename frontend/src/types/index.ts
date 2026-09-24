@@ -19,7 +19,45 @@ export interface BaseExpense {
   date: string
   description: string | null
   amount: number
+  receiptFilename: string | null
+  receiptMimeType: string | null
+  receiptOcrData: ReceiptOcrData | null
+  receiptUploadedAt: string | null
   createdAt: string
+}
+
+export interface ReceiptOcrData {
+  status: 'completed' | 'empty' | 'unavailable'
+  merchant: string | null
+  date: string | null
+  amount: number | null
+  rawText: string
+}
+
+export interface ReceiptVaultItem {
+  id: string
+  date: string
+  type: ExpenseType
+  typeLabel: string
+  description: string | null
+  amount: number
+  receiptFilename: string | null
+  receiptMimeType: string | null
+  receiptOcrData: ReceiptOcrData | null
+  receiptUploadedAt: string | null
+}
+
+export interface ReceiptVault {
+  personId: string
+  year: number
+  total: number
+  withReceipt: number
+  missing: number
+  filtered: number
+  page: number
+  pageSize: number
+  hasMore: boolean
+  items: ReceiptVaultItem[]
 }
 
 export interface TravelExpense extends BaseExpense {
@@ -56,7 +94,6 @@ export interface ParkingExpense extends BaseExpense {
   type: 'parking'
   parkingAmount: number
   location: string | null
-  receiptFilename: string | null
 }
 
 export type Expense = TravelExpense | RemoteWorkExpense | TollExpense | MealExpense | ParkingExpense

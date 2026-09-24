@@ -77,6 +77,18 @@ Infrastructure/
   Persistence/   # Doctrine repository implementations
 ```
 
+### Mandatory DDD/CQRS boundaries
+
+- HTTP controllers are inbound adapters only. They may parse HTTP input, perform authentication/authorization, dispatch one command or query, and build the HTTP response.
+- Controllers must not contain business rules, repository calls, entity mutations, persistence, filesystem access, OCR processing, calculations, filtering, pagination logic, or response-model assembly.
+- Every state change is represented by a command and handled in `Application/Command/<UseCase>/` through `command.bus`.
+- Every read is represented by a query and handled in `Application/Query/<UseCase>/` through `query.bus`.
+- Command and query handlers orchestrate use cases and depend on Domain or Application interfaces. They must not depend on Symfony HTTP classes.
+- External I/O such as filesystem, OCR, email, payment, or third-party APIs is exposed as an Application port and implemented by an Infrastructure adapter.
+- Domain objects contain business invariants and never import Symfony, HTTP requests, uploaded files, or infrastructure services.
+- Add unit tests at the handler/use-case boundary. Test infrastructure adapters separately when their mapping or I/O behavior is significant.
+- Before completing backend work, inspect every modified controller and reject the change if it does more than transport mapping, authorization, bus dispatch, and response construction.
+
 **Expense STI hierarchy** (Doctrine Single Table Inheritance):
 - `Expense` (base) → `TravelExpense`, `RemoteWorkExpense`, `TollExpense`, `MealExpense`
 - `KilometricAllowanceCalculator` — barème kilométrique 2024 (3–7 CV, voiture/moto, électrique +20%)

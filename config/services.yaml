@@ -1,6 +1,7 @@
 # yaml-language-server: $schema=../vendor/symfony/dependency-injection/Loader/schema/services.schema.json
 
 parameters:
+    env(APP_SHARE_DIR): 'var/share'
 
 services:
     _defaults:
@@ -28,15 +29,19 @@ services:
     App\Expense\Domain\Repository\ExpenseRepositoryInterface:
         class: App\Expense\Infrastructure\Persistence\DoctrineExpenseRepository
 
+    App\Expense\Application\Ocr\ReceiptOcrExtractorInterface:
+        class: App\Expense\Infrastructure\Ocr\TesseractReceiptOcrExtractor
+
+    App\Expense\Application\Receipt\ReceiptStorageInterface:
+        class: App\Expense\Infrastructure\Receipt\LocalReceiptStorage
+        arguments:
+            $shareDir: '%kernel.project_dir%/%env(APP_SHARE_DIR)%'
+
     App\SharedKernel\Infrastructure\Security\OwnershipGuardInterface:
         alias: App\SharedKernel\Infrastructure\Security\OwnershipGuard
 
     App\Auth\Domain\Repository\UserRepositoryInterface:
         class: App\Auth\Infrastructure\Persistence\DoctrineUserRepository
-
-    App\Expense\Infrastructure\Http\ReceiptController:
-        arguments:
-            $shareDir: '%kernel.project_dir%/%env(APP_SHARE_DIR)%'
 
     Stripe\StripeClient:
         arguments:

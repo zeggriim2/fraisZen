@@ -24,7 +24,11 @@ RUN <<-EOF
 	apt-get install -y --no-install-recommends \
 		file \
 		git \
-		make
+		make \
+		poppler-utils \
+		tesseract-ocr \
+		tesseract-ocr-eng \
+		tesseract-ocr-fra
 	install-php-extensions \
 		@composer \
 		apcu \
@@ -181,7 +185,7 @@ ENV XDG_CONFIG_HOME=/config XDG_DATA_HOME=/data
 # hadolint ignore=DL3008
 RUN <<-EOF
 	apt-get update
-	apt-get install -y --no-install-recommends openssl
+	apt-get install -y --no-install-recommends openssl poppler-utils tesseract-ocr tesseract-ocr-eng tesseract-ocr-fra
 	rm -rf /var/lib/apt/lists/*
 	mkdir -p /data/caddy /config/caddy
 	chown -R www-data:www-data /data /config

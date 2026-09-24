@@ -1,5 +1,5 @@
 import http from './http'
-import type { CreateExpenseDto, UpdateExpenseDto, Expense, ExpenseSummary } from '@/types'
+import type { CreateExpenseDto, UpdateExpenseDto, Expense, ExpenseSummary, ReceiptVault } from '@/types'
 
 export interface TrancheTaux {
   rate1: number
@@ -48,7 +48,7 @@ export const expenseApi = {
   uploadReceipt: (id: string, file: File) => {
     const form = new FormData()
     form.append('receipt', file)
-    return http.post<{ receiptFilename: string }>(`/expenses/${id}/receipt`, form, {
+    return http.post<{ receiptFilename: string; receiptMimeType: string }>(`/expenses/${id}/receipt`, form, {
       headers: { 'Content-Type': 'multipart/form-data' },
     }).then(r => r.data)
   },
@@ -56,6 +56,10 @@ export const expenseApi = {
     http.get(`/expenses/${id}/receipt`, { responseType: 'blob' }).then(r => r.data as Blob),
   deleteReceipt: (id: string) =>
     http.delete(`/expenses/${id}/receipt`),
+  getReceiptVault: (personId: string, year: number, page = 1, pageSize = 6, status = 'all', search = '') =>
+    http.get<ReceiptVault>('/receipts', {
+      params: { personId, year, page, pageSize, status, search },
+    }).then(r => r.data),
 
   bulkCreateTravel: (payload: {
     personId: string
