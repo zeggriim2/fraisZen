@@ -62,6 +62,7 @@ function logout() {
 const nav = [
   { to: '/calendar', label: 'Calendrier', icon: 'calendar' },
   { to: '/summary', label: 'Récapitulatif', icon: 'chart' },
+  { to: '/receipts', label: 'Justificatifs', icon: 'receipt' },
   { to: '/trips', label: 'Gestion des trajets', icon: 'car' },
   { to: '/persons', label: 'Personnes', icon: 'users' },
   { to: '/settings', label: 'Paramètres', icon: 'settings' },

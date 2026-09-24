@@ -20,6 +20,7 @@ final readonly class CreateTollExpenseCommandHandler implements CommandHandlerIn
     public function __invoke(CreateTollExpenseCommand $command): string
     {
         $id = ExpenseId::generate();
+
         $this->repository->save(new TollExpense(
             id: $id,
             personId: $command->personId,
