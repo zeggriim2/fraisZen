@@ -22,6 +22,19 @@ interface ExpenseRepositoryInterface
     public function findByPersonAndYear(string $personId, int $year): array;
 
     /** @return Expense[] */
+    public function findReceiptPage(
+        string $personId,
+        int $year,
+        int $offset,
+        int $limit,
+        string $status = 'all',
+        string $search = '',
+    ): array;
+
+    /** @return array{total: int, withReceipt: int, missing: int, filtered: int} */
+    public function receiptVaultCounts(string $personId, int $year, string $status = 'all', string $search = ''): array;
+
+    /** @return Expense[] */
     public function findByPeriod(\DateTimeImmutable $from, \DateTimeImmutable $to): array;
 
     public function countByPersonId(string $personId): int;

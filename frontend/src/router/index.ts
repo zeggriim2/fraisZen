@@ -13,6 +13,7 @@ const router = createRouter({
     { path: '/', redirect: '/calendar' },
     { path: '/calendar', component: () => import('@/views/CalendarView.vue') },
     { path: '/summary', component: () => import('@/views/SummaryView.vue') },
+    { path: '/receipts', component: () => import('@/views/ReceiptVaultView.vue') },
     { path: '/trips', component: () => import('@/views/TripDetailView.vue') },
     { path: '/persons', component: () => import('@/views/PersonsView.vue') },
     { path: '/admin', redirect: '/admin/dashboard', meta: { admin: true } },

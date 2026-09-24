@@ -24,6 +24,7 @@ final readonly class OwnershipGuard implements OwnershipGuardInterface
     ) {
     }
 
+    #[\Override]
     public function assertPersonBelongsToUser(string $personId, string $userId): void
     {
         $person = $this->personRepository->findById(PersonId::fromString($personId))
@@ -34,6 +35,7 @@ final readonly class OwnershipGuard implements OwnershipGuardInterface
         }
     }
 
+    #[\Override]
     public function assertExpenseBelongsToUser(string $expenseId, string $userId): Expense
     {
         $expense = $this->expenseRepository->findById(ExpenseId::fromString($expenseId))
@@ -44,6 +46,7 @@ final readonly class OwnershipGuard implements OwnershipGuardInterface
         return $expense;
     }
 
+    #[\Override]
     public function assertFavoriteRouteBelongsToUser(string $routeId, string $personId, string $userId): void
     {
         $route = $this->favoriteRouteRepository->findById(FavoriteRouteId::fromString($routeId))

@@ -10,6 +10,7 @@ interface OwnershipGuardInterface
 {
     public function assertPersonBelongsToUser(string $personId, string $userId): void;
 
+    /** @psalm-suppress PossiblyUnusedReturnValue Controllers may use the returned aggregate. */
     public function assertExpenseBelongsToUser(string $expenseId, string $userId): Expense;
 
     public function assertFavoriteRouteBelongsToUser(string $routeId, string $personId, string $userId): void;

@@ -19,8 +19,55 @@ export interface BaseExpense {
   date: string
   description: string | null
   amount: number
+  receiptFilename: string | null
+  receiptMimeType: string | null
+  receiptOcrData: ReceiptOcrData | null
+  receiptUploadedAt: string | null
   createdAt: string
 }
+
+export interface ReceiptOcrData {
+  status: 'completed' | 'empty' | 'unavailable'
+  merchant: string | null
+  date: string | null
+  amount: number | null
+  rawText: string
+}
+
+export interface ReceiptVaultItem {
+  id: string
+  date: string
+  type: ExpenseType
+  typeLabel: string
+  description: string | null
+  amount: number
+  receiptFilename: string | null
+  receiptMimeType: string | null
+  receiptOcrData: ReceiptOcrData | null
+  receiptUploadedAt: string | null
+}
+
+export interface ReceiptVault {
+  personId: string
+  year: number
+  total: number
+  withReceipt: number
+  missing: number
+  filtered: number
+  page: number
+  pageSize: number
+  hasMore: boolean
+  items: ReceiptVaultItem[]
+}
+
+export type ReceiptAnalysisStatus = 'pending' | 'processing' | 'completed' | 'failed'
+export type ReceiptMatchStatus = 'suggested' | 'confirmed' | 'rejected'
+export interface ReceiptMatch { id: string; expenseId: string; confidence: number; status: ReceiptMatchStatus; reasons: string[]; reviewedAt: string | null; expense: ReceiptExpenseSummary | null }
+export interface ReceiptExpenseSummary { id: string; date: string; amount: number; description: string | null }
+export interface ReceiptExpenseCandidate extends ReceiptExpenseSummary { departure: string | null; arrival: string | null; score: number; reasons: string[] }
+export interface ReceiptLine { id: string; lineNumber: number; date: string; departure: string | null; arrival: string | null; amountHt: number | null; amountTtc: number; distanceKm: number | null; rawText: string; matches: ReceiptMatch[] }
+export interface ReceiptDocument { id: string; personId: string; filename: string; mimeType: string; status: ReceiptAnalysisStatus; supplier: string | null; invoiceNumber: string | null; invoiceDate: string | null; periodStart: string | null; periodEnd: string | null; totalAmount: number | null; errorMessage: string | null; createdAt: string; analyzedAt: string | null; lines?: ReceiptLine[] }
+export interface ReceiptDocumentPage { total: number; page: number; pageSize: number; hasMore: boolean; items: ReceiptDocument[] }
 
 export interface TravelExpense extends BaseExpense {
   type: 'travel'
@@ -56,7 +103,6 @@ export interface ParkingExpense extends BaseExpense {
   type: 'parking'
   parkingAmount: number
   location: string | null
-  receiptFilename: string | null
 }
 
 export type Expense = TravelExpense | RemoteWorkExpense | TollExpense | MealExpense | ParkingExpense

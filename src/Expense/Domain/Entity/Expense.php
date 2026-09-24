@@ -37,6 +37,22 @@ abstract class Expense
     #[ORM\Column(type: Types::STRING, length: 255, nullable: true)]
     protected ?string $description;
 
+    #[ORM\Column(name: 'receipt_filename', type: Types::STRING, length: 255, nullable: true)]
+    protected ?string $receiptFilename = null;
+
+    #[ORM\Column(name: 'receipt_mime_type', type: Types::STRING, length: 100, nullable: true)]
+    protected ?string $receiptMimeType = null;
+
+    #[ORM\Column(name: 'receipt_sha256', type: Types::STRING, length: 64, nullable: true)]
+    protected ?string $receiptSha256 = null;
+
+    /** @var array<string, mixed>|null */
+    #[ORM\Column(name: 'receipt_ocr_data', type: Types::JSON, nullable: true)]
+    protected ?array $receiptOcrData = null;
+
+    #[ORM\Column(name: 'receipt_uploaded_at', type: Types::DATETIME_IMMUTABLE, nullable: true)]
+    protected ?\DateTimeImmutable $receiptUploadedAt = null;
+
     #[ORM\Column(type: Types::DATETIME_IMMUTABLE)]
     protected \DateTimeImmutable $createdAt;
 
@@ -83,6 +99,48 @@ abstract class Expense
         $this->updatedAt = new \DateTimeImmutable();
     }
 
+    public function receiptFilename(): ?string
+    {
+        return $this->receiptFilename;
+    }
+
+    public function receiptMimeType(): ?string
+    {
+        return $this->receiptMimeType;
+    }
+
+    public function receiptSha256(): ?string
+    {
+        return $this->receiptSha256;
+    }
+
+    /** @return array<string, mixed>|null */
+    public function receiptOcrData(): ?array
+    {
+        return $this->receiptOcrData;
+    }
+
+    public function receiptUploadedAt(): ?\DateTimeImmutable
+    {
+        return $this->receiptUploadedAt;
+    }
+
+    public function setReceipt(?string $filename, ?string $mimeType): void
+    {
+        $this->receiptFilename = $filename;
+        $this->receiptMimeType = $mimeType;
+        $this->touch();
+    }
+
+    /** @param array<string, mixed>|null $ocrData */
+    public function setReceiptMetadata(?string $sha256, ?array $ocrData, ?\DateTimeImmutable $uploadedAt): void
+    {
+        $this->receiptSha256 = $sha256;
+        $this->receiptOcrData = $ocrData;
+        $this->receiptUploadedAt = $uploadedAt;
+        $this->touch();
+    }
+
     protected function touch(): void
     {
         $this->updatedAt = new \DateTimeImmutable();
@@ -106,6 +164,10 @@ abstract class Expense
             'date' => $this->date->format('Y-m-d'),
             'description' => $this->description,
             'amount' => $this->amount(),
+            'receiptFilename' => $this->receiptFilename,
+            'receiptMimeType' => $this->receiptMimeType,
+            'receiptOcrData' => $this->receiptOcrData,
+            'receiptUploadedAt' => $this->receiptUploadedAt?->format(DATE_ATOM),
             'createdAt' => $this->createdAt->format('Y-m-d H:i:s'),
         ];
     }
