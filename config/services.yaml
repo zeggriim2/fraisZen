@@ -70,6 +70,9 @@ services:
     App\Admin\Domain\Repository\FiscalConfigRepositoryInterface:
         class: App\Admin\Infrastructure\Persistence\DoctrineFiscalConfigRepository
 
+    App\AgentLease\Domain\Repository\IssueLeaseRepositoryInterface:
+        class: App\AgentLease\Infrastructure\Persistence\DoctrineIssueLeaseRepository
+
     # Tag command & query handlers to their respective buses
     _instanceof:
         App\SharedKernel\Application\Bus\CommandHandlerInterface:

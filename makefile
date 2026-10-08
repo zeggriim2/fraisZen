@@ -11,7 +11,7 @@ SYMFONY  = $(PHP) bin/console
 
 # Misc
 .DEFAULT_GOAL = help
-.PHONY        : help build up start down logs sh composer vendor sf cc test \
+.PHONY        : help build up start down logs sh composer vendor sf cc test test-agent-lease test-agent-lease-http \
                 coverage frontend-install frontend-dev frontend-build db-setup fixtures \
                 lint cs-fix phpstan psalm typecheck hadolint actionlint analyse
 
@@ -43,6 +43,18 @@ bash: ## Connect to the FrankenPHP container via bash so up and down arrows go t
 test: ## Run unit tests with Pest (browser tests excluded — use make test-browser), pass c= for options
 	@$(eval c ?=)
 	@$(DOCKER_COMP) exec -e APP_ENV=test php vendor/bin/pest tests/Unit/ $(c)
+
+test-agent-lease: ## Run MySQL/InnoDB lease integration tests in an isolated database
+	@$(DOCKER_COMP) up -d --wait php
+	@$(DOCKER_COMP) -f compose.agent-lease-test.yaml up -d --wait database-agent-lease
+	@$(DOCKER_COMP) exec -T php sh -lc "until php -r 'try { new PDO(\"mysql:host=database-agent-lease;port=3306;dbname=agent_lease_test_test\", \"agent_lease_test\", \"agent_lease_test\"); exit(0); } catch (Throwable) { exit(1); }'; do sleep 1; done"
+	@$(DOCKER_COMP) exec -T php sh -lc "APP_ENV=test DATABASE_URL='mysql://agent_lease_test:agent_lease_test@database-agent-lease:3306/agent_lease_test?serverVersion=8.0.32&charset=utf8mb4' php bin/console doctrine:migrations:migrate --no-interaction"
+	@$(DOCKER_COMP) exec -T php sh -lc "APP_ENV=test DATABASE_URL='mysql://agent_lease_test:agent_lease_test@database-agent-lease:3306/agent_lease_test?serverVersion=8.0.32&charset=utf8mb4' php vendor/bin/pest tests/Integration/AgentLease"
+	@$(DOCKER_COMP) -f compose.agent-lease-test.yaml down --volumes
+
+test-agent-lease-http: ## Run authenticated HTTP tests for the agent lease API
+	@$(DOCKER_COMP) up -d --wait php
+	@$(DOCKER_COMP) exec -T php sh -lc "APP_ENV=test php vendor/bin/pest tests/Http/AgentLease"
 
 coverage: ## Generate HTML coverage report and open it in the browser
 	@$(DOCKER_COMP) exec -e APP_ENV=test -e XDEBUG_MODE=coverage php vendor/bin/pest --coverage --coverage-html=var/coverage
@@ -105,7 +117,7 @@ hadolint: ## Hadolint — vérifie les best practices du Dockerfile
 	@docker run --rm -i hadolint/hadolint < Dockerfile
 
 actionlint: ## Actionlint — vérifie les workflows GitHub Actions
-	@docker run --rm -v $(PWD):/repo --workdir /repo rhysd/actionlint:latest
+	@docker run --rm -v $(abspath $(dir $(lastword $(MAKEFILE_LIST)))):/repo --workdir /repo rhysd/actionlint:latest
 
 analyse: lint phpstan psalm typecheck hadolint actionlint ## Lance tous les contrôles qualité
 

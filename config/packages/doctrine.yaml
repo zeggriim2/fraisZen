@@ -38,6 +38,12 @@ doctrine:
                 dir: '%kernel.project_dir%/src/Admin/Domain/Entity'
                 prefix: 'App\Admin\Domain\Entity'
                 alias: Admin
+            AgentLease:
+                type: attribute
+                is_bundle: false
+                dir: '%kernel.project_dir%/src/AgentLease/Domain/Entity'
+                prefix: 'App\AgentLease\Domain\Entity'
+                alias: AgentLease
 
 when@test:
     doctrine:

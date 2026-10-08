@@ -3,6 +3,9 @@
 admin:
     resource: routes/api/admin.yaml
 
+agent_lease:
+    resource: routes/api/agent_lease.yaml
+
 auth:
     resource: routes/api/auth.yaml
 

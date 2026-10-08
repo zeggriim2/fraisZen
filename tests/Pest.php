@@ -9,6 +9,8 @@ declare(strict_types=1);
 */
 
 pest()->extend(App\Tests\TestCase::class)->in('Unit');
+pest()->extend(App\Tests\TestCase::class)->in('Integration');
+pest()->extend(App\Tests\TestCase::class)->in('Http');
 
 const APP_URL = 'http://node:5173';
 const TEST_EMAIL = 'alice@example.com';
