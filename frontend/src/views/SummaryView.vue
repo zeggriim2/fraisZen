@@ -159,6 +159,7 @@
 
 <script setup lang="ts">
 import { ref, watch, onMounted, computed } from 'vue'
+import { useRoute } from 'vue-router'
 import AppIcon from '@/components/ui/AppIcon.vue'
 import SummaryCard from '@/components/ui/SummaryCard.vue'
 import BaseButton from '@/components/ui/BaseButton.vue'
@@ -178,12 +179,15 @@ import { fmtEur } from '@/utils/formatting'
 const personStore = usePersonStore()
 const expenseStore = useExpenseStore()
 const authStore = useAuthStore()
+const route = useRoute()
 const _now = new Date()
 const now = _now.getFullYear()
 // En période de déclaration (jan–juin), on affiche par défaut l'année N-1 (revenus à déclarer).
 // De juillet à décembre, l'utilisateur saisit ses dépenses courantes → année N.
 const declarationDefaultYear = _now.getMonth() < 6 ? now - 1 : now
-const selectedYear = ref(authStore.user?.defaultYear ?? declarationDefaultYear)
+// Deep link : /summary?year=2025 (ex. depuis le calendrier) prime sur la préférence utilisateur.
+const queryYear = Number.parseInt(String(route.query.year ?? ''), 10)
+const selectedYear = ref(Number.isFinite(queryYear) && queryYear > 2000 ? queryYear : (authStore.user?.defaultYear ?? declarationDefaultYear))
 const years = Array.from({ length: 6 }, (_, i) => now - i)
 const multiYears = Array.from({ length: 5 }, (_, i) => now - i)
 const loading = ref(false)

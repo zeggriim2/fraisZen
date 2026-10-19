@@ -79,7 +79,7 @@
               <button v-if="cell.expenses.length > (viewMode === 'week' ? 10 : 2)" type="button" class="more-events" @click.stop="focusDay(cell.date)">+{{ cell.expenses.length - (viewMode === 'week' ? 10 : 2) }} <span class="hidden sm:inline">frais</span></button>
             </div>
           </div>
-          <div class="calendar-bottom"><span>Sélectionnez un jour pour retrouver ses frais</span><RouterLink to="/summary" class="btn-link text-xs">Récapitulatif annuel<AppIcon name="arrow-right" :size="14" /></RouterLink></div>
+          <div class="calendar-bottom"><span>Sélectionnez un jour pour retrouver ses frais</span><RouterLink :to="{ path: '/summary', query: { year } }" class="btn-link text-xs">Récapitulatif annuel<AppIcon name="arrow-right" :size="14" /></RouterLink></div>
         </section>
 
         <aside class="day-panel" aria-labelledby="day-panel-title">

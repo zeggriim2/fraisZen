@@ -126,7 +126,9 @@
     font-weight: 500;
     border-radius: 8px;
     color: rgb(var(--ink-muted));
-    transition: background-color 150ms ease, color 150ms ease;
+    transition:
+        background-color 150ms ease,
+        color 150ms ease;
 }
 .segmented-control button.active {
     background: rgb(var(--surface));
@@ -150,7 +152,10 @@
     color: rgb(var(--ink-muted));
     border: 1px solid transparent;
     border-radius: 999px;
-    transition: background-color 150ms ease, color 150ms ease, border-color 150ms ease;
+    transition:
+        background-color 150ms ease,
+        color 150ms ease,
+        border-color 150ms ease;
 }
 .category-filters button.active {
     border-color: rgb(var(--gray-200));
@@ -312,12 +317,15 @@
     background: rgb(var(--surface));
     padding: 20px;
 }
-.day-panel h3 {
+.day-panel > h3 {
     font-size: 20px;
-    font-weight: 500;
-    text-transform: capitalize;
-    letter-spacing: -0.6px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
     margin: 12px 0 20px;
+}
+/* « dimanche 19 octobre » → « Dimanche 19 octobre » (pas de capitalize : les mois restent en minuscules en français) */
+.day-panel > h3::first-letter {
+    text-transform: uppercase;
 }
 .count-badge {
     font-size: 12px;
@@ -420,7 +428,9 @@
     font-weight: 500;
     color: rgb(var(--ink-muted));
     border: 1px dashed rgb(var(--line-strong));
-    transition: background-color 150ms ease, color 150ms ease;
+    transition:
+        background-color 150ms ease,
+        color 150ms ease;
 }
 .import-action:hover {
     background: rgb(var(--surface-sunken));
