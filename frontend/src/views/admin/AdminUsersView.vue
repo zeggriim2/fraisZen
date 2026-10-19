@@ -57,7 +57,7 @@
             <td class="px-4 py-3 text-gray-400">{{ user.personCount }}</td>
             <td class="px-4 py-3 text-right">
               <RouterLink :to="`/admin/users/${user.id}`" class="text-indigo-400 hover:text-indigo-300 text-xs font-medium">
-                Voir →
+                Voir<AppIcon name="arrow-right" :size="14" />
               </RouterLink>
             </td>
           </tr>
@@ -83,6 +83,7 @@
 </template>
 
 <script setup lang="ts">
+import AppIcon from '@/components/ui/AppIcon.vue'
 import AdminSectionNav from '@/components/ui/AdminSectionNav.vue'
 import { ref, onMounted, onUnmounted } from 'vue'
 import { adminApi, type AdminUser } from '@/api/adminApi'

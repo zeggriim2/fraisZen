@@ -1,38 +1,42 @@
 <template>
   <Teleport to="body">
-    <div class="fixed inset-0 z-50 flex items-center justify-center p-4" @click.self="onBackdropClick">
-      <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" @click="onBackdropClick" />
-      <div ref="dialog" role="dialog" aria-modal="true" :aria-labelledby="titleId" tabindex="-1" @keydown="handleKeydown" :class="['modal-surface relative bg-white rounded-2xl shadow-xl w-full flex flex-col max-h-[90vh]', maxWidthClass]">
-
+    <div class="modal-root" @click.self="onBackdropClick">
+      <div class="modal-backdrop" @click="onBackdropClick" />
+      <div
+        ref="dialog"
+        role="dialog"
+        aria-modal="true"
+        :aria-labelledby="titleId"
+        tabindex="-1"
+        @keydown="handleKeydown"
+        :class="['modal-surface card relative flex w-full flex-col shadow-float', maxWidthClass]"
+      >
         <!-- Header -->
-        <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 shrink-0">
+        <div class="modal-header">
           <slot name="header">
-            <div>
-              <h2 :id="titleId" class="text-lg font-semibold text-gray-900">
+            <div class="min-w-0">
+              <h2 :id="titleId" class="text-lg font-semibold text-ink">
                 <slot name="title" />
               </h2>
-              <p v-if="$slots.subtitle" class="text-sm text-gray-500 mt-0.5">
+              <p v-if="$slots.subtitle" class="text-sm text-ink-muted mt-0.5">
                 <slot name="subtitle" />
               </p>
             </div>
           </slot>
-          <button aria-label="Fermer la fenêtre" @click="$emit('close')" class="p-2 rounded-lg hover:bg-gray-100 shrink-0 ml-4">
-            <svg class="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-            </svg>
+          <button type="button" class="icon-button is-plain shrink-0 -mr-2" aria-label="Fermer la fenêtre" @click="$emit('close')">
+            <AppIcon name="x" />
           </button>
         </div>
 
         <!-- Body -->
-        <div class="flex-1 overflow-y-auto px-6 py-5">
+        <div class="modal-body">
           <slot />
         </div>
 
         <!-- Footer -->
-        <div v-if="$slots.footer" class="px-6 py-4 border-t border-gray-200 shrink-0">
+        <div v-if="$slots.footer" class="modal-footer">
           <slot name="footer" />
         </div>
-
       </div>
     </div>
   </Teleport>
@@ -40,6 +44,7 @@
 
 <script setup lang="ts">
 import { computed, ref, onMounted, onUnmounted, useId } from 'vue'
+import AppIcon from './AppIcon.vue'
 
 const props = withDefaults(defineProps<{
   maxWidth?: 'sm' | 'md' | 'lg' | 'xl' | 'wide'
@@ -52,11 +57,17 @@ const props = withDefaults(defineProps<{
 const dialog = ref<HTMLElement | null>(null)
 const titleId = useId()
 let previousFocus: HTMLElement | null = null
+let previousOverflow = ''
 onMounted(() => {
   previousFocus = document.activeElement as HTMLElement | null
+  previousOverflow = document.body.style.overflow
+  document.body.style.overflow = 'hidden'
   dialog.value?.focus()
 })
-onUnmounted(() => { previousFocus?.focus() })
+onUnmounted(() => {
+  document.body.style.overflow = previousOverflow
+  previousFocus?.focus()
+})
 function handleKeydown(event: KeyboardEvent) {
   if (event.key === 'Escape') { event.stopPropagation(); emit('close'); return }
   if (event.key !== 'Tab') return

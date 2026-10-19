@@ -14,7 +14,7 @@
         <div class="px-5 py-4 flex items-center justify-between">
           <span class="text-gray-900 font-semibold text-lg">{{ row.year }}</span>
           <div class="flex items-center gap-3">
-            <span v-if="row.savedAt" class="text-xs text-emerald-400">✓ Enregistré</span>
+            <span v-if="row.savedAt" class="badge badge-success"><AppIcon name="check" :size="14" />Enregistré</span>
             <button
               @click="row.open = !row.open" :aria-expanded="row.open"
               class="px-4 py-1.5 text-sm font-medium bg-gray-100 text-gray-800 rounded-lg hover:bg-gray-200 transition-colors"
@@ -120,6 +120,7 @@
 </template>
 
 <script setup lang="ts">
+import AppIcon from '@/components/ui/AppIcon.vue'
 import AdminSectionNav from '@/components/ui/AdminSectionNav.vue'
 import { ref, onMounted } from 'vue'
 import { adminApi, type BaremeKilometrique, type BaremeRates } from '@/api/adminApi'

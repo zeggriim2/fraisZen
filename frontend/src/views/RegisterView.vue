@@ -1,57 +1,53 @@
 <template>
-  <div class="auth-page min-h-screen bg-gray-50 flex items-center justify-center p-4">
-    <div class="auth-card bg-white rounded-2xl border border-gray-200 shadow-sm w-full max-w-sm p-8">
-      <div class="mb-8 text-center">
-        <span class="auth-brand">f.</span><h1 class="text-2xl font-bold text-gray-900">Créez votre espace.</h1>
-        <p class="text-sm text-gray-500 mt-1">Vos frais professionnels, enfin bien organisés</p>
-      </div>
+  <AuthCard title="Créez votre espace." subtitle="Vos frais professionnels, enfin bien organisés.">
+    <form @submit.prevent="submit" class="space-y-5">
+      <FormField label="Email" field-id="register-email" v-slot="{ id, describedBy }">
+        <input :id="id" v-model="email" type="email" required autocomplete="email" inputmode="email" class="form-control"
+          placeholder="vous@exemple.fr" :aria-describedby="describedBy" />
+      </FormField>
+      <FormField label="Mot de passe" field-id="register-password" hint="8 caractères minimum." :error="passwordError" v-slot="{ id, describedBy, invalid }">
+        <input :id="id" v-model="password" type="password" required autocomplete="new-password" minlength="8" class="form-control"
+          :aria-describedby="describedBy" :aria-invalid="invalid || undefined" @blur="touched = true" />
+      </FormField>
 
-      <form @submit.prevent="submit" class="space-y-4">
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
-          <input v-model="email" type="email" required autocomplete="email"
-            class="w-full rounded-lg border-gray-300 shadow-sm text-sm focus:border-indigo-500 focus:ring-indigo-500"
-            placeholder="vous@exemple.fr" />
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Mot de passe</label>
-          <input v-model="password" type="password" required autocomplete="new-password" minlength="8"
-            class="w-full rounded-lg border-gray-300 shadow-sm text-sm focus:border-indigo-500 focus:ring-indigo-500"
-            placeholder="8 caractères minimum" />
-        </div>
+      <AlertBanner v-if="error" variant="danger">{{ error }}</AlertBanner>
 
-        <div v-if="error" class="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
-          {{ error }}
-        </div>
+      <BaseButton type="submit" block size="lg" :loading="loading">
+        {{ loading ? 'Création…' : 'Créer mon compte' }}
+      </BaseButton>
+    </form>
 
-        <button type="submit" :disabled="loading"
-          class="w-full py-2.5 px-4 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 disabled:opacity-50 transition-colors">
-          {{ loading ? 'Création…' : 'Créer mon compte' }}
-        </button>
-      </form>
-
-      <p class="mt-6 text-center text-sm text-gray-500">
-        Déjà un compte ?
-        <RouterLink to="/login" class="text-indigo-600 font-medium hover:text-indigo-700">Se connecter</RouterLink>
-      </p>
-    </div>
-  </div>
+    <template #footer>
+      <p>Déjà un compte ? <RouterLink to="/login" class="btn-link">Se connecter</RouterLink></p>
+    </template>
+  </AuthCard>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/authStore'
+import AuthCard from '@/components/auth/AuthCard.vue'
+import FormField from '@/components/ui/FormField.vue'
+import BaseButton from '@/components/ui/BaseButton.vue'
+import AlertBanner from '@/components/ui/AlertBanner.vue'
 
 const authStore = useAuthStore()
 const router = useRouter()
 const email = ref('')
 const password = ref('')
+const touched = ref(false)
 const loading = ref(false)
 const error = ref('')
 
+const passwordError = computed(() =>
+  touched.value && password.value.length > 0 && password.value.length < 8 ? 'Le mot de passe doit contenir au moins 8 caractères.' : undefined
+)
+
 async function submit() {
   error.value = ''
+  touched.value = true
+  if (password.value.length < 8) return
   loading.value = true
   try {
     await authStore.register(email.value, password.value)

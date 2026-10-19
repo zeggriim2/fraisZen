@@ -1,52 +1,37 @@
 <template>
-  <div class="auth-page">
-    <div class="auth-card">
-      <div class="mb-8 text-center">
-        <div class="auth-card-head"><span class="auth-brand">f.</span><ThemeToggle /></div>
-        <h1 class="text-2xl font-bold text-gray-900">Vos frais, enfin sous contrôle.</h1>
-        <p class="text-sm text-gray-500 mt-2">Préparez votre déclaration avec sérénité.</p>
-      </div>
+  <AuthCard title="Vos frais, enfin sous contrôle." subtitle="Connectez-vous pour préparer votre déclaration avec sérénité.">
+    <form @submit.prevent="submit" class="space-y-5">
+      <FormField label="Email" field-id="login-email" v-slot="{ id, describedBy }">
+        <input :id="id" v-model="email" type="email" required autocomplete="email" inputmode="email" class="form-control"
+          placeholder="vous@exemple.fr" :aria-describedby="describedBy" :aria-invalid="error ? 'true' : undefined" />
+      </FormField>
+      <FormField label="Mot de passe" field-id="login-password" v-slot="{ id, describedBy }">
+        <input :id="id" v-model="password" type="password" required autocomplete="current-password" class="form-control"
+          :aria-describedby="describedBy" :aria-invalid="error ? 'true' : undefined" />
+      </FormField>
 
-      <form @submit.prevent="submit" class="space-y-4">
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
-          <input v-model="email" type="email" required autocomplete="email"
-            class="w-full rounded-lg border-gray-300 shadow-sm text-sm focus:border-indigo-500 focus:ring-indigo-500"
-            placeholder="vous@exemple.fr" />
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Mot de passe</label>
-          <input v-model="password" type="password" required autocomplete="current-password"
-            class="w-full rounded-lg border-gray-300 shadow-sm text-sm focus:border-indigo-500 focus:ring-indigo-500" />
-        </div>
+      <AlertBanner v-if="error" variant="danger">{{ error }}</AlertBanner>
 
-        <div v-if="error" class="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
-          {{ error }}
-        </div>
+      <BaseButton type="submit" block size="lg" :loading="loading">
+        {{ loading ? 'Connexion…' : 'Se connecter' }}
+      </BaseButton>
+    </form>
 
-        <button type="submit" :disabled="loading"
-          class="w-full py-2.5 px-4 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 disabled:opacity-50 transition-colors">
-          {{ loading ? 'Connexion…' : 'Se connecter' }}
-        </button>
-      </form>
-
-      <p class="mt-4 text-center text-sm text-gray-500">
-        <RouterLink to="/forgot-password" class="text-indigo-600 font-medium hover:text-indigo-700">Mot de passe oublié ?</RouterLink>
-      </p>
-
-      <p class="mt-2 text-center text-sm text-gray-500">
-        Pas encore de compte ?
-        <RouterLink to="/register" class="text-indigo-600 font-medium hover:text-indigo-700">S'inscrire</RouterLink>
-      </p>
-    </div>
-  </div>
+    <template #footer>
+      <p><RouterLink to="/forgot-password" class="btn-link">Mot de passe oublié ?</RouterLink></p>
+      <p>Pas encore de compte ? <RouterLink to="/register" class="btn-link">S'inscrire</RouterLink></p>
+    </template>
+  </AuthCard>
 </template>
 
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/authStore'
-import ThemeToggle from '@/components/ui/ThemeToggle.vue'
+import AuthCard from '@/components/auth/AuthCard.vue'
+import FormField from '@/components/ui/FormField.vue'
+import BaseButton from '@/components/ui/BaseButton.vue'
+import AlertBanner from '@/components/ui/AlertBanner.vue'
 
 const authStore = useAuthStore()
 const router = useRouter()

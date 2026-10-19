@@ -1,111 +1,110 @@
 <template>
   <div class="workspace-page trips-workspace">
-    <!-- Header -->
-    <div class="workspace-title flex items-center gap-3 mb-6">
-      <router-link to="/summary" class="text-gray-400 hover:text-gray-600 text-lg leading-none">←</router-link>
-      <h2 class="text-xl font-semibold text-gray-900">Détail des trajets</h2>
-      <span v-if="personStore.activePerson" class="text-sm text-gray-400">— {{ personStore.activePerson.fullName }}</span>
-    </div>
+    <PageHeader eyebrow="Barème kilométrique" title="Détail des trajets" :description="personStore.activePerson ? personStore.activePerson.fullName : undefined">
+      <template #actions>
+        <BaseButton variant="secondary" size="sm" icon="arrow-left" to="/summary">Récapitulatif</BaseButton>
+      </template>
+    </PageHeader>
 
-    <div v-if="!personStore.activePerson" class="bg-amber-50 border border-amber-200 rounded-xl p-5 text-sm text-amber-700">
-      Sélectionnez une personne dans le menu latéral.
-    </div>
+    <EmptyState v-if="!personStore.activePerson" icon="users" title="Aucun profil sélectionné" description="Sélectionnez une personne dans le menu latéral pour afficher ses trajets.">
+      <template #actions><BaseButton to="/persons" variant="secondary">Gérer les profils</BaseButton></template>
+    </EmptyState>
 
     <template v-else>
       <!-- Filtres -->
-      <div class="flex flex-wrap gap-3 mb-6">
-        <select v-model="selectedYear" @change="load"
-          class="trip-filter-select rounded-lg border-gray-300 shadow-sm text-sm px-3 py-2">
-          <option v-for="y in years" :key="y" :value="y">{{ y }}</option>
-        </select>
-
-        <select v-model="selectedMonth"
-          class="trip-filter-select rounded-lg border-gray-300 shadow-sm text-sm px-3 py-2">
-          <option :value="0">Tous les mois</option>
-          <option v-for="(label, i) in MONTHS" :key="i + 1" :value="i + 1">{{ label }}</option>
-        </select>
-
-        <select v-model="selectedCv"
-          class="trip-filter-select rounded-lg border-gray-300 shadow-sm text-sm px-3 py-2">
-          <option :value="0">Toutes puissances</option>
-          <option v-for="cv in [3, 4, 5, 6, 7]" :key="cv" :value="cv">{{ cv }} CV</option>
-        </select>
+      <div class="flex flex-wrap gap-3 mb-6" role="group" aria-label="Filtres">
+        <div class="form-field">
+          <label for="trips-year" class="sr-only">Année</label>
+          <select id="trips-year" v-model="selectedYear" @change="load" class="form-control trip-filter-select w-auto">
+            <option v-for="y in years" :key="y" :value="y">{{ y }}</option>
+          </select>
+        </div>
+        <div class="form-field">
+          <label for="trips-month" class="sr-only">Mois</label>
+          <select id="trips-month" v-model="selectedMonth" class="form-control trip-filter-select w-auto">
+            <option :value="0">Tous les mois</option>
+            <option v-for="(label, i) in MONTHS" :key="i + 1" :value="i + 1">{{ label }}</option>
+          </select>
+        </div>
+        <div class="form-field">
+          <label for="trips-cv" class="sr-only">Puissance fiscale</label>
+          <select id="trips-cv" v-model="selectedCv" class="form-control trip-filter-select w-auto">
+            <option :value="0">Toutes puissances</option>
+            <option v-for="cv in [3, 4, 5, 6, 7]" :key="cv" :value="cv">{{ cv }} CV</option>
+          </select>
+        </div>
       </div>
 
       <!-- Stats rapides -->
-      <div class="grid grid-cols-3 gap-4 mb-6" v-if="filteredTrips.length">
-        <div class="bg-blue-50 rounded-2xl p-4 border border-blue-100">
-          <p class="text-xs text-blue-500 font-medium uppercase tracking-wide mb-1">Trajets</p>
-          <p class="text-2xl font-bold text-blue-700">{{ filteredTrips.length }}</p>
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6" v-if="filteredTrips.length">
+        <div class="card p-4">
+          <p class="eyebrow mb-1">Trajets</p>
+          <p class="figure text-2xl font-semibold text-ink">{{ filteredTrips.length }}</p>
         </div>
-        <div class="bg-blue-50 rounded-2xl p-4 border border-blue-100">
-          <p class="text-xs text-blue-500 font-medium uppercase tracking-wide mb-1">Distance totale</p>
-          <p class="text-2xl font-bold text-blue-700">{{ totalKm.toFixed(0) }} km</p>
+        <div class="card p-4">
+          <p class="eyebrow mb-1">Distance totale</p>
+          <p class="figure text-2xl font-semibold text-ink">{{ totalKm.toFixed(0) }} km</p>
         </div>
-        <div class="bg-indigo-50 rounded-2xl p-4 border border-indigo-100">
-          <p class="text-xs text-indigo-500 font-medium uppercase tracking-wide mb-1">Déduction estimée</p>
-          <p class="text-2xl font-bold text-indigo-700">{{ fmt(totalDeduction) }}</p>
+        <div class="card p-4 border-brand-200 bg-brand-50">
+          <p class="eyebrow mb-1 !text-brand-700">Déduction estimée</p>
+          <p class="figure text-2xl font-semibold text-brand-700">{{ fmt(totalDeduction) }}</p>
         </div>
       </div>
 
       <!-- Loading -->
-      <div v-if="loading" class="flex justify-center py-20">
-        <div class="w-8 h-8 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
-      </div>
+      <LoadingState v-if="loading" label="Chargement des trajets…" />
 
       <!-- Tableau -->
-      <div v-else-if="filteredTrips.length" class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-        <table class="w-full text-sm">
-          <thead>
-            <tr class="border-b border-gray-100 bg-gray-50">
-              <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500">Date</th>
-              <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500">Trajet</th>
-              <th class="px-3 py-3 text-right text-xs font-semibold text-gray-500">Distance</th>
-              <th class="px-3 py-3 text-center text-xs font-semibold text-gray-500">CV</th>
-              <th class="px-3 py-3 text-center text-xs font-semibold text-gray-500">A/R</th>
-              <th class="px-5 py-3 text-right text-xs font-semibold text-gray-500">Déduction</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-gray-50">
-            <tr v-for="(t, i) in filteredTrips" :key="i" class="hover:bg-gray-50 transition-colors">
-              <td class="px-5 py-3 text-gray-400 text-xs whitespace-nowrap">{{ t.date }}</td>
-              <td class="px-5 py-3 text-gray-700">
-                <span v-if="t.departure && t.arrival">{{ t.departure }} → {{ t.arrival }}</span>
-                <span v-else class="italic text-gray-400">{{ t.description ?? '—' }}</span>
-              </td>
-              <td class="px-3 py-3 text-right text-gray-600 whitespace-nowrap">{{ t.distanceKm }} km</td>
-              <td class="px-3 py-3 text-center">
-                <span class="text-xs font-medium bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">
-                  {{ t.vehiclePower ?? '—' }} CV
-                </span>
-              </td>
-              <td class="px-3 py-3 text-center">
-                <span v-if="t.roundTrip" class="text-xs font-medium bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full">A/R</span>
-                <span v-else class="text-gray-300 text-xs">—</span>
-              </td>
-              <td class="px-5 py-3 text-right font-medium text-indigo-600 whitespace-nowrap">
-                {{ fmt(tripDeduction(t)) }}
-              </td>
-            </tr>
-          </tbody>
-          <tfoot>
-            <tr class="border-t-2 border-gray-200 bg-indigo-50">
-              <td colspan="2" class="px-5 py-3 text-sm font-semibold text-gray-700">Total ({{ filteredTrips.length }} trajets)</td>
-              <td class="px-3 py-3 text-right text-sm font-semibold text-gray-700">{{ totalKm.toFixed(0) }} km</td>
-              <td colspan="2"></td>
-              <td class="px-5 py-3 text-right text-sm font-bold text-indigo-700">{{ fmt(totalDeduction) }}</td>
-            </tr>
-          </tfoot>
-        </table>
+      <div v-else-if="filteredTrips.length" class="card overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <caption class="sr-only">Trajets de l’année {{ selectedYear }}</caption>
+            <thead>
+              <tr class="border-b border-line bg-surface-muted">
+                <th scope="col" class="px-5 py-3 text-left text-xs font-semibold text-ink-muted">Date</th>
+                <th scope="col" class="px-5 py-3 text-left text-xs font-semibold text-ink-muted">Trajet</th>
+                <th scope="col" class="px-3 py-3 text-right text-xs font-semibold text-ink-muted">Distance</th>
+                <th scope="col" class="px-3 py-3 text-center text-xs font-semibold text-ink-muted">CV</th>
+                <th scope="col" class="px-3 py-3 text-center text-xs font-semibold text-ink-muted">A/R</th>
+                <th scope="col" class="px-5 py-3 text-right text-xs font-semibold text-ink-muted">Déduction</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-line">
+              <tr v-for="(t, i) in filteredTrips" :key="i" class="hover:bg-surface-muted transition-colors">
+                <td class="px-5 py-3 text-ink-muted text-xs whitespace-nowrap">{{ t.date }}</td>
+                <td class="px-5 py-3 text-ink">
+                  <span v-if="t.departure && t.arrival" class="inline-flex items-center gap-1.5">{{ t.departure }} <AppIcon name="arrow-right" :size="14" class="text-ink-subtle" /> {{ t.arrival }}</span>
+                  <span v-else class="italic text-ink-subtle">{{ t.description ?? '—' }}</span>
+                </td>
+                <td class="px-3 py-3 text-right text-ink-muted whitespace-nowrap">{{ t.distanceKm }} km</td>
+                <td class="px-3 py-3 text-center">
+                  <span class="badge badge-neutral">{{ t.vehiclePower ?? '—' }} CV</span>
+                </td>
+                <td class="px-3 py-3 text-center">
+                  <span v-if="t.roundTrip" class="badge badge-brand">A/R</span>
+                  <span v-else class="text-ink-subtle text-xs" aria-label="Aller simple">—</span>
+                </td>
+                <td class="px-5 py-3 text-right font-semibold text-brand-700 whitespace-nowrap">
+                  {{ fmt(tripDeduction(t)) }}
+                </td>
+              </tr>
+            </tbody>
+            <tfoot>
+              <tr class="border-t-2 border-line-strong bg-surface-muted">
+                <td colspan="2" class="px-5 py-3 text-sm font-semibold text-ink">Total ({{ filteredTrips.length }} trajet{{ filteredTrips.length > 1 ? 's' : '' }})</td>
+                <td class="px-3 py-3 text-right text-sm font-semibold text-ink">{{ totalKm.toFixed(0) }} km</td>
+                <td colspan="2"></td>
+                <td class="px-5 py-3 text-right text-sm font-bold text-brand-700">{{ fmt(totalDeduction) }}</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
       </div>
 
-      <div v-else class="bg-white rounded-2xl border border-gray-200 p-12 text-center text-gray-400">
-        Aucun trajet trouvé pour cette période.
-      </div>
+      <EmptyState v-else icon="car" title="Aucun trajet trouvé" description="Aucun trajet ne correspond à cette période ou à ces filtres." compact />
     </template>
   </div>
 </template>
-
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
@@ -113,6 +112,11 @@ import { usePersonStore } from '@/stores/personStore'
 import { expenseApi } from '@/api/expenseApi'
 import type { TravelExpense } from '@/types'
 import { fmtEur } from '@/utils/formatting'
+import AppIcon from '@/components/ui/AppIcon.vue'
+import BaseButton from '@/components/ui/BaseButton.vue'
+import PageHeader from '@/components/ui/PageHeader.vue'
+import EmptyState from '@/components/ui/EmptyState.vue'
+import LoadingState from '@/components/ui/LoadingState.vue'
 
 const MONTHS = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre']
 

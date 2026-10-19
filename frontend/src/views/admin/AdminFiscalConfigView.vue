@@ -48,7 +48,7 @@
           {{ row.saving ? 'Enreg…' : 'Enregistrer' }}
         </button>
 
-        <span class="text-xs text-emerald-400 text-right">{{ row.savedAt ? '✓' : '' }}</span>
+        <span class="text-right"><span v-if="row.savedAt" class="badge badge-success"><AppIcon name="check" :size="14" />Enregistré</span></span>
       </div>
 
       <!-- Add a new year -->
@@ -80,6 +80,7 @@
 </template>
 
 <script setup lang="ts">
+import AppIcon from '@/components/ui/AppIcon.vue'
 import AdminSectionNav from '@/components/ui/AdminSectionNav.vue'
 import { ref, onMounted } from 'vue'
 import { adminApi, type FiscalConfig } from '@/api/adminApi'

@@ -1,28 +1,22 @@
 <template>
   <Teleport to="body">
-    <div class="fixed bottom-6 left-1/2 -translate-x-1/2 z-[100] flex flex-col gap-2 items-center pointer-events-none">
+    <div class="toast-region" aria-live="polite" aria-atomic="false">
       <TransitionGroup
-        enter-active-class="transition duration-300 ease-out"
-        enter-from-class="opacity-0 translate-y-2 scale-95"
-        enter-to-class="opacity-100 translate-y-0 scale-100"
-        leave-active-class="transition duration-200 ease-in"
-        leave-from-class="opacity-100 translate-y-0 scale-100"
-        leave-to-class="opacity-0 translate-y-2 scale-95"
+        enter-active-class="transition duration-300 ease-out motion-reduce:transition-none"
+        enter-from-class="opacity-0 translate-y-2"
+        enter-to-class="opacity-100 translate-y-0"
+        leave-active-class="transition duration-200 ease-in motion-reduce:transition-none"
+        leave-from-class="opacity-100 translate-y-0"
+        leave-to-class="opacity-0 translate-y-2"
       >
         <div
           v-for="toast in toasts"
           :key="toast.id"
-          :class="[
-            'flex items-center gap-2.5 px-4 py-3 rounded-xl shadow-lg text-sm font-medium pointer-events-auto min-w-[200px] max-w-sm',
-            toast.variant === 'success' && 'bg-gray-900 text-white',
-            toast.variant === 'error'   && 'bg-red-600 text-white',
-            toast.variant === 'info'    && 'bg-indigo-600 text-white',
-          ]"
+          :class="['toast', toastClass(toast.variant)]"
+          :role="toast.variant === 'error' ? 'alert' : 'status'"
         >
-          <span v-if="toast.variant === 'success'" class="text-base leading-none">✓</span>
-          <span v-else-if="toast.variant === 'error'" class="text-base leading-none">✕</span>
-          <span v-else class="text-base leading-none">ℹ</span>
-          {{ toast.message }}
+          <AppIcon :name="iconFor(toast.variant)" :size="18" />
+          <span class="flex-1">{{ toast.message }}</span>
         </div>
       </TransitionGroup>
     </div>
@@ -31,5 +25,19 @@
 
 <script setup lang="ts">
 import { useToast } from '@/composables/useToast'
+import AppIcon from './AppIcon.vue'
+
 const { toasts } = useToast()
+
+function toastClass(variant: string): string {
+  if (variant === 'success') return 'toast-success'
+  if (variant === 'error') return 'toast-error'
+  return 'toast-info'
+}
+
+function iconFor(variant: string): string {
+  if (variant === 'success') return 'check-circle'
+  if (variant === 'error') return 'alert-circle'
+  return 'info'
+}
 </script>

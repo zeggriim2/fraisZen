@@ -1,4 +1,6 @@
-<template><button class="icon-button" @click="toggle" :aria-label="dark ? 'Activer le mode clair' : 'Activer le mode sombre'" :title="dark ? 'Mode clair' : 'Mode sombre'" :aria-pressed="dark"><AppIcon :name="dark ? 'sun' : 'moon'" /></button></template>
+<template>
+  <button type="button" class="icon-button" @click="toggle" :aria-label="dark ? 'Activer le mode clair' : 'Activer le mode sombre'" :title="dark ? 'Mode clair' : 'Mode sombre'" :aria-pressed="dark"><AppIcon :name="dark ? 'sun' : 'moon'" /></button>
+</template>
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
 import AppIcon from './AppIcon.vue'

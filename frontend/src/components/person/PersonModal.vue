@@ -30,8 +30,8 @@
           <button
             type="button"
             @click="form.favorite = !form.favorite" :aria-pressed="form.favorite" aria-label="Profil favori"
-            :class="['text-2xl leading-none transition-colors', form.favorite ? 'text-yellow-400 hover:text-yellow-500' : 'text-gray-300 hover:text-yellow-300']"
-          >★</button>
+            :class="['icon-button is-plain transition-colors', form.favorite ? 'text-amber-600' : 'text-ink-subtle hover:text-amber-600']"
+          ><svg width="22" height="22" viewBox="0 0 24 24" :fill="form.favorite ? 'currentColor' : 'none'" stroke="currentColor" stroke-width="1.75" stroke-linejoin="round" aria-hidden="true"><path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2L12 17.3 6.4 20.2l1.1-6.2L3 9.6l6.2-.9L12 3Z" /></svg></button>
         </div>
 
       </section>
@@ -40,14 +40,14 @@
           <div class="flex items-center justify-between">
             <div ref="routeHeading" tabindex="-1" class="form-intro"><span class="eyebrow">VOS ITINÉRAIRES</span><h3>Moins de saisie, plus de simplicité.</h3><p>Réutilisez ces trajets lors de vos déclarations de frais.</p></div>
             <button @click="showAddRoute = !showAddRoute; editingRouteId = null; routeError = ''" class="quiet-button">
-              {{ showAddRoute ? '✕ Annuler' : '+ Ajouter' }}
+              <AppIcon :name="showAddRoute ? 'x' : 'plus'" :size="14" />{{ showAddRoute ? 'Annuler' : 'Ajouter' }}
             </button>
           </div>
 
           <!-- Add route form -->
           <div v-if="showAddRoute" class="p-3 rounded-xl border border-indigo-100 bg-indigo-50/40 space-y-3">
             <div>
-              <input v-model="newRoute.name" type="text" class="w-full rounded-lg border-gray-300 shadow-sm text-sm" placeholder="Nom (ex : Domicile → Bureau)" />
+              <input v-model="newRoute.name" type="text" class="w-full rounded-lg border-gray-300 shadow-sm text-sm" placeholder="Nom (ex : Domicile - Bureau)" />
             </div>
             <div class="grid grid-cols-2 gap-2">
               <AddressAutocompleteInput v-model="newRoute.departure" placeholder="Départ" />
@@ -149,7 +149,7 @@
                 <span class="overview-icon blue"><AppIcon name="car" /></span>
                 <div class="flex-1 min-w-0">
                   <p class="text-xs font-medium text-gray-800 truncate">{{ route.name }}</p>
-                  <p class="route-itinerary"><span>{{ route.departure }}</span><span aria-hidden="true">→</span><span>{{ route.arrival }}</span></p><div class="route-tags"><span>{{ route.roundTrip ? 'Aller-retour' : 'Aller simple' }}</span><span>{{ vehicleTypes.find(v => v.value === route.vehicleType)?.label }}</span><span v-if="route.vehiclePower">{{ route.vehiclePower }} CV</span><span v-if="route.isElectric">Électrique</span></div>
+                  <p class="route-itinerary"><span>{{ route.departure }}</span><AppIcon name="arrow-right" :size="14" /><span>{{ route.arrival }}</span></p><div class="route-tags"><span>{{ route.roundTrip ? 'Aller-retour' : 'Aller simple' }}</span><span>{{ vehicleTypes.find(v => v.value === route.vehicleType)?.label }}</span><span v-if="route.vehiclePower">{{ route.vehiclePower }} CV</span><span v-if="route.isElectric">Électrique</span></div>
                 </div>
                 <span class="text-xs text-gray-400 shrink-0">{{ vehicleIcon(route.vehicleType, route.isElectric) }}</span>
                 <button @click="startEdit(route)" class="p-0.5 text-gray-600 hover:text-blue-500 shrink-0" title="Modifier">
@@ -223,14 +223,14 @@ const newRoute = ref(freshRoute())
 const editForm = ref(freshRoute())
 
 const vehicleTypes = [
-  { value: 'car' as VehicleType, label: 'Voiture', icon: '🚗' },
-  { value: 'motorcycle' as VehicleType, label: 'Moto', icon: '🏍️' },
-  { value: 'moped' as VehicleType, label: 'Cyclomoteur', icon: '🛵' },
+  { value: 'car' as VehicleType, label: 'Voiture', icon: 'car' },
+  { value: 'motorcycle' as VehicleType, label: 'Moto', icon: 'motorcycle' },
+  { value: 'moped' as VehicleType, label: 'Cyclomoteur', icon: 'moped' },
 ]
 
 function vehicleIcon(type: string, isElectric = false): string {
-  if (type === 'car' && isElectric) return '⚡'
-  return ({ car: '🚗', motorcycle: '🏍️', moped: '🛵' } as Record<string, string>)[type] ?? '🚗'
+  if (type === 'car' && isElectric) return 'bolt'
+  return ({ car: 'car', motorcycle: 'motorcycle', moped: 'moped' } as Record<string, string>)[type] ?? 'car'
 }
 
 onMounted(async () => {

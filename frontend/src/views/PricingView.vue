@@ -1,62 +1,48 @@
 <template>
-  <div class="auth-page pricing-page min-h-screen bg-gray-50 flex items-center justify-center p-6">
-    <div class="max-w-2xl w-full">
+  <div class="auth-page pricing-page">
+    <div class="w-full max-w-3xl">
       <div class="text-center mb-10">
-        <h1 class="text-3xl font-bold text-gray-900">Choisissez votre offre</h1>
-        <p class="mt-2 text-gray-500">Accédez à toutes les fonctionnalités de Frais Réels</p>
+        <span class="eyebrow mb-2">FraisZen · Abonnement</span>
+        <h1 class="text-3xl font-semibold text-ink">Choisissez votre offre</h1>
+        <p class="mt-2 text-ink-muted">Accédez à toutes les fonctionnalités de Frais Réels</p>
       </div>
 
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-        <!-- Mensuel -->
-        <div class="bg-white rounded-2xl border border-gray-200 p-6 flex flex-col">
-          <p class="text-sm font-semibold text-gray-500 uppercase tracking-wider">Mensuel</p>
-          <div class="mt-4 flex items-end gap-1">
-            <span class="text-4xl font-bold text-gray-900">3,99 €</span>
-            <span class="text-gray-400 mb-1">/mois</span>
-          </div>
-          <p class="mt-2 text-sm text-gray-400">Sans engagement</p>
-          <ul class="mt-6 space-y-2 flex-1">
-            <li v-for="f in features" :key="f" class="flex items-start gap-2 text-sm text-gray-600">
-              <span class="text-indigo-500 font-bold shrink-0">✓</span>{{ f }}
-            </li>
-          </ul>
-          <button
-            @click="subscribe('monthly')"
-            :disabled="loading === 'monthly'"
-            class="mt-6 w-full py-2.5 px-4 bg-indigo-600 text-white rounded-xl text-sm font-medium hover:bg-indigo-700 disabled:opacity-50 transition-colors"
-          >
-            {{ loading === 'monthly' ? 'Redirection…' : 'S\'abonner' }}
-          </button>
-        </div>
+      <AlertBanner v-if="error" variant="danger" class="mb-6">{{ error }}</AlertBanner>
 
-        <!-- Annuel -->
-        <div class="bg-white rounded-2xl border-2 border-indigo-500 p-6 flex flex-col relative">
-          <span class="absolute -top-3 left-1/2 -translate-x-1/2 bg-indigo-500 text-white text-xs font-semibold px-3 py-1 rounded-full">
-            -10 %
-          </span>
-          <p class="text-sm font-semibold text-gray-500 uppercase tracking-wider">Annuel</p>
-          <div class="mt-4 flex items-end gap-1">
-            <span class="text-4xl font-bold text-gray-900">43,09 €</span>
-            <span class="text-gray-400 mb-1">/an</span>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+        <article
+          v-for="plan in plans"
+          :key="plan.id"
+          :class="['card relative flex flex-col p-6', plan.featured && 'ring-2 ring-brand-500 border-transparent']"
+        >
+          <span v-if="plan.featured" class="badge badge-brand absolute -top-3 left-1/2 -translate-x-1/2">{{ plan.badge }}</span>
+          <h2 class="eyebrow">{{ plan.name }}</h2>
+          <div class="mt-4 flex items-baseline gap-1">
+            <span class="figure text-4xl font-semibold text-ink">{{ plan.price }}</span>
+            <span class="text-ink-muted">{{ plan.period }}</span>
           </div>
-          <p class="mt-2 text-sm text-gray-400">soit 3,59 € / mois — 2 mois offerts</p>
-          <ul class="mt-6 space-y-2 flex-1">
-            <li v-for="f in features" :key="f" class="flex items-start gap-2 text-sm text-gray-600">
-              <span class="text-indigo-500 font-bold shrink-0">✓</span>{{ f }}
+          <p class="mt-2 text-sm text-ink-muted">{{ plan.note }}</p>
+          <ul class="mt-6 space-y-2.5 flex-1">
+            <li v-for="f in features" :key="f" class="flex items-start gap-2.5 text-sm text-ink">
+              <AppIcon name="check-circle" :size="18" class="shrink-0 text-brand-600 mt-0.5" />{{ f }}
             </li>
           </ul>
-          <button
-            @click="subscribe('yearly')"
-            :disabled="loading === 'yearly'"
-            class="mt-6 w-full py-2.5 px-4 bg-indigo-600 text-white rounded-xl text-sm font-medium hover:bg-indigo-700 disabled:opacity-50 transition-colors"
+          <BaseButton
+            class="mt-6"
+            block
+            size="lg"
+            :variant="plan.featured ? 'primary' : 'secondary'"
+            :loading="loading === plan.id"
+            :disabled="loading !== null && loading !== plan.id"
+            @click="subscribe(plan.id)"
           >
-            {{ loading === 'yearly' ? 'Redirection…' : 'Choisir l\'offre annuelle' }}
-          </button>
-        </div>
+            {{ loading === plan.id ? 'Redirection…' : plan.cta }}
+          </BaseButton>
+        </article>
       </div>
 
-      <p class="text-center text-xs text-gray-400 mt-8">
-        Paiement sécurisé par Stripe · Annulation à tout moment
+      <p class="text-center text-xs text-ink-subtle mt-8 inline-flex w-full items-center justify-center gap-1.5">
+        <AppIcon name="lock" :size="14" />Paiement sécurisé par Stripe · Annulation à tout moment
       </p>
     </div>
   </div>
@@ -65,8 +51,14 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { billingApi } from '@/api/billingApi'
+import BaseButton from '@/components/ui/BaseButton.vue'
+import AppIcon from '@/components/ui/AppIcon.vue'
+import AlertBanner from '@/components/ui/AlertBanner.vue'
 
-const loading = ref<'monthly' | 'yearly' | null>(null)
+type Plan = 'monthly' | 'yearly'
+
+const loading = ref<Plan | null>(null)
+const error = ref('')
 
 const features = [
   'Calendrier de trajets illimités',
@@ -75,11 +67,19 @@ const features = [
   'Gestion multi-personnes',
 ]
 
-async function subscribe(plan: 'monthly' | 'yearly') {
+const plans: { id: Plan; name: string; price: string; period: string; note: string; cta: string; featured: boolean; badge?: string }[] = [
+  { id: 'monthly', name: 'Mensuel', price: '3,99 €', period: '/mois', note: 'Sans engagement', cta: 'S\'abonner', featured: false },
+  { id: 'yearly', name: 'Annuel', price: '43,09 €', period: '/an', note: 'soit 3,59 € / mois — 2 mois offerts', cta: 'Choisir l\'offre annuelle', featured: true, badge: '-10 %' },
+]
+
+async function subscribe(plan: Plan) {
+  error.value = ''
   loading.value = plan
   try {
     const { url } = await billingApi.createCheckout(plan)
     window.location.href = url
+  } catch {
+    error.value = 'Impossible d\'ouvrir le paiement pour le moment. Veuillez réessayer.'
   } finally {
     loading.value = null
   }

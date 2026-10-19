@@ -2,7 +2,7 @@
   <div class="workspace-page admin-workspace">
     <AdminSectionNav />
     <div class="workspace-title account-heading">
-      <RouterLink to="/admin/users" class="text-gray-400 hover:text-gray-200 text-sm">← Retour</RouterLink>
+      <RouterLink to="/admin/users" class="btn-link text-sm"><AppIcon name="arrow-left" :size="16" />Retour</RouterLink>
       <span class="text-gray-600">/</span>
       <h2 class="break-all">{{ user?.email }}</h2>
     </div>
@@ -95,7 +95,7 @@
             :disabled="impersonating"
             class="px-4 py-2 bg-gray-100 text-gray-800 text-sm rounded-lg hover:bg-gray-200 disabled:opacity-50 transition-colors"
           >
-            {{ impersonating ? 'Génération…' : '🔑 Se connecter en tant que cet utilisateur' }}
+            <AppIcon v-if="!impersonating" name="key" :size="16" />{{ impersonating ? 'Génération…' : 'Se connecter en tant que cet utilisateur' }}
           </button>
           <button
             @click="confirmDelete"
@@ -111,6 +111,7 @@
 </template>
 
 <script setup lang="ts">
+import AppIcon from '@/components/ui/AppIcon.vue'
 import AdminSectionNav from '@/components/ui/AdminSectionNav.vue'
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'

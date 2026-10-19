@@ -3,7 +3,7 @@
     <template #title>Trajets récurrents</template>
     <template #subtitle>Vos habitudes, planifiées en quelques instants.</template>
 
-    <div ref="stepHeading" tabindex="-1" class="workflow-steps" aria-label="Étapes de création"><span v-for="(label,index) in ['Votre rythme','Votre trajet','Vérification']" :key="label" :class="{active:step === index + 1, complete:step > index + 1}" :aria-current="step === index + 1 ? 'step' : undefined"><b>{{ step > index + 1 ? '✓' : index + 1 }}</b>{{ label }}</span></div>
+    <div ref="stepHeading" tabindex="-1" class="workflow-steps" aria-label="Étapes de création"><span v-for="(label,index) in ['Votre rythme','Votre trajet','Vérification']" :key="label" :class="{active:step === index + 1, complete:step > index + 1}" :aria-current="step === index + 1 ? 'step' : undefined"><b><AppIcon v-if="step > index + 1" name="check" :size="14" /><template v-else>{{ index + 1 }}</template></b>{{ label }}</span></div>
     <div class="recurring-form space-y-5">
 
         <!-- Étape 1 : plage de dates -->
@@ -60,7 +60,7 @@
               class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300">
               <option value="">— Saisie manuelle —</option>
               <option v-for="r in favoriteRoutes" :key="r.id" :value="r.id">
-                {{ r.name }} ({{ r.roundTrip ? 'A/R' : 'simple' }} · {{ r.vehicleType === 'car' ? '🚗' : r.vehicleType === 'motorcycle' ? '🏍️' : '🛵' }})
+                {{ r.name }} ({{ r.roundTrip ? 'A/R' : 'simple' }} · {{ r.vehicleType === 'car' ? 'voiture' : r.vehicleType === 'motorcycle' ? 'moto' : 'cyclomoteur' }})
               </option>
             </select>
           </div>
@@ -156,9 +156,9 @@
       <div class="flex items-center justify-between gap-3">
         <button @click="step > 1 ? step-- : $emit('close')"
           class="px-4 py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-          {{ step > 1 ? '← Retour' : 'Annuler' }}
+          <AppIcon v-if="step > 1" name="arrow-left" :size="16" />{{ step > 1 ? 'Retour' : 'Annuler' }}
         </button>
-        <button v-if="step < 3" class="primary-action" @click="step++" :disabled="step === 1 ? !previewDates.length : !canGenerate">Continuer →</button>
+        <button v-if="step < 3" class="primary-action" @click="step++" :disabled="step === 1 ? !previewDates.length : !canGenerate">Continuer<AppIcon name="arrow-right" :size="16" /></button>
         <button v-else @click="generate"
           :disabled="!canGenerate || generating"
           class="flex items-center gap-2 px-5 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50 transition-colors">
@@ -171,6 +171,7 @@
 </template>
 
 <script setup lang="ts">
+import AppIcon from '@/components/ui/AppIcon.vue'
 import { ref, computed, watch, onMounted, nextTick } from 'vue'
 import { expenseApi, getPublicHolidays } from '@/api/expenseApi'
 import { personApi } from '@/api/personApi'

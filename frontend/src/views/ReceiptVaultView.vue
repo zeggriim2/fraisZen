@@ -64,7 +64,7 @@
                             </div>
                             <div class="receipt-detail-actions">
                                 <button class="quiet-button" @click="openDocument(selected.id)">Voir le PDF</button>
-                                <button class="icon-danger-button" title="Supprimer la facture" aria-label="Supprimer la facture" @click="removeDocument(selected.id)">×</button>
+                                <button class="icon-danger-button" title="Supprimer la facture" aria-label="Supprimer la facture" @click="removeDocument(selected.id)"><AppIcon name="trash" :size="18" /></button>
                             </div>
                         </header>
 
@@ -77,7 +77,7 @@
                             <article v-for="line in selected.lines" :key="line.id" class="receipt-line-card">
                                 <div class="receipt-line-route">
                                     <time :datetime="line.date">{{ formatDate(line.date) }}</time>
-                                    <strong>{{ line.departure || "Départ non détecté" }} <span>→</span> {{ line.arrival || "Arrivée non détectée" }}</strong>
+                                    <strong>{{ line.departure || "Départ non détecté" }} <span aria-hidden="true"><AppIcon name="arrow-right" :size="14" /></span> {{ line.arrival || "Arrivée non détectée" }}</strong>
                                     <small v-if="line.distanceKm">{{ line.distanceKm }} km</small>
                                 </div>
                                 <strong class="receipt-line-amount">{{ formatAmount(line.amountTtc) }}</strong>
@@ -120,7 +120,7 @@
                 <section class="receipt-attach-modal" role="dialog" aria-modal="true" aria-labelledby="attach-title">
                     <header>
                         <div><p class="eyebrow">RATTACHER LE PASSAGE</p><h3 id="attach-title">Choisir une dépense</h3><p>Comparez la ligne détectée avec vos frais de péage.</p></div>
-                        <button class="modal-close-button" aria-label="Fermer" @click="closeAttachModal">×</button>
+                        <button class="modal-close-button" aria-label="Fermer" @click="closeAttachModal"><AppIcon name="x" :size="18" /></button>
                     </header>
 
                     <div class="source-line-card">

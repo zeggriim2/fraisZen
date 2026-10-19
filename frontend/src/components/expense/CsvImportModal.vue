@@ -13,7 +13,7 @@
             @dragover.prevent
             @drop.prevent="handleDrop"
           >
-            <div class="text-4xl mb-3">📄</div>
+            <div class="mx-auto mb-3 grid h-14 w-14 place-items-center rounded-2xl bg-brand-50 text-brand-600" aria-hidden="true"><AppIcon name="file-spreadsheet" :size="28" /></div>
             <p class="text-sm font-medium text-gray-700">Déposez votre fichier CSV ou cliquez pour sélectionner</p>
             <p class="text-xs text-gray-500 mt-1">BNP, Société Générale, LCL, Boursorama, N26, Revolut…</p>
             <input ref="fileInput" type="file" accept=".csv,.txt" class="hidden" @change="handleFileInput" />
@@ -65,8 +65,8 @@
                   v-model="row.type"
                   :class="['text-xs rounded-lg border px-2 py-1 font-medium', typeSelectClass(row.type)]"
                 >
-                  <option value="toll">🛣️ Péage</option>
-                  <option value="meal">🍽️ Repas</option>
+                  <option value="toll">Péage</option>
+                  <option value="meal">Repas</option>
                 </select>
               </div>
             </div>
@@ -89,6 +89,7 @@
 </template>
 
 <script setup lang="ts">
+import AppIcon from '@/components/ui/AppIcon.vue'
 import { ref, computed } from 'vue'
 import { useExpenseStore } from '@/stores/expenseStore'
 import { usePersonStore } from '@/stores/personStore'

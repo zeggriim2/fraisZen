@@ -6,8 +6,8 @@
     <!-- Detail view -->
     <div v-if="expense && !editing" class="space-y-1">
         <div class="flex items-center gap-2 mb-4">
-          <span :class="['px-3 py-1 rounded-full text-sm font-medium', badgeClass(expense.type)]">
-            {{ expenseIcon(expense.type) }} {{ expense.typeLabel }}
+          <span :class="['badge text-sm py-1', badgeClass(expense.type)]">
+            <AppIcon :name="expenseIcon(expense.type)" :size="16" /> {{ expense.typeLabel }}
           </span>
         </div>
         <template v-if="expense.type === 'travel'">
@@ -36,13 +36,13 @@
             <span class="text-sm text-gray-500 w-32 shrink-0">Justificatif</span>
             <template v-if="(expense as ParkingExpense).receiptFilename">
               <button @click="viewReceipt(expense.id)" class="text-sm text-indigo-600 hover:underline flex items-center gap-1">
-                <span>📎</span>{{ (expense as ParkingExpense).receiptFilename }}
+                <AppIcon name="paperclip" :size="16" />{{ (expense as ParkingExpense).receiptFilename }}
               </button>
               <button @click="removeReceipt(expense.id)" class="text-xs text-red-400 hover:text-red-600 ml-auto">Supprimer</button>
             </template>
             <template v-else>
               <label class="cursor-pointer text-sm text-indigo-600 hover:text-indigo-800 flex items-center gap-1">
-                <span>📎</span>Attacher un justificatif
+                <AppIcon name="paperclip" :size="16" />Attacher un justificatif
                 <input type="file" accept=".pdf,.jpg,.jpeg,.png,.webp,application/pdf,image/jpeg,image/png,image/webp" class="sr-only" @change="(e) => attachReceiptToExisting(expense!.id, e)" />
               </label>
             </template>
@@ -55,22 +55,22 @@
           <span class="text-sm text-gray-500 w-32 shrink-0">Justificatif</span>
           <template v-if="expense.receiptFilename">
             <button @click="viewReceipt(expense.id)" class="text-sm text-indigo-600 hover:underline flex items-center gap-1">
-              <span>📎</span>{{ expense.receiptFilename }}
+              <AppIcon name="paperclip" :size="16" />{{ expense.receiptFilename }}
             </button>
             <button @click="removeReceipt(expense.id)" class="text-xs text-red-400 hover:text-red-600 ml-auto">Supprimer</button>
           </template>
           <template v-else>
             <label class="cursor-pointer text-sm text-indigo-600 hover:text-indigo-800 flex items-center gap-1">
-              <span>📎</span>Attacher un justificatif
+              <AppIcon name="paperclip" :size="16" />Attacher un justificatif
               <input type="file" accept=".pdf,.jpg,.jpeg,.png,.webp,application/pdf,image/jpeg,image/png,image/webp" class="sr-only" @change="(e) => attachReceiptToExisting(expense!.id, e)" />
             </label>
           </template>
         </div>
         <InfoRow v-if="expense.description" label="Description" :value="expense.description" />
         <div class="flex gap-3 pt-4">
-          <button @click="startEdit" class="flex-1 px-4 py-2 bg-indigo-50 border border-indigo-100 rounded-lg text-sm font-medium text-indigo-600 hover:bg-indigo-100">Modifier</button>
-          <button @click="$emit('duplicate', expense)" class="flex-1 px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-100">Dupliquer</button>
-          <button @click="confirmDelete" class="flex-1 px-4 py-2 bg-red-50 border border-red-100 rounded-lg text-sm font-medium text-red-600 hover:bg-red-100">Supprimer</button>
+          <button type="button" @click="startEdit" class="btn btn-brand-soft flex-1"><AppIcon name="edit" :size="16" />Modifier</button>
+          <button type="button" @click="$emit('duplicate', expense)" class="btn btn-secondary flex-1"><AppIcon name="copy" :size="16" />Dupliquer</button>
+          <button type="button" @click="confirmDelete" class="btn btn-danger-soft flex-1"><AppIcon name="trash" :size="16" />Supprimer</button>
         </div>
       </div>
 
@@ -87,8 +87,10 @@
             type="button"
             @click="togglePersonFavorite"
             :title="personStore.activePerson.favorite ? 'Retirer des favoris' : 'Ajouter aux favoris'"
-            :class="['text-xl leading-none transition-colors', personStore.activePerson.favorite ? 'text-yellow-400 hover:text-yellow-500' : 'text-gray-300 hover:text-yellow-300']"
-          >★</button>
+            :aria-label="personStore.activePerson.favorite ? 'Retirer des favoris' : 'Ajouter aux favoris'"
+            :aria-pressed="personStore.activePerson.favorite"
+            :class="['icon-button is-plain transition-colors', personStore.activePerson.favorite ? 'text-amber-600' : 'text-ink-subtle hover:text-amber-600']"
+          ><svg width="20" height="20" viewBox="0 0 24 24" :fill="personStore.activePerson.favorite ? 'currentColor' : 'none'" stroke="currentColor" stroke-width="1.75" stroke-linejoin="round" aria-hidden="true"><path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2L12 17.3 6.4 20.2l1.1-6.2L3 9.6l6.2-.9L12 3Z" /></svg></button>
         </div>
 
         <div class="expense-form-layout">
@@ -98,7 +100,7 @@
             <button v-for="t in expenseTypes" :key="t.value" @click="form.type = t.value" :aria-pressed="form.type === t.value"
               :class="['expense-type-option',
                 form.type === t.value ? t.activeClass : 'border-gray-200 text-gray-600 hover:border-gray-300']">
-              <AppIcon :name="typeIcons[t.value]" /><span>{{ t.label }}<small>{{ typeDescriptions[t.value] }}</small></span><span v-if="form.type === t.value" class="ml-auto">✓</span>
+              <AppIcon :name="typeIcons[t.value]" /><span>{{ t.label }}<small>{{ typeDescriptions[t.value] }}</small></span><AppIcon v-if="form.type === t.value" name="check" :size="16" class="ml-auto shrink-0" />
             </button>
           </div>
         </aside>
@@ -111,7 +113,7 @@
               <button v-for="v in vehicleTypes" :key="v.value" @click="form.vehicleType = v.value"
                 :class="['flex flex-col items-center gap-1 p-2.5 rounded-xl border-2 text-xs font-medium transition-all',
                   form.vehicleType === v.value ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-gray-200 text-gray-600 hover:border-gray-300']">
-                <span class="text-lg">{{ v.icon }}</span>{{ v.label }}
+                <AppIcon :name="v.icon" :size="22" />{{ v.label }}
               </button>
             </div>
           </div>
@@ -125,14 +127,15 @@
                   @click="applyFavorite(fav)"
                   class="flex items-center gap-1.5 pl-2.5 pr-1.5 py-1 rounded-l-full border-2 border-indigo-200 bg-indigo-50 text-xs font-medium text-indigo-700 hover:bg-indigo-100 transition-colors"
                 >
-                  <span>⭐</span>
+                  <AppIcon name="star" :size="14" />
                   <span>{{ fav.name }}</span>
                 </button>
                 <button
                   @click="removeFavorite(fav.id)"
                   class="px-1.5 py-1 rounded-r-full border-2 border-l-0 border-indigo-200 bg-indigo-50 text-gray-400 hover:text-red-500 hover:bg-red-50 hover:border-red-200 transition-colors text-xs leading-none"
                   title="Supprimer ce favori"
-                >×</button>
+                  :aria-label="`Supprimer le favori ${fav.name}`"
+                ><AppIcon name="x" :size="14" /></button>
               </div>
             </div>
           </div>
@@ -164,8 +167,8 @@
               :disabled="calculating || !form.departure || !form.arrival"
               class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-300 bg-gray-50 text-xs font-medium text-gray-600 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
             >
-              <span v-if="calculating" class="animate-spin inline-block">⟳</span>
-              <span v-else>📍</span>
+              <span v-if="calculating" class="spinner" style="width:0.875rem;height:0.875rem" aria-hidden="true" />
+              <AppIcon v-else name="map-pin" :size="16" />
               {{ calculating ? 'Calcul en cours…' : 'Calculer la distance' }}
             </button>
             <p v-if="calcError" class="text-xs text-red-600">{{ calcError }}</p>
@@ -199,7 +202,7 @@
           <!-- Save as favorite -->
           <div v-if="form.departure && form.arrival && !showSaveFavorite">
             <button @click="openSaveFavorite" class="text-xs text-indigo-500 hover:text-indigo-700 flex items-center gap-1">
-              <span>⭐</span> Sauvegarder ce trajet en favori
+              <AppIcon name="star" :size="14" /> Sauvegarder ce trajet en favori
             </button>
           </div>
           <div v-if="showSaveFavorite" class="flex gap-2 items-center">
@@ -211,8 +214,8 @@
               @keyup.enter="confirmSaveFavorite"
               @keyup.escape="showSaveFavorite = false"
             />
-            <button @click="confirmSaveFavorite" class="px-3 py-1.5 bg-indigo-600 text-white rounded-lg text-xs font-medium hover:bg-indigo-700">Sauvegarder</button>
-            <button @click="showSaveFavorite = false" class="px-2 py-1.5 border border-gray-200 rounded-lg text-xs text-gray-600 hover:bg-gray-50">✕</button>
+            <button type="button" @click="confirmSaveFavorite" class="btn btn-primary btn-sm">Sauvegarder</button>
+            <button type="button" @click="showSaveFavorite = false" class="icon-button" aria-label="Annuler l’enregistrement du favori"><AppIcon name="x" :size="16" /></button>
           </div>
         </template>
 
@@ -235,7 +238,7 @@
             <label class="block text-sm font-medium text-gray-700 mb-1.5">Justificatif PDF (optionnel)</label>
             <label class="flex items-center gap-2 cursor-pointer">
               <span class="px-3 py-1.5 rounded-lg border border-dashed border-gray-300 bg-gray-50 text-sm text-gray-500 hover:bg-gray-100 flex items-center gap-2">
-                <span>📎</span>
+                <AppIcon name="paperclip" :size="16" />
                 {{ parkingReceiptFile ? parkingReceiptFile.name : (expense && (expense as ParkingExpense).receiptFilename ? (expense as ParkingExpense).receiptFilename! : 'Choisir un fichier…') }}
               </span>
               <input type="file" accept=".pdf,application/pdf" class="sr-only" @change="onReceiptSelected" />
@@ -293,15 +296,15 @@
           <label class="block text-sm font-medium text-gray-700 mb-1.5">Description (optionnel)</label>
           <input v-model="form.description" type="text" class="w-full rounded-lg border-gray-300 shadow-sm text-sm" placeholder="Motif, client…" />
         </div>
-        <p v-if="error" role="alert" class="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg">{{ error }}</p>
+        <p v-if="error" role="alert" class="alert alert-danger"><AppIcon name="alert-circle" :size="18" /><span>{{ error }}</span></p>
         </div></div>
     </div>
 
     <template v-if="!expense || editing" #footer>
       <div class="flex gap-3">
-        <button @click="editing ? cancelEdit() : $emit('close')" class="flex-1 px-4 py-2 border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50">Annuler</button>
-        <button @click="save" :disabled="saving" class="flex-1 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 rounded-lg text-sm font-medium text-white">
-          {{ saving ? 'Enregistrement…' : 'Enregistrer' }}
+        <button type="button" @click="editing ? cancelEdit() : $emit('close')" class="btn btn-secondary flex-1">Annuler</button>
+        <button type="button" @click="save" :disabled="saving" :aria-busy="saving" class="btn btn-primary flex-1">
+          <span v-if="saving" class="spinner" aria-hidden="true" />{{ saving ? 'Enregistrement…' : 'Enregistrer' }}
         </button>
       </div>
     </template>

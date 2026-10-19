@@ -33,7 +33,7 @@
           <ul v-if="missing.length" class="declaration-warnings">
             <li v-for="item in missing" :key="item">{{ item }}</li>
           </ul>
-          <p v-else class="declaration-valid">✓ Les données nécessaires au calcul sont disponibles.</p>
+          <p v-else class="declaration-valid"><AppIcon name="check-circle" :size="16" />Les données nécessaires au calcul sont disponibles.</p>
         </div>
       </article>
 
@@ -42,7 +42,7 @@
         <div class="step-content">
           <h4>Préparez votre annexe</h4>
           <p class="declaration-copy">{{ declarationText }}</p>
-          <button class="quiet-button" type="button" @click="copyText">{{ copied ? 'Texte copié ✓' : 'Copier le texte' }}</button>
+          <button class="quiet-button" type="button" @click="copyText"><AppIcon :name="copied ? 'check' : 'copy'" :size="16" />{{ copied ? 'Texte copié' : 'Copier le texte' }}</button>
         </div>
       </article>
     </div>

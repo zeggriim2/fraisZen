@@ -1,142 +1,107 @@
 <template>
   <div class="workspace-page settings-workspace max-w-3xl mx-auto space-y-6">
-    <div class="workspace-title"><div><span class="eyebrow">VOTRE ESPACE</span><h2>Paramètres</h2><p>Compte, sécurité, abonnement et préférences.</p></div></div>
+    <PageHeader eyebrow="Votre espace" title="Paramètres" description="Compte, sécurité, abonnement et préférences." />
 
     <!-- Compte -->
-    <section class="bg-white rounded-2xl border border-gray-200 divide-y divide-gray-100">
-      <div class="px-6 py-4">
-        <h2 class="text-sm font-semibold text-gray-700">Mon compte</h2>
-      </div>
-
-      <form @submit.prevent="saveProfile" class="px-6 py-5 space-y-4">
-        <div>
-          <label class="block text-xs font-medium text-gray-500 mb-1">Adresse e-mail</label>
-          <input v-model="form.email" type="email" required
-            class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300" />
-        </div>
-        <div class="flex items-center gap-3">
-          <button type="submit" :disabled="profileSaving"
-            class="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 disabled:opacity-50 transition-colors">
-            {{ profileSaving ? 'Enregistrement…' : 'Enregistrer' }}
-          </button>
-          <span v-if="profileSuccess" class="text-sm text-emerald-600">Modifications enregistrées.</span>
-          <span v-if="profileError" class="text-sm text-red-600">{{ profileError }}</span>
+    <BaseCard title="Mon compte" title-tag="h2">
+      <form @submit.prevent="saveProfile" class="space-y-5">
+        <FormField label="Adresse e-mail" field-id="settings-email" v-slot="{ id, describedBy }">
+          <input :id="id" v-model="form.email" type="email" required autocomplete="email" class="form-control" :aria-describedby="describedBy" />
+        </FormField>
+        <div class="flex flex-wrap items-center gap-3">
+          <BaseButton type="submit" :loading="profileSaving">{{ profileSaving ? 'Enregistrement…' : 'Enregistrer' }}</BaseButton>
+          <span v-if="profileSuccess" class="inline-flex items-center gap-1.5 text-sm text-success-ink" role="status"><AppIcon name="check-circle" :size="16" />Modifications enregistrées.</span>
+          <span v-if="profileError" class="text-sm text-danger-ink" role="alert">{{ profileError }}</span>
         </div>
       </form>
-    </section>
+    </BaseCard>
 
     <!-- Mot de passe -->
-    <section class="bg-white rounded-2xl border border-gray-200 divide-y divide-gray-100">
-      <div class="px-6 py-4">
-        <h2 class="text-sm font-semibold text-gray-700">Mot de passe</h2>
-      </div>
-
-      <form @submit.prevent="savePassword" class="px-6 py-5 space-y-4">
-        <div>
-          <label class="block text-xs font-medium text-gray-500 mb-1">Mot de passe actuel</label>
-          <input v-model="passwordForm.current" type="password" required
-            class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300" />
-        </div>
-        <div>
-          <label class="block text-xs font-medium text-gray-500 mb-1">Nouveau mot de passe</label>
-          <input v-model="passwordForm.next" type="password" required minlength="8"
-            class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300" />
-        </div>
-        <div class="flex items-center gap-3">
-          <button type="submit" :disabled="passwordSaving"
-            class="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 disabled:opacity-50 transition-colors">
-            {{ passwordSaving ? 'Modification…' : 'Modifier le mot de passe' }}
-          </button>
-          <span v-if="passwordSuccess" class="text-sm text-emerald-600">Mot de passe modifié.</span>
-          <span v-if="passwordError" class="text-sm text-red-600">{{ passwordError }}</span>
+    <BaseCard title="Mot de passe" title-tag="h2">
+      <form @submit.prevent="savePassword" class="space-y-5">
+        <FormField label="Mot de passe actuel" field-id="settings-password-current" v-slot="{ id }">
+          <input :id="id" v-model="passwordForm.current" type="password" required autocomplete="current-password" class="form-control" />
+        </FormField>
+        <FormField label="Nouveau mot de passe" field-id="settings-password-next" hint="8 caractères minimum." v-slot="{ id, describedBy }">
+          <input :id="id" v-model="passwordForm.next" type="password" required minlength="8" autocomplete="new-password" class="form-control" :aria-describedby="describedBy" />
+        </FormField>
+        <div class="flex flex-wrap items-center gap-3">
+          <BaseButton type="submit" :loading="passwordSaving">{{ passwordSaving ? 'Modification…' : 'Modifier le mot de passe' }}</BaseButton>
+          <span v-if="passwordSuccess" class="inline-flex items-center gap-1.5 text-sm text-success-ink" role="status"><AppIcon name="check-circle" :size="16" />Mot de passe modifié.</span>
+          <span v-if="passwordError" class="text-sm text-danger-ink" role="alert">{{ passwordError }}</span>
         </div>
       </form>
-    </section>
+    </BaseCard>
 
     <!-- Abonnement -->
-    <section class="bg-white rounded-2xl border border-gray-200 divide-y divide-gray-100">
-      <div class="px-6 py-4">
-        <h2 class="text-sm font-semibold text-gray-700">Abonnement</h2>
-      </div>
-
-      <div class="px-6 py-5 flex items-center justify-between gap-4">
+    <BaseCard title="Abonnement" title-tag="h2">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <p class="text-sm text-gray-700">
+          <p class="text-sm text-ink flex items-center gap-2">
             Statut :
-            <span :class="statusClass">{{ statusLabel }}</span>
+            <span :class="['badge', statusBadge]">{{ statusLabel }}</span>
           </p>
-          <p v-if="authStore.user?.subscriptionStatus === 'active'" class="text-xs text-gray-400 mt-0.5">
+          <p v-if="authStore.user?.subscriptionStatus === 'active'" class="text-xs text-ink-muted mt-1">
             Gérez votre carte, vos factures ou annulez depuis le portail Stripe.
           </p>
-          <p v-else class="text-xs text-gray-400 mt-0.5">
+          <p v-else class="text-xs text-ink-muted mt-1">
             Abonnez-vous pour accéder à toutes les fonctionnalités.
           </p>
         </div>
 
-        <RouterLink v-if="authStore.user?.subscriptionStatus !== 'active'" to="/pricing"
-          class="shrink-0 px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors">
-          Voir les offres
-        </RouterLink>
-        <button v-else @click="openPortal" :disabled="portalLoading"
-          class="shrink-0 px-4 py-2 border border-gray-200 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50 disabled:opacity-50 transition-colors">
+        <BaseButton v-if="authStore.user?.subscriptionStatus !== 'active'" to="/pricing" class="shrink-0">Voir les offres</BaseButton>
+        <BaseButton v-else variant="secondary" icon="credit-card" :loading="portalLoading" class="shrink-0" @click="openPortal">
           {{ portalLoading ? 'Redirection…' : 'Gérer mon abonnement' }}
-        </button>
+        </BaseButton>
       </div>
-    </section>
+    </BaseCard>
 
     <!-- Préférences -->
-    <section class="bg-white rounded-2xl border border-gray-200 divide-y divide-gray-100">
-      <div class="px-6 py-4">
-        <h2 class="text-sm font-semibold text-gray-700">Préférences</h2>
-      </div>
-
-      <form @submit.prevent="saveProfile" class="px-6 py-5 space-y-4">
-        <div class="grid grid-cols-2 gap-4">
-          <div>
-            <label class="block text-xs font-medium text-gray-500 mb-1">Année fiscale par défaut</label>
-            <select v-model="form.defaultYear"
-              class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300">
+    <BaseCard title="Préférences" title-tag="h2">
+      <form @submit.prevent="saveProfile" class="space-y-5">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <FormField label="Année fiscale par défaut" field-id="settings-default-year" :hint="defaultYearHint" v-slot="{ id, describedBy }">
+            <select :id="id" v-model="form.defaultYear" class="form-control" :aria-describedby="describedBy">
               <option :value="null">Aucune (automatique)</option>
               <option v-for="y in years" :key="y" :value="y">{{ y }}</option>
             </select>
-            <p class="text-xs text-gray-400 mt-1">{{ defaultYearHint }}</p>
-          </div>
-          <div>
-            <label class="block text-xs font-medium text-gray-500 mb-1">Puissance fiscale par défaut</label>
-            <select v-model="form.defaultFiscalPower"
-              class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300">
+          </FormField>
+          <FormField label="Puissance fiscale par défaut" field-id="settings-default-cv" v-slot="{ id }">
+            <select :id="id" v-model="form.defaultFiscalPower" class="form-control">
               <option :value="null">Aucune</option>
               <option v-for="p in fiscalPowers" :key="p" :value="p">{{ p }} CV</option>
             </select>
-          </div>
+          </FormField>
         </div>
-        <div class="flex items-center gap-3">
-          <button type="submit" :disabled="profileSaving"
-            class="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 disabled:opacity-50 transition-colors">
-            {{ profileSaving ? 'Enregistrement…' : 'Enregistrer' }}
-          </button>
-          <span v-if="profileSuccess" class="text-sm text-emerald-600">Modifications enregistrées.</span>
+        <div class="flex flex-wrap items-center gap-3">
+          <BaseButton type="submit" :loading="profileSaving">{{ profileSaving ? 'Enregistrement…' : 'Enregistrer' }}</BaseButton>
+          <span v-if="profileSuccess" class="inline-flex items-center gap-1.5 text-sm text-success-ink" role="status"><AppIcon name="check-circle" :size="16" />Modifications enregistrées.</span>
         </div>
       </form>
-    </section>
+    </BaseCard>
 
     <!-- Zone de danger -->
-    <section class="bg-white rounded-2xl border border-red-200 divide-y divide-red-100">
-      <div class="px-6 py-4">
-        <h2 class="text-sm font-semibold text-red-600">Zone de danger</h2>
-      </div>
-
-      <div class="px-6 py-5 flex items-center justify-between gap-4">
+    <BaseCard title="Zone de danger" title-tag="h2" class="!border-danger/40">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <p class="text-sm text-gray-700 font-medium">Supprimer mon compte</p>
-          <p class="text-xs text-gray-400 mt-0.5">Action irréversible. Toutes vos données seront supprimées.</p>
+          <p class="text-sm text-ink font-semibold">Supprimer mon compte</p>
+          <p class="text-xs text-ink-muted mt-1">Action irréversible. Toutes vos données seront supprimées.</p>
         </div>
-        <button @click="confirmDelete"
-          class="shrink-0 px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 transition-colors">
-          Supprimer
-        </button>
+        <BaseButton variant="danger" icon="trash" class="shrink-0" @click="confirmDelete">Supprimer</BaseButton>
       </div>
-    </section>
+    </BaseCard>
+
+    <ConfirmModal
+      v-if="showDeleteConfirm"
+      title="Supprimer définitivement votre compte ?"
+      message="Cette action est irréversible et supprimera toutes vos données : profils, frais, justificatifs."
+      confirm-label="Supprimer mon compte"
+      cancel-label="Annuler"
+      variant="danger"
+      :icon="true"
+      @confirm="doDelete"
+      @cancel="showDeleteConfirm = false"
+    />
   </div>
 </template>
 
@@ -145,6 +110,12 @@ import { reactive, ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/authStore'
 import { billingApi } from '@/api/billingApi'
+import PageHeader from '@/components/ui/PageHeader.vue'
+import BaseCard from '@/components/ui/BaseCard.vue'
+import BaseButton from '@/components/ui/BaseButton.vue'
+import FormField from '@/components/ui/FormField.vue'
+import AppIcon from '@/components/ui/AppIcon.vue'
+import ConfirmModal from '@/components/ui/ConfirmModal.vue'
 
 const authStore = useAuthStore()
 const router = useRouter()
@@ -243,17 +214,19 @@ const statusLabel = computed(() => {
   }
 })
 
-const statusClass = computed(() => {
+const statusBadge = computed(() => {
   switch (authStore.user?.subscriptionStatus) {
-    case 'active': return 'font-semibold text-emerald-600'
-    case 'past_due': return 'font-semibold text-amber-600'
-    default: return 'font-semibold text-gray-400'
+    case 'active': return 'badge-success'
+    case 'past_due': return 'badge-warning'
+    default: return 'badge-neutral'
   }
 })
 
 // Suppression
-async function confirmDelete() {
-  if (!confirm('Êtes-vous sûr ? Cette action est irréversible et supprimera toutes vos données.')) return
+const showDeleteConfirm = ref(false)
+function confirmDelete() { showDeleteConfirm.value = true }
+async function doDelete() {
+  showDeleteConfirm.value = false
   await authStore.deleteAccount()
   router.push('/login')
 }
