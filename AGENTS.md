@@ -40,6 +40,26 @@ make test           # run PHPUnit
 make test c='tests/Unit/FooTest.php'         # run a single test file
 ```
 
+## Project Skills
+
+Project-specific skills live in `.agents/skills/` and provide task workflows. They complement the mandatory rules in this file; they do not replace or weaken them.
+
+- Use `.agents/skills/api-developer/SKILL.md` when creating, changing, debugging, or reviewing an HTTP endpoint, controller, JSON contract, command, query, or API-facing use case.
+- Use `.agents/skills/frontend-developer/SKILL.md` for Vue views, reusable components, stores, routes, frontend API clients, responsive design, themes, or accessibility work.
+- Use `.agents/skills/ddd-cqrs-reviewer/SKILL.md` to review backend architecture before delivering a significant backend change or when layer responsibilities are uncertain.
+- Use `.agents/skills/doctrine-migration/SKILL.md` for entity mappings, repositories, schema changes, STI changes, constraints, indexes, or Doctrine migrations.
+- Use `.agents/skills/source-command-check-analyse/SKILL.md` for the complete project quality analysis.
+- Use `.agents/skills/source-command-commit/SKILL.md` when the user asks to prepare or create a commit.
+
+### Cross-cutting delivery rules
+
+- Every endpoint accessing a user-owned or person-owned resource must verify ownership.
+- Keep API response contracts typed in PHP and in `frontend/src/types/index.ts` when consumed by Vue.
+- Never modify a migration that has already been deployed or merged; create a new migration instead.
+- Any modified user-facing flow must remain usable in light mode, dark mode, desktop, and mobile layouts.
+- Prefer a reusable component when the same behavior is used on multiple pages.
+- Before delivery, run the quality checks for every modified layer.
+
 ## Architecture
 
 DDD + CQRS. **Never put business logic in controllers or infrastructure handlers.**
