@@ -1918,6 +1918,64 @@
     cursor: wait;
     opacity: 0.65;
 }
+.receipt-upload-button {
+    gap: 8px;
+}
+.receipt-upload-button svg {
+    width: 16px;
+    height: 16px;
+}
+.receipt-steps {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0;
+    margin: 18px 0 12px;
+    padding: 0;
+    overflow: hidden;
+    border: 1px solid var(--border-color);
+    border-radius: 18px;
+    background: rgb(var(--surface));
+    list-style: none;
+}
+.receipt-steps li {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 68px;
+    padding: 12px 18px;
+}
+.receipt-steps li + li {
+    border-left: 1px solid var(--border-color);
+}
+.receipt-steps li > span {
+    display: grid;
+    flex: 0 0 auto;
+    place-items: center;
+    width: 30px;
+    height: 30px;
+    border-radius: 10px;
+    background: rgb(var(--gray-100));
+    color: rgb(var(--gray-500));
+    font-size: 11px;
+    font-weight: 800;
+}
+.receipt-steps li.done > span {
+    background: #ecfdf5;
+    color: #047857;
+}
+.receipt-steps li div {
+    display: grid;
+    gap: 2px;
+}
+.receipt-steps strong {
+    font-size: 12px;
+}
+.receipt-steps small {
+    color: rgb(var(--gray-500));
+    font-size: 10px;
+    text-wrap: pretty;
+}
 .receipt-kpis {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -1933,6 +1991,10 @@
     border: 1px solid var(--border-color);
     border-radius: 18px;
     background: rgb(var(--surface));
+}
+.receipt-kpis > div.attention {
+    border-color: rgb(245 158 11 / 24%);
+    background: color-mix(in srgb, rgb(var(--surface)) 94%, #fff7ed);
 }
 .receipt-kpis p {
     display: grid;
@@ -1974,7 +2036,15 @@
     );
 }
 .receipt-document-list > header {
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+    gap: 12px;
     padding: 4px 8px 14px;
+}
+.receipt-document-list > header small {
+    color: rgb(var(--gray-400));
+    font-size: 9px;
 }
 .receipt-document-list h3 {
     margin-top: 3px;
@@ -2088,6 +2158,85 @@
     color: rgb(var(--gray-500));
     font-size: 12px;
 }
+.receipt-review-progress {
+    display: grid;
+    gap: 12px;
+    margin: 18px 0 12px;
+    padding: 14px 16px;
+    border: 1px solid var(--border-color);
+    border-radius: 17px;
+    background: color-mix(
+        in srgb,
+        rgb(var(--surface)) 95%,
+        rgb(var(--gray-100))
+    );
+}
+.receipt-review-progress > div:first-child {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.receipt-review-progress > div:first-child > span:last-child {
+    display: grid;
+    gap: 2px;
+}
+.receipt-review-progress strong {
+    font-size: 13px;
+}
+.receipt-review-progress small {
+    color: rgb(var(--gray-500));
+    font-size: 10px;
+}
+.receipt-progress-track {
+    height: 6px;
+    overflow: hidden;
+    border-radius: 999px;
+    background: rgb(var(--gray-100));
+}
+.receipt-progress-track span {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: #10b981;
+    transition-property: width;
+    transition-duration: 260ms;
+    transition-timing-function: ease-out;
+}
+.receipt-line-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin: 14px 0 4px;
+}
+.receipt-line-toolbar .segmented-control {
+    padding: 3px;
+}
+.receipt-line-toolbar .segmented-control button {
+    min-height: 34px;
+    padding: 0 11px;
+}
+.receipt-line-toolbar .segmented-control button span {
+    display: inline-grid;
+    place-items: center;
+    min-width: 20px;
+    height: 20px;
+    margin-left: 5px;
+    padding: 0 5px;
+    border-radius: 999px;
+    background: rgb(var(--gray-100));
+    color: rgb(var(--gray-500));
+    font-size: 9px;
+    font-variant-numeric: tabular-nums;
+}
+.receipt-line-toolbar .segmented-control button.active span {
+    background: rgb(var(--surface));
+    color: inherit;
+}
+.receipt-line-toolbar > small {
+    color: rgb(var(--gray-400));
+    font-size: 10px;
+}
 .receipt-detail-actions,
 .line-link-actions {
     display: flex;
@@ -2148,14 +2297,29 @@
     border-color: rgb(var(--accent-500) / 22%);
     box-shadow: 0 8px 22px rgb(15 23 42 / 5%);
 }
+.receipt-line-card.resolved {
+    border-color: rgb(16 185 129 / 18%);
+}
 .receipt-line-route {
     display: grid;
     gap: 4px;
 }
 .receipt-line-route time {
+    display: flex;
+    align-items: center;
+    gap: 7px;
     color: rgb(var(--gray-500));
     font-size: 11px;
     font-weight: 700;
+}
+.receipt-line-route time span {
+    padding: 3px 6px;
+    border-radius: 7px;
+    background: rgb(var(--gray-100));
+    color: rgb(var(--gray-500));
+    font-size: 8px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
 }
 .receipt-line-route strong {
     font-size: 13px;
@@ -2224,8 +2388,29 @@
     transition-duration: 140ms;
 }
 .compact-action.primary {
-    border-color: rgb(var(--accent-500) / 25%);
-    color: rgb(var(--accent-600));
+    min-height: 38px;
+    border-color: rgb(var(--accent-500));
+    background: rgb(var(--accent-500));
+    color: white;
+}
+.compact-action.primary:hover {
+    background: rgb(var(--accent-600));
+}
+.receipt-filter-empty {
+    display: grid;
+    place-items: center;
+    min-height: 210px;
+    padding: 24px;
+    text-align: center;
+}
+.receipt-filter-empty strong {
+    margin-top: 10px;
+    font-size: 14px;
+}
+.receipt-filter-empty p {
+    margin-top: 3px;
+    color: rgb(var(--gray-500));
+    font-size: 11px;
 }
 .compact-action.success {
     border-color: #a7f3d0;
@@ -2495,6 +2680,16 @@
     }
 }
 @media (max-width: 639px) {
+    .receipt-steps {
+        grid-template-columns: 1fr;
+    }
+    .receipt-steps li {
+        min-height: 58px;
+    }
+    .receipt-steps li + li {
+        border-top: 1px solid var(--border-color);
+        border-left: 0;
+    }
     .receipt-actions,
     .receipt-detail-header,
     .receipt-attach-modal > header {
@@ -2516,6 +2711,14 @@
     }
     .receipt-detail-actions {
         justify-content: space-between;
+    }
+    .receipt-line-toolbar {
+        align-items: stretch;
+        flex-direction: column;
+    }
+    .receipt-line-toolbar .segmented-control {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
     }
     .candidate-card {
         grid-template-columns: 28px minmax(0, 1fr) auto;
