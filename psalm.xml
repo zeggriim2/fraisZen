@@ -38,6 +38,8 @@
                 <directory name="src/Auth/Application" />
                 <directory name="src/Expense/Application" />
                 <directory name="src/Person/Application" />
+                <directory name="src/Tax/Domain" />
+                <directory name="src/Tax/Infrastructure/Persistence" />
             </errorLevel>
         </UnusedClass>
         <!-- Attribut PHP 8.3+ : verbeux sans valeur ajoutée dans le code applicatif -->
@@ -55,6 +57,7 @@
                 <directory name="src/Auth/Domain" />
                 <directory name="src/Expense/Domain" />
                 <directory name="src/Person/Domain" />
+                <directory name="src/Tax/Domain" />
                 <directory name="src/Admin/Infrastructure/Stats" />
                 <directory name="src/Billing/Application/Webhook" />
                 <directory name="src/Expense/Infrastructure/Export" />
