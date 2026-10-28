@@ -23,6 +23,6 @@ final class DoctrineNetTaxableSalaryRepository implements NetTaxableSalaryReposi
 
     public function findByPersonAndYear(string $personId, int $year): array
     {
-        return $this->em->getRepository(NetTaxableSalary::class)->findBy(['personId' => $personId, 'year' => $year], ['periodStart' => 'ASC']);
+        return $this->em->getRepository(NetTaxableSalary::class)->findBy(['personId' => $personId, 'year' => $year], ['periodStart' => 'ASC', 'id' => 'ASC']);
     }
 }

@@ -84,6 +84,13 @@ services:
     App\Admin\Domain\Repository\FiscalConfigRepositoryInterface:
         class: App\Admin\Infrastructure\Persistence\DoctrineFiscalConfigRepository
 
+    # Tax comparison inputs repositories
+    App\Tax\Domain\Repository\NetTaxableSalaryRepositoryInterface:
+        class: App\Tax\Infrastructure\Persistence\DoctrineNetTaxableSalaryRepository
+
+    App\Tax\Domain\Repository\EmployerReimbursementRepositoryInterface:
+        class: App\Tax\Infrastructure\Persistence\DoctrineEmployerReimbursementRepository
+
     # Tag command & query handlers to their respective buses
     _instanceof:
         App\SharedKernel\Application\Bus\CommandHandlerInterface:
