@@ -23,6 +23,6 @@ final class DoctrineEmployerReimbursementRepository implements EmployerReimburse
 
     public function findByPersonAndYear(string $personId, int $year): array
     {
-        return $this->em->getRepository(EmployerReimbursement::class)->findBy(['personId' => $personId, 'year' => $year], ['date' => 'ASC']);
+        return $this->em->getRepository(EmployerReimbursement::class)->findBy(['personId' => $personId, 'year' => $year], ['date' => 'ASC', 'id' => 'ASC']);
     }
 }

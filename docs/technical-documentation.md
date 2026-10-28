@@ -342,6 +342,41 @@ frontend/src/
 
 Le routeur protège les routes privées par présence du token JWT et protège les routes admin par `ROLE_ADMIN`.
 
+## Comparaison fiscale forfait / frais réels (contexte `Tax`)
+
+Données par personne et par année :
+
+- `net_taxable_salary` (`App\Tax\Domain\Entity\NetTaxableSalary`) : salaire **net imposable** annuel en centimes,
+  par personne, employeur, période (`period_start`/`period_end` dans l'année) et année. Aucun salaire brut, net versé,
+  revenu fiscal de référence ni cumul de dépenses n'est modélisé ni utilisé.
+- `employer_reimbursement` (`App\Tax\Domain\Entity\EmployerReimbursement`) : montant en centimes, employeur, année
+  et date optionnelle (dans l'année), catégorie, indicateur `to_reintegrate` (nullable : `NULL` = information non
+  renseignée → résultat `incomplete`) et `expense_id` optionnel vers la dépense concernée.
+- Adaptation de schéma : la table existante `fiscal_config` (une ligne par année) est réutilisée et étendue par des
+  colonnes nullables `forfait_rate_percent`, `forfait_minimum_cents`, `forfait_maximum_cents`, `version`, `source`,
+  `effective_from`. Les lignes existantes restent valides ; tant que ces paramètres ne sont pas renseignés
+  (`FiscalConfig::defineTaxComparisonRules()`), la comparaison renvoie `configuration_missing`. L'ordre des arguments
+  historiques du constructeur est conservé (nouveaux arguments ajoutés en fin, optionnels).
+- Migration : `Version20261028000000`. Repositories : `NetTaxableSalaryRepositoryInterface`,
+  `EmployerReimbursementRepositoryInterface` (implémentations Doctrine dans `src/Tax/Infrastructure/Persistence`).
+
+Moteur `App\Tax\Domain\Service\TaxComparisonService::compare(personId, year, salaires, remboursements, dépenses, config)` :
+déterministe, en entiers (centimes), filtre toutes les collections par personne **et** année.
+
+- forfait théorique = `floor(salaire × taux / 100)` ; forfait final = forfait théorique borné par le minimum et le
+  plafond de l'année ;
+- base forfait = salaire − forfait final ; base frais réels = salaire + remboursements réintégrés − frais réels ;
+- écart = base forfait − base frais réels ; décision `advantageous` (> 0, les frais réels réduisent la base),
+  `less_advantageous` (< 0) ou `equivalent` (= 0) ;
+- frais réels = somme des montants déductibles des dépenses de l'année, indépendante des remboursements ;
+- seuls les remboursements `to_reintegrate = true` sont réintégrés ; pour un remboursement lié à un repas
+  (`MealExpense` avec justificatif), la part couverte par la contribution employeur déjà déduite du repas est exclue
+  (pas de double comptage), avec avertissement ;
+- statuts : `configuration_missing` (configuration absente, d'une autre année — jamais utilisée en repli — ou
+  incomplète), `incomplete` (salaire absent, indicateur de réintégration absent, dépense liée introuvable pour la
+  personne) avec la liste exacte `missing`, sinon `available` avec `amounts`, `rules` (code, valeur, version, source,
+  date d'entrée en vigueur), `configuration` et `warnings`.
+
 ## Docker Compose
 
 ### Services
