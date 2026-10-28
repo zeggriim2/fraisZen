@@ -25,14 +25,39 @@ final class TaxComparisonService
             $missing[] = 'net_taxable_salary';
         }
         $matchingReimbursements = array_filter($reimbursements, fn (EmployerReimbursement $r): bool => $r->personId() === $personId && $r->year() === $year);
-        if (null === $config || !$config->isComplete()) {
+        if (null === $config || $config->year() !== $year || !$config->isComplete()) {
             return new TaxComparisonResult('configuration_missing', [], array_values(array_unique($missing)), [], null, ['No fiscal configuration was silently substituted.']);
         }
         if ($missing) {
             return new TaxComparisonResult('incomplete', [], array_values(array_unique($missing)));
         }
 
-        $reintegrated = array_sum(array_map(fn (EmployerReimbursement $r): int => $r->toReintegrate() ? $r->amountCents() : 0, $matchingReimbursements));
+        $warnings = [];
+        $reintegrated = 0;
+        foreach ($matchingReimbursements as $reimbursement) {
+            if (!$reimbursement->toReintegrate()) {
+                continue;
+            }
+
+            $duplicateContribution = false;
+            if (null !== $reimbursement->expenseId()) {
+                foreach ($expenses as $expense) {
+                    if ($expense->personId() !== $personId || $expense->id()->value() !== $reimbursement->expenseId()) {
+                        continue;
+                    }
+                    if ($expense instanceof \App\Expense\Domain\Entity\MealExpense
+                        && $reimbursement->amountCents() === (int) round($expense->employerTicketContribution() * 100.0)) {
+                        $duplicateContribution = true;
+                        break;
+                    }
+                }
+            }
+            if ($duplicateContribution) {
+                $warnings[] = 'Employer meal contribution already accounted for by the linked expense was not counted twice.';
+                continue;
+            }
+            $reintegrated += $reimbursement->amountCents();
+        }
         $realExpenses = array_sum(array_map(fn (Expense $e): int => (int) round($e->amount() * 100.0), array_filter($expenses, fn (Expense $e): bool => $e->personId() === $personId && (int) $e->date()->format('Y') === $year)));
         $theoretical = intdiv($salaryCents * $config->forfaitRatePercent(), 100);
         $forfait = max($config->forfaitMinimumCents(), min($theoretical, $config->forfaitMaximumCents()));
@@ -40,6 +65,6 @@ final class TaxComparisonService
         $baseReal = $salaryCents + $reintegrated - $realExpenses;
         $difference = $baseForfait - $baseReal;
 
-        return new TaxComparisonResult('available', ['salaryCents' => $salaryCents, 'reintegratedReimbursementsCents' => $reintegrated, 'realExpensesCents' => $realExpenses, 'theoreticalForfaitCents' => $theoretical, 'forfaitCents' => $forfait, 'baseForfaitCents' => $baseForfait, 'baseRealExpensesCents' => $baseReal, 'differenceCents' => $difference, 'decision' => $difference > 0 ? 'advantageous' : ($difference < 0 ? 'less_advantageous' : 'equivalent')], ['10_percent_of_net_taxable_salary', 'forfait_minimum_and_maximum_applied', 'reintegrated_reimbursements_added_to_real_expenses_base', 'real_expenses_are_independent'], [], $config->metadata(), ['Only net taxable salaries are consolidated; reimbursements and real expenses are kept separate.']);
+        return new TaxComparisonResult('available', ['salaryCents' => $salaryCents, 'reintegratedReimbursementsCents' => $reintegrated, 'realExpensesCents' => $realExpenses, 'theoreticalForfaitCents' => $theoretical, 'forfaitCents' => $forfait, 'baseForfaitCents' => $baseForfait, 'baseRealExpensesCents' => $baseReal, 'differenceCents' => $difference, 'decision' => $difference > 0 ? 'advantageous' : ($difference < 0 ? 'less_advantageous' : 'equivalent')], [], ['10_percent_of_net_taxable_salary', 'forfait_minimum_and_maximum_applied', 'reintegrated_reimbursements_added_to_real_expenses_base', 'real_expenses_are_independent'], $config->metadata(), array_values(array_unique(array_merge($warnings, ['Only net taxable salaries are consolidated; reimbursements and real expenses are kept separate.']))));
     }
 }

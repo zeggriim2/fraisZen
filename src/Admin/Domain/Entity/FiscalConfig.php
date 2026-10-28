@@ -72,6 +72,11 @@ class FiscalConfig
         return $this->forfaitMaximumCents ?? 0;
     }
 
+    public function version(): ?string
+    {
+        return $this->version;
+    }
+
     /** @return array{year:int, version:?string, source:?string, effectiveFrom:?string} */
     public function metadata(): array
     {
