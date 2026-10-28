@@ -7,6 +7,7 @@ namespace App\Tests\Unit\Tax\Domain;
 use App\Admin\Domain\Entity\FiscalConfig;
 use App\Expense\Domain\Entity\MealExpense;
 use App\Expense\Domain\Entity\ParkingExpense;
+use App\Expense\Domain\Entity\TravelExpense;
 use App\Expense\Domain\ValueObject\ExpenseId;
 use App\Tax\Domain\Entity\EmployerReimbursement;
 use App\Tax\Domain\Entity\NetTaxableSalary;
@@ -297,6 +298,44 @@ final class TaxComparisonServiceTest extends TestCase
             'employer_reimbursement[r2].expense['.self::OTHER_MEAL_ID.']',
         ], $result->missing());
         self::assertNull($result->decision());
+    }
+
+    public function testTravelExpensesWithoutKilometricAllowanceAreIncomplete(): void
+    {
+        $service = new TaxComparisonService();
+        $config = $this->config(2026, 10, 0, 1_400_000);
+        $salaries = [$this->salary('s1', 'person-a', 'Employer A', '2026-01-01', '2026-12-31', 1_000_000)];
+        $travel = new TravelExpense(ExpenseId::generate(), 'person-a', new \DateTimeImmutable('2026-03-01'), null, 'A', 'B', 15_000.0, 5);
+        $parking = new ParkingExpense(ExpenseId::generate(), 'person-a', new \DateTimeImmutable('2026-02-01'), null, 300.00);
+
+        $missing = $service->compare('person-a', 2026, $salaries, [], [$travel, $parking], $config);
+        self::assertSame('incomplete', $missing->status());
+        self::assertSame(['travel_allowance[2026]'], $missing->missing());
+        self::assertNull($missing->amounts());
+        self::assertNull($missing->decision());
+
+        $negative = $service->compare('person-a', 2026, $salaries, [], [$travel], $config, -1);
+        self::assertSame('incomplete', $negative->status());
+        self::assertSame(['travel_allowance[2026]'], $negative->missing());
+
+        // Travel expenses of another person or another year never require an allowance.
+        $otherPersonTravel = new TravelExpense(ExpenseId::generate(), 'person-b', new \DateTimeImmutable('2026-03-01'), null, 'A', 'B', 100.0, 5);
+        $otherYearTravel = new TravelExpense(ExpenseId::generate(), 'person-a', new \DateTimeImmutable('2025-03-01'), null, 'A', 'B', 100.0, 5);
+        self::assertSame('available', $service->compare('person-a', 2026, $salaries, [], [$otherPersonTravel, $otherYearTravel], $config)->status());
+
+        // 15 000 km, 5 CV: 15 000 x 0.357 + 1 395 = 6 750 EUR.
+        $available = $service->compare('person-a', 2026, $salaries, [], [$travel, $parking], $config, 675_000);
+        self::assertSame('available', $available->status());
+        self::assertSame([], $available->missing());
+        $amounts = $available->amounts();
+        self::assertNotNull($amounts);
+        self::assertSame(705_000, $amounts['realExpensesCents']);
+        self::assertSame(900_000, $amounts['baseForfaitCents']);
+        self::assertSame(295_000, $amounts['baseRealExpensesCents']);
+        self::assertSame(605_000, $amounts['differenceCents']);
+        self::assertSame('advantageous', $available->decision());
+        $travelRules = array_values(array_filter($available->rules(), static fn (array $r): bool => 'travel_kilometric_allowance_cents' === $r['code']));
+        self::assertSame([['code' => 'travel_kilometric_allowance_cents', 'value' => 675_000, 'version' => '2026.1', 'source' => 'BOFiP-IR-BASE-2026', 'effectiveFrom' => '2026-01-01']], $travelRules);
     }
 
     public function testAResultOfOnePersonIsNeverUsedForAnother(): void

@@ -360,7 +360,7 @@ Données par personne et par année :
 - Migration : `Version20261028000000`. Repositories : `NetTaxableSalaryRepositoryInterface`,
   `EmployerReimbursementRepositoryInterface` (implémentations Doctrine dans `src/Tax/Infrastructure/Persistence`).
 
-Moteur `App\Tax\Domain\Service\TaxComparisonService::compare(personId, year, salaires, remboursements, dépenses, config)` :
+Moteur `App\Tax\Domain\Service\TaxComparisonService::compare(personId, year, salaires, remboursements, dépenses, config, indemnitéKmCentimes = null)` :
 déterministe, en entiers (centimes), filtre toutes les collections par personne **et** année.
 
 - forfait théorique = `floor(salaire × taux / 100)` ; forfait final = forfait théorique borné par le minimum et le
@@ -369,12 +369,17 @@ déterministe, en entiers (centimes), filtre toutes les collections par personne
 - écart = base forfait − base frais réels ; décision `advantageous` (> 0, les frais réels réduisent la base),
   `less_advantageous` (< 0) ou `equivalent` (= 0) ;
 - frais réels = somme des montants déductibles des dépenses de l'année, indépendante des remboursements ;
+  `TravelExpense::amount()` vaut toujours 0 (le barème kilométrique dépend du cumul annuel) : l'indemnité
+  kilométrique annuelle de la personne, calculée avec le barème de l'année (ex. `KilometricAllowanceCalculator`),
+  est fournie en centimes par l'appelant et ajoutée aux frais réels (règle `travel_kilometric_allowance_cents`).
+  Si la personne a des trajets dans l'année sans indemnité fournie (ou avec une indemnité négative), le résultat est
+  `incomplete` avec `travel_allowance[<année>]` dans `missing` (jamais compté silencieusement à 0) ;
 - seuls les remboursements `to_reintegrate = true` sont réintégrés ; pour un remboursement lié à un repas
   (`MealExpense` avec justificatif), la part couverte par la contribution employeur déjà déduite du repas est exclue
   (pas de double comptage), avec avertissement ;
 - statuts : `configuration_missing` (configuration absente, d'une autre année — jamais utilisée en repli — ou
   incomplète), `incomplete` (salaire absent, indicateur de réintégration absent, dépense liée introuvable pour la
-  personne) avec la liste exacte `missing`, sinon `available` avec `amounts`, `rules` (code, valeur, version, source,
+  personne, indemnité kilométrique absente) avec la liste exacte `missing`, sinon `available` avec `amounts`, `rules` (code, valeur, version, source,
   date d'entrée en vigueur), `configuration` et `warnings`.
 
 ## Docker Compose

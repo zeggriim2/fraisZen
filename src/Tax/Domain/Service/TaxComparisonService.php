@@ -7,6 +7,7 @@ namespace App\Tax\Domain\Service;
 use App\Admin\Domain\Entity\FiscalConfig;
 use App\Expense\Domain\Entity\Expense;
 use App\Expense\Domain\Entity\MealExpense;
+use App\Expense\Domain\Entity\TravelExpense;
 use App\Tax\Domain\Entity\EmployerReimbursement;
 use App\Tax\Domain\Entity\NetTaxableSalary;
 
@@ -25,6 +26,12 @@ use App\Tax\Domain\Entity\NetTaxableSalary;
  * caller-provided data can never leak into another person's result. The fiscal configuration is
  * only used when it is complete and belongs to the requested year: no other year is used as a fallback.
  *
+ * Travel expenses carry no amount of their own (TravelExpense::amount() is always 0): their deductible
+ * kilometric allowance depends on the annual distance and on the requested year's kilometric scale.
+ * The caller must therefore provide the annual kilometric allowance of the person and year, in cents;
+ * when the person has travel expenses for the year and no allowance is provided, the result is
+ * incomplete (missing "travel_allowance[<year>]") instead of silently counting those trips as 0.
+ *
  * @psalm-import-type Amounts from TaxComparisonResult
  * @psalm-import-type Rule from TaxComparisonResult
  *
@@ -36,8 +43,10 @@ final class TaxComparisonService
      * @param list<NetTaxableSalary>      $salaries
      * @param list<EmployerReimbursement> $reimbursements
      * @param list<Expense>               $expenses
+     * @param int|null                    $travelAllowanceCents annual kilometric allowance (cents) of the person's
+     *                                                          travel expenses for the year, computed with that year's scale
      */
-    public function compare(string $personId, int $year, array $salaries, array $reimbursements, array $expenses, ?FiscalConfig $config): TaxComparisonResult
+    public function compare(string $personId, int $year, array $salaries, array $reimbursements, array $expenses, ?FiscalConfig $config, ?int $travelAllowanceCents = null): TaxComparisonResult
     {
         $salaries = array_values(array_filter(
             $salaries,
@@ -57,6 +66,20 @@ final class TaxComparisonService
 
         $dataMissing = $this->missingData($year, $salaries, $reimbursements, $personExpenses);
         $warnings = [];
+
+        $hasTravel = false;
+        foreach ($personExpenses as $expense) {
+            if ($expense instanceof TravelExpense && (int) $expense->date()->format('Y') === $year) {
+                $hasTravel = true;
+                break;
+            }
+        }
+        if (null !== $travelAllowanceCents && $travelAllowanceCents < 0) {
+            $dataMissing[] = sprintf('travel_allowance[%d]', $year);
+            $warnings[] = 'The provided kilometric allowance is negative and was rejected.';
+        } elseif ($hasTravel && null === $travelAllowanceCents) {
+            $dataMissing[] = sprintf('travel_allowance[%d]', $year);
+        }
 
         $configMissing = [];
         if (null === $config || $config->year() !== $year) {
@@ -98,9 +121,15 @@ final class TaxComparisonService
 
         $realExpensesCents = 0;
         foreach ($personExpenses as $expense) {
-            if ((int) $expense->date()->format('Y') === $year) {
+            // Travel expenses are valued through the provided annual kilometric allowance below.
+            if (!$expense instanceof TravelExpense && (int) $expense->date()->format('Y') === $year) {
                 $realExpensesCents += self::toCents($expense->amount());
             }
+        }
+        $travelCents = $travelAllowanceCents ?? 0;
+        $realExpensesCents += $travelCents;
+        if ($travelCents > 0 && !$hasTravel) {
+            $warnings[] = sprintf('A kilometric allowance of %d cents was provided although no travel expense exists for year %d.', $travelCents, $year);
         }
 
         [$reintegratedCents, $excludedCents, $reimbursementWarnings] = $this->reintegratedReimbursements($reimbursements, $personExpenses);
@@ -158,6 +187,9 @@ final class TaxComparisonService
             $rule('reintegration_explicit_only', null),
             $rule('meal_employer_contribution_not_counted_twice', null),
         ];
+        if (null !== $travelAllowanceCents) {
+            $rules[] = $rule('travel_kilometric_allowance_cents', $travelAllowanceCents);
+        }
 
         return TaxComparisonResult::available($personId, $year, $amounts, $rules, $config->metadata(), $warnings);
     }
