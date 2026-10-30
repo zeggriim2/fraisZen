@@ -21,6 +21,17 @@ final class DoctrineNetTaxableSalaryRepository implements NetTaxableSalaryReposi
         $this->em->flush();
     }
 
+    public function remove(NetTaxableSalary $salary): void
+    {
+        $this->em->remove($salary);
+        $this->em->flush();
+    }
+
+    public function findById(string $id): ?NetTaxableSalary
+    {
+        return $this->em->find(NetTaxableSalary::class, $id);
+    }
+
     public function findByPersonAndYear(string $personId, int $year): array
     {
         return $this->em->getRepository(NetTaxableSalary::class)->findBy(['personId' => $personId, 'year' => $year], ['periodStart' => 'ASC', 'id' => 'ASC']);

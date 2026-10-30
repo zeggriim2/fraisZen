@@ -44,10 +44,10 @@
       <li>{{ t('tax.comparison.detail.origins.forfaitParameters', { year: comparison.configuration?.year ?? comparison.year }) }}</li>
     </ul>
 
-    <template v-if="comparison.warnings.length">
+    <template v-if="comparison.display.warnings.length">
       <p class="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">{{ t('tax.comparison.detail.warningsTitle') }}</p>
-      <ul class="list-disc pl-5 space-y-1 mb-4">
-        <li v-for="(warning, i) in comparison.warnings" :key="i" lang="en">{{ warning }}</li>
+      <ul class="list-disc pl-5 space-y-1 mb-4" data-testid="tax-warnings">
+        <li v-for="(warning, i) in comparison.display.warnings" :key="i">{{ warningLabel(warning) }}</li>
       </ul>
     </template>
 
@@ -59,7 +59,7 @@
 import { computed } from 'vue'
 import type { TaxComparison } from '@/types'
 import { t } from '@/i18n'
-import { fmtCents } from '@/utils/taxComparison'
+import { fmtCents, warningLabel } from '@/utils/taxComparison'
 
 const props = defineProps<{ comparison: TaxComparison; id: string }>()
 

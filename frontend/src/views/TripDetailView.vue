@@ -42,7 +42,7 @@
           <p class="text-xs text-blue-500 font-medium uppercase tracking-wide mb-1">Distance totale</p>
           <p class="text-2xl font-bold text-blue-700">{{ totalKm.toFixed(0) }} km</p>
         </div>
-        <div class="bg-indigo-50 rounded-2xl p-4 border border-indigo-100">
+        <div id="tax-field-travel-allowance" tabindex="-1" class="bg-indigo-50 rounded-2xl p-4 border border-indigo-100">
           <p class="text-xs text-indigo-500 font-medium uppercase tracking-wide mb-1">Déduction estimée</p>
           <p class="text-2xl font-bold text-indigo-700">{{ fmt(totalDeduction) }}</p>
         </div>
@@ -113,6 +113,7 @@ import { usePersonStore } from '@/stores/personStore'
 import { expenseApi } from '@/api/expenseApi'
 import type { TravelExpense } from '@/types'
 import { fmtEur } from '@/utils/formatting'
+import { focusField } from '@/utils/fieldAnchor'
 
 const MONTHS = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre']
 
@@ -193,9 +194,18 @@ async function load() {
   } finally {
     loading.value = false
   }
+  // Direct link from the tax comparison ("indemnité kilométrique annuelle" missing): focus the annual deduction.
+  if (route.hash === '#tax-field-travel-allowance') focusField('tax-field-travel-allowance')
+}
+
+// A direct link (?personId=) opens the trips of that person, never those of the currently selected one.
+function selectRequestedPerson() {
+  const requested = personStore.persons.find(p => p.id === route.query.personId)
+  if (requested && personStore.activePerson?.id !== requested.id) personStore.setActive(requested)
 }
 
 watch(() => personStore.activePerson, load)
 watch(selectedYear, load)
-onMounted(load)
+watch(() => personStore.persons, selectRequestedPerson)
+onMounted(() => { selectRequestedPerson(); load() })
 </script>

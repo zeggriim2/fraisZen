@@ -27,10 +27,10 @@
       },
       "missing": {
         "goTo": "Compléter ce champ",
-        "adminOnly": "(réservé à l’administration)",
+        "adminOnly": "(paramètre réglementaire à compléter par l’administration de FraisZen)",
         "net_taxable_salary": "Salaire net imposable de l’année {year}",
         "employer_reimbursement_to_reintegrate": "Indiquer si le remboursement employeur {reimbursementId} doit être réintégré",
-        "employer_reimbursement_expense": "Dépense {expenseId} liée au remboursement employeur {reimbursementId}",
+        "employer_reimbursement_expense": "La dépense {expenseId} liée au remboursement employeur {reimbursementId} est introuvable pour cette personne et cette année : retirez le lien",
         "travel_allowance": "Indemnité kilométrique annuelle {year}",
         "fiscal_config": "Configuration fiscale de l’année {year}",
         "fiscal_config_forfait_rate_percent": "Taux du forfait (configuration fiscale {year})",
@@ -102,6 +102,59 @@
         "title": "Forfait ou frais réels, personne par personne",
         "subtitle": "Chaque personne du foyer est calculée séparément : les écarts ne sont jamais additionnés.",
         "year": "Année de comparaison"
+      },
+      "warning": {
+        "negative_travel_allowance": "L’indemnité kilométrique annuelle fournie était négative : elle a été rejetée.",
+        "other_year_configuration_ignored": "La configuration fiscale de l’année {configurationYear} a été ignorée : seule celle de l’année {year} peut être utilisée.",
+        "travel_allowance_without_trip": "Une indemnité kilométrique de {amount} a été fournie alors qu’aucun trajet n’existe pour l’année {year}.",
+        "meal_contribution_not_counted_twice": "Remboursement {reimbursementId} : {amount} déjà déduits comme participation employeur du repas {expenseId} n’ont pas été comptés deux fois.",
+        "reimbursements_not_reintegrated": "{count} remboursement(s) employeur non marqué(s) à réintégrer n’ont pas été ajoutés à la base frais réels.",
+        "forfait_exceeds_salary": "Le minimum du forfait dépasse le salaire net imposable : la base imposable avec le forfait est négative.",
+        "unknown": "Un point d’attention du calcul n’a pas pu être affiché : vérifiez vos saisies."
+      }
+    },
+    "inputs": {
+      "title": "Données fiscales de {name} · {year}",
+      "loading": "Chargement des données fiscales…",
+      "loadError": "Les données fiscales n’ont pas pu être chargées.",
+      "saveError": "L’enregistrement a échoué. Réessayez.",
+      "invalid": "Certaines valeurs sont invalides : vérifiez les dates (dans l’année), les montants (positifs) et l’employeur.",
+      "remove": "Supprimer",
+      "salaries": {
+        "title": "Salaire net imposable {year}",
+        "empty": "Aucun salaire net imposable saisi pour {year} : la comparaison ne peut pas être calculée.",
+        "row": "{employer} · du {start} au {end} · {amount}",
+        "employer": "Employeur",
+        "amount": "Montant net imposable (€)",
+        "periodStart": "Début de période",
+        "periodEnd": "Fin de période",
+        "help": "Montant net imposable figurant sur vos bulletins de paie (cumul annuel) ; saisissez une ligne par employeur ou par période.",
+        "add": "Ajouter ce salaire"
+      },
+      "reimbursements": {
+        "title": "Remboursements employeur {year}",
+        "empty": "Aucun remboursement employeur saisi.",
+        "row": "{employer} · {category} · {amount} · {date}",
+        "noDate": "date non renseignée",
+        "toReintegrate": "À réintégrer au revenu imposable ?",
+        "notIndicated": "Non indiqué",
+        "yes": "Oui, à réintégrer",
+        "no": "Non",
+        "linkedExpense": "Lié à une dépense saisie dans FraisZen",
+        "linkedExpenseMissing": "La dépense liée {expenseId} est introuvable pour {year}",
+        "unlink": "Retirer le lien avec la dépense",
+        "employer": "Employeur",
+        "amount": "Montant (€)",
+        "category": "Nature",
+        "date": "Date (facultative)",
+        "add": "Ajouter ce remboursement"
+      },
+      "categories": {
+        "transport": "Transport",
+        "meal": "Repas",
+        "mileage": "Indemnités kilométriques",
+        "remote_work": "Télétravail",
+        "other": "Autre"
       }
     }
   }

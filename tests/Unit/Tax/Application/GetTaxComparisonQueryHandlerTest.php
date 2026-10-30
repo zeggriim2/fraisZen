@@ -81,7 +81,8 @@ final class GetTaxComparisonQueryHandlerTest extends TestCase
         self::assertNull($result['amounts']);
         self::assertSame(['net_taxable_salary[2025]', 'employer_reimbursement[r-a].to_reintegrate'], $result['missing']);
         self::assertSame(['net_taxable_salary', 'employer_reimbursement_to_reintegrate'], array_column($result['display']['missingFields'], 'field'));
-        self::assertSame('/persons', $result['display']['missingFields'][0]['link']['path'] ?? null);
+        self::assertSame(['path' => '/persons', 'query' => ['personId' => 'person-a', 'year' => '2025'], 'hash' => '#tax-field-net-taxable-salary-person-a'], $result['display']['missingFields'][0]['link']);
+        self::assertSame('#tax-field-employer-reimbursement-r-a', $result['display']['missingFields'][1]['link']['hash'] ?? null);
         self::assertFalse($result['display']['showBanner']);
         self::assertSame('annual_estimate_to_verify', $result['display']['temporalQualification']);
     }
@@ -99,7 +100,9 @@ final class GetTaxComparisonQueryHandlerTest extends TestCase
 
         self::assertSame('configuration_missing', $result['status']);
         self::assertSame(['fiscal_config[2026]'], $result['missing']);
-        self::assertSame('/admin/fiscal-config', $result['display']['missingFields'][0]['link']['path'] ?? null);
+        self::assertSame('fiscal_config', $result['display']['missingFields'][0]['field']);
+        self::assertNull($result['display']['missingFields'][0]['link'], 'no screen holds the forfait parameters');
+        self::assertSame([['code' => 'other_year_configuration_ignored', 'params' => ['configurationYear' => '2025', 'year' => '2026']]], $result['display']['warnings']);
         self::assertFalse($result['display']['showBanner']);
         self::assertSame('provisional_estimate', $result['display']['temporalQualification']);
     }
@@ -164,6 +167,15 @@ final class GetTaxComparisonQueryHandlerTest extends TestCase
                 {
                 }
 
+                public function remove(NetTaxableSalary $salary): void
+                {
+                }
+
+                public function findById(string $id): ?NetTaxableSalary
+                {
+                    return null;
+                }
+
                 public function findByPersonAndYear(string $personId, int $year): array
                 {
                     return $this->rows;
@@ -177,6 +189,15 @@ final class GetTaxComparisonQueryHandlerTest extends TestCase
 
                 public function save(EmployerReimbursement $reimbursement): void
                 {
+                }
+
+                public function remove(EmployerReimbursement $reimbursement): void
+                {
+                }
+
+                public function findById(string $id): ?EmployerReimbursement
+                {
+                    return null;
                 }
 
                 public function findByPersonAndYear(string $personId, int $year): array

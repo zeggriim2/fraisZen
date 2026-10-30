@@ -216,6 +216,60 @@ export interface TaxComparison {
     roundedDifferenceEuros: number | null
     differenceBelowOneEuro: boolean
     missingFields: TaxComparisonMissingField[]
+    /** Engine warnings converted to translation codes (tax.comparison.warning.<code>). */
+    warnings: TaxComparisonWarning[]
     disclaimerKey: string
   }
+}
+
+export interface TaxComparisonWarning {
+  code: string
+  params: Record<string, string>
+}
+
+export interface NetTaxableSalaryInput {
+  id: string
+  employer: string
+  year: number
+  periodStart: string
+  periodEnd: string
+  amountCents: number
+}
+
+export interface EmployerReimbursementInput {
+  id: string
+  employer: string
+  year: number
+  date: string | null
+  amountCents: number
+  category: string
+  /** null = not indicated yet: the comparison stays incomplete. */
+  toReintegrate: boolean | null
+  expenseId: string | null
+  /** null when no expense is linked; false when the linked expense does not exist for this person and year. */
+  linkedExpenseFound: boolean | null
+}
+
+/** Inputs of ONE person for ONE year (GET /api/persons/{id}/tax-inputs/{year}). */
+export interface TaxInputs {
+  personId: string
+  year: number
+  salaries: NetTaxableSalaryInput[]
+  reimbursements: EmployerReimbursementInput[]
+  categories: string[]
+}
+
+export interface NewNetTaxableSalary {
+  employer: string
+  periodStart: string
+  periodEnd: string
+  amountCents: number
+}
+
+export interface NewEmployerReimbursement {
+  employer: string
+  amountCents: number
+  category: string
+  toReintegrate: boolean | null
+  date: string | null
 }

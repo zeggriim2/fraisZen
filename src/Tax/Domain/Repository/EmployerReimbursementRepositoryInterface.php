@@ -11,6 +11,10 @@ interface EmployerReimbursementRepositoryInterface
 {
     public function save(EmployerReimbursement $reimbursement): void;
 
+    public function remove(EmployerReimbursement $reimbursement): void;
+
+    public function findById(string $id): ?EmployerReimbursement;
+
     /** @return list<EmployerReimbursement> */
     public function findByPersonAndYear(string $personId, int $year): array;
 }
