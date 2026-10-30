@@ -1787,6 +1787,58 @@
     background: rgb(var(--surface));
     border-radius: 18px;
 }
+.fiscal-year-card {
+    border: 1px solid rgb(var(--gray-200));
+    background: rgb(var(--surface));
+    border-radius: 18px;
+}
+.fiscal-year-card > .fiscal-year-row {
+    border: 0;
+    border-radius: 18px 18px 0 0;
+}
+.forfait-fields {
+    padding: 14px 24px 18px;
+    border-top: 1px dashed rgb(var(--gray-200));
+}
+.forfait-fields legend {
+    padding: 0 4px;
+}
+.forfait-fields-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px 18px;
+    margin-top: 10px;
+}
+.forfait-field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 11px;
+    color: rgb(var(--gray-500));
+}
+.forfait-input {
+    width: 100%;
+    background: rgb(var(--gray-100));
+    border: 1px solid rgb(var(--gray-300));
+    border-radius: 10px;
+    padding: 6px 12px;
+    font-size: 13px;
+    color: rgb(var(--gray-900));
+}
+.forfait-input:focus {
+    outline: none;
+    border-color: rgb(99 102 241);
+}
+.forfait-status {
+    margin-top: 12px;
+    font-size: 12px;
+}
+.forfait-status-ok {
+    color: rgb(16 185 129);
+}
+.forfait-status-missing {
+    color: rgb(var(--gray-500));
+}
 .fiscal-year-row > span:first-child {
     display: grid;
     place-items: center;
@@ -1866,6 +1918,12 @@
     }
     .fiscal-year-row input {
         max-width: 80px;
+    }
+    .forfait-fields {
+        padding: 14px 18px 18px;
+    }
+    .forfait-fields-grid {
+        grid-template-columns: 1fr 1fr;
     }
     .admin-section-nav {
         gap: 2px;

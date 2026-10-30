@@ -189,13 +189,38 @@ class FiscalConfig
         $this->homeMealValue = (string) $amount;
     }
 
-    /** @return array{year: int, remoteWorkDailyAllowance: float, homeMealValue: float} */
+    /**
+     * Admin API representation. Forfait amounts are exposed in cents (never converted to euros here);
+     * `taxComparisonComplete` tells whether the forfait / real expenses comparison can run for the year.
+     *
+     * @return array{
+     *     year: int,
+     *     remoteWorkDailyAllowance: float,
+     *     homeMealValue: float,
+     *     forfaitRatePercent: ?int,
+     *     forfaitMinimumCents: ?int,
+     *     forfaitMaximumCents: ?int,
+     *     version: ?string,
+     *     source: ?string,
+     *     effectiveFrom: ?string,
+     *     taxComparisonComplete: bool,
+     *     missingTaxComparisonFields: list<string>
+     * }
+     */
     public function toArray(): array
     {
         return [
             'year' => $this->year(),
             'remoteWorkDailyAllowance' => $this->remoteWorkDailyAllowance(),
             'homeMealValue' => $this->homeMealValue(),
+            'forfaitRatePercent' => $this->forfaitRatePercent,
+            'forfaitMinimumCents' => $this->forfaitMinimumCents,
+            'forfaitMaximumCents' => $this->forfaitMaximumCents,
+            'version' => $this->version,
+            'source' => $this->source,
+            'effectiveFrom' => $this->effectiveFrom?->format('Y-m-d'),
+            'taxComparisonComplete' => $this->isComplete(),
+            'missingTaxComparisonFields' => $this->missingTaxComparisonFields(),
         ];
     }
 }
