@@ -39,19 +39,8 @@
         <section class="report-breakdown"><h3>La répartition de vos frais</h3><div class="distribution-bar" role="img" aria-label="Répartition des déductions par catégorie"><span v-for="item in distribution" :key="item.label" :class="item.color" :style="{width: `${item.percent}%`}" /></div><p v-if="!summary.total" class="text-sm text-gray-500 mb-4">Vos premiers frais apparaîtront ici.</p><div class="distribution-legend"><div v-for="item in distribution" :key="item.label"><span :class="['category-dot',item.color]" /><span>{{ item.label }}</span><strong>{{ fmt(item.amount) }}</strong></div></div></section>
       </div>
 
-      <!-- Comparaison forfait 10% -->
-      <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 mb-6">
-        <p class="text-sm font-semibold text-gray-700 mb-3">Comparaison avec le forfait 10 %</p>
-        <div class="flex flex-wrap items-center gap-3">
-          <label class="text-sm text-gray-500 whitespace-nowrap">Salaire brut annuel :</label>
-          <input v-model.number="grossSalary" type="number" min="0" step="100" placeholder="ex : 35 000"
-            class="w-40 px-3 py-1.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300" />
-          <span v-if="grossSalary > 0" :class="['text-sm font-medium px-3 py-1.5 rounded-lg', forfaitComparison.favorable ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-amber-50 text-amber-700 border border-amber-200']">
-            {{ forfaitComparison.label }}
-          </span>
-          <span v-else class="text-xs text-gray-400">Renseignez votre salaire pour comparer</span>
-        </div>
-      </div>
+      <!-- Comparaison forfait 10 % / frais réels (moteur Tax, personne active uniquement) -->
+      <TaxComparisonCard v-if="personStore.activePerson" :key="personStore.activePerson.id" :person="personStore.activePerson" :year="summary.year" class="mb-6" />
 
       <!-- Cards -->
       <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 mb-8">
@@ -177,6 +166,7 @@ import { ref, watch, onMounted, computed } from 'vue'
 import AppIcon from '@/components/ui/AppIcon.vue'
 import SummaryCard from '@/components/ui/SummaryCard.vue'
 import DeclarationAssistant from '@/components/expense/DeclarationAssistant.vue'
+import TaxComparisonCard from '@/components/tax/TaxComparisonCard.vue'
 import { usePersonStore } from '@/stores/personStore'
 import { useExpenseStore } from '@/stores/expenseStore'
 import { useAuthStore } from '@/stores/authStore'
@@ -200,10 +190,8 @@ const pdfLoading = ref(false)
 const csvLoading = ref(false)
 const summary = ref<ExpenseSummary | null>(null)
 const multiYearData = ref<(ExpenseSummary | null)[]>([])
-const grossSalary = ref<number>(parseInt(localStorage.getItem('grossSalary') ?? '0') || 0)
 const taxCase = ref('1AK')
 
-watch(grossSalary, v => localStorage.setItem('grossSalary', String(v)))
 watch(taxCase, value => {
   if (personStore.activePerson) localStorage.setItem(`taxCase:${personStore.activePerson.id}`, value)
 })
@@ -232,16 +220,6 @@ const distribution = computed(() => {
   ].map(item => ({ ...item, percent: s.total > 0 ? item.amount / s.total * 100 : 0 }))
 })
 const fmt = fmtEur
-
-// B — Comparaison forfait 10%
-const FORFAIT_CAP_2024 = 14171
-const forfaitComparison = computed(() => {
-  if (!summary.value || grossSalary.value <= 0) return { favorable: true, label: '' }
-  const forfait = Math.min(grossSalary.value * 0.10, FORFAIT_CAP_2024)
-  const diff = summary.value.total - forfait
-  if (diff > 0) return { favorable: true, label: `Frais réels avantageux : +${fmt(diff)} vs forfait 10 %` }
-  return { favorable: false, label: `Forfait 10 % plus avantageux de ${fmt(Math.abs(diff))}` }
-})
 
 // E — Détail barème (taux chargés depuis l'API pour refléter la configuration BDD)
 const baremeYear = ref<BaremeYear | null>(null)
