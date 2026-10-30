@@ -1,0 +1,186 @@
+{
+  "tax": {
+    "comparison": {
+      "title": "Forfait 10 % ou frais réels",
+      "yearLabel": "Année {year}",
+      "loading": "Calcul de la comparaison…",
+      "error": "La comparaison n’a pas pu être chargée.",
+      "retry": "Réessayer",
+      "temporal": {
+        "provisional_estimate": "Estimation provisoire : l’année {year} n’est pas terminée, le résultat évoluera avec vos saisies.",
+        "annual_estimate_to_verify": "Estimation annuelle à vérifier : l’année {year} est échue mais n’est pas clôturée.",
+        "closed_estimate": "Estimation clôturée : le résultat {year} est figé à la date de clôture. Il reste une estimation et ne constitue pas le calcul définitif de votre impôt."
+      },
+      "banner": {
+        "title": "Les frais réels pourraient réduire votre revenu imposable",
+        "amount": "Écart estimé de revenu imposable : {amount}",
+        "belowOneEuro": "écart inférieur à 1 €",
+        "understand": "Comprendre le calcul",
+        "hide": "Masquer le détail du calcul"
+      },
+      "outcome": {
+        "equivalent": "Les deux options produisent actuellement la même déduction : aucune option n’est recommandée.",
+        "less_advantageous": "Avec les données actuelles, l’option frais réels n’est pas recommandée : l’abattement forfaitaire de 10 % produit une base imposable plus faible."
+      },
+      "status": {
+        "configuration_missing": "La configuration fiscale de l’année {year} doit être complétée avant de pouvoir comparer les deux options.",
+        "incomplete": "Le calcul n’est pas possible tant que ces informations manquent :"
+      },
+      "missing": {
+        "goTo": "Compléter ce champ",
+        "adminOnly": "(paramètre réglementaire à compléter par l’administration de FraisZen)",
+        "net_taxable_salary": "Salaire net imposable de l’année {year}",
+        "employer_reimbursement_to_reintegrate": "Indiquer si le remboursement employeur {reimbursementId} doit être réintégré",
+        "employer_reimbursement_expense": "La dépense {expenseId} liée au remboursement employeur {reimbursementId} est introuvable pour cette personne et cette année : retirez le lien",
+        "travel_allowance": "Indemnité kilométrique annuelle {year}",
+        "fiscal_config": "Configuration fiscale de l’année {year}",
+        "fiscal_config_forfait_rate_percent": "Taux du forfait (configuration fiscale {year})",
+        "fiscal_config_forfait_minimum_cents": "Minimum du forfait (configuration fiscale {year})",
+        "fiscal_config_forfait_maximum_cents": "Plafond du forfait (configuration fiscale {year})",
+        "fiscal_config_version": "Version des règles (configuration fiscale {year})",
+        "fiscal_config_source": "Source des règles (configuration fiscale {year})",
+        "fiscal_config_effective_from": "Date d’entrée en vigueur (configuration fiscale {year})",
+        "fiscal_config_forfait_limits": "Minimum et plafond du forfait incohérents (configuration fiscale {year})",
+        "unknown": "Information manquante : {code}"
+      },
+      "detail": {
+        "title": "Détail du calcul",
+        "amountsTitle": "Montants",
+        "formulasTitle": "Formules",
+        "referenceTitle": "Règles et références",
+        "netTaxableSalary": "Salaire net imposable",
+        "theoreticalForfait": "Forfait théorique ({rate} % du salaire)",
+        "forfaitMinimum": "Minimum du forfait",
+        "forfaitMaximum": "Plafond du forfait",
+        "finalForfait": "Forfait retenu",
+        "forfaitLimit": {
+          "none": "Aucune limite appliquée",
+          "minimum": "Minimum appliqué",
+          "maximum": "Plafond appliqué"
+        },
+        "realExpenses": "Frais réels",
+        "reintegrated": "Remboursements employeur réintégrés",
+        "excludedContribution": "Contribution employeur déjà déduite des repas (non comptée deux fois)",
+        "baseForfait": "Base imposable avec le forfait",
+        "baseReal": "Base imposable avec les frais réels",
+        "difference": "Écart estimé de revenu imposable",
+        "formulas": {
+          "theoreticalForfait": "Forfait théorique = salaire net imposable × taux ÷ 100 (arrondi au centime inférieur)",
+          "finalForfait": "Forfait retenu = forfait théorique borné par le minimum et le plafond de l’année",
+          "baseForfait": "Base forfait = salaire net imposable − forfait retenu",
+          "baseReal": "Base frais réels = salaire net imposable + remboursements réintégrés − frais réels",
+          "difference": "Écart = base forfait − base frais réels (positif : les frais réels réduisent davantage le revenu imposable)"
+        },
+        "year": "Année",
+        "version": "Version des règles",
+        "source": "Source",
+        "effectiveFrom": "Date d’entrée en vigueur",
+        "rulesTitle": "Règles appliquées",
+        "rule": {
+          "net_taxable_salary_consolidation": "Consolidation des seuls salaires nets imposables de la personne et de l’année",
+          "forfait_rate_percent": "Taux du forfait (%)",
+          "forfait_minimum_cents": "Minimum du forfait",
+          "forfait_maximum_cents": "Plafond du forfait",
+          "base_forfait_salary_minus_forfait": "Base forfait = salaire − forfait retenu",
+          "base_real_expenses_salary_plus_reintegrated_minus_expenses": "Base frais réels = salaire + remboursements réintégrés − frais réels",
+          "reintegration_explicit_only": "Seuls les remboursements explicitement marqués à réintégrer sont réintégrés",
+          "meal_employer_contribution_not_counted_twice": "La contribution employeur déjà déduite d’un repas n’est pas comptée deux fois",
+          "travel_kilometric_allowance_cents": "Indemnité kilométrique annuelle (barème de l’année)"
+        },
+        "originsTitle": "Origine des montants",
+        "origins": {
+          "netTaxableSalary": "Salaire : {entries} salaire(s) net(s) imposable(s) saisi(s) — employeur(s) : {employers}",
+          "realExpenses": "Frais réels : {entries} dépense(s) saisie(s) dans FraisZen et {trips} trajet(s) valorisé(s) au barème kilométrique {year}",
+          "travelAllowance": "Indemnité kilométrique annuelle calculée : {amount}",
+          "reimbursements": "Remboursements employeur : {reintegrated} sur {entries} marqué(s) à réintégrer",
+          "forfaitParameters": "Taux, minimum et plafond du forfait : configuration fiscale {year}"
+        },
+        "warningsTitle": "Points d’attention du calcul",
+        "none": "—"
+      },
+      "disclaimer": "Avertissement fiscal : ce calcul est une estimation indicative de l’écart de revenu imposable entre l’abattement forfaitaire de 10 % et la déduction des frais réels. Il ne calcule pas votre impôt, ne constitue pas un conseil fiscal et dépend des informations saisies. Vérifiez votre situation et les règles en vigueur sur impots.gouv.fr avant d’opter pour les frais réels : vous restez responsable de votre déclaration.",
+      "dashboard": {
+        "title": "Forfait ou frais réels, personne par personne",
+        "subtitle": "Chaque personne du foyer est calculée séparément : les écarts ne sont jamais additionnés.",
+        "year": "Année de comparaison"
+      },
+      "warning": {
+        "negative_travel_allowance": "L’indemnité kilométrique annuelle fournie était négative : elle a été rejetée.",
+        "other_year_configuration_ignored": "La configuration fiscale de l’année {configurationYear} a été ignorée : seule celle de l’année {year} peut être utilisée.",
+        "travel_allowance_without_trip": "Une indemnité kilométrique de {amount} a été fournie alors qu’aucun trajet n’existe pour l’année {year}.",
+        "meal_contribution_not_counted_twice": "Remboursement {reimbursementId} : {amount} déjà déduits comme participation employeur du repas {expenseId} n’ont pas été comptés deux fois.",
+        "reimbursements_not_reintegrated": "{count} remboursement(s) employeur non marqué(s) à réintégrer n’ont pas été ajoutés à la base frais réels.",
+        "forfait_exceeds_salary": "Le minimum du forfait dépasse le salaire net imposable : la base imposable avec le forfait est négative.",
+        "unknown": "Un point d’attention du calcul n’a pas pu être affiché : vérifiez vos saisies."
+      }
+    },
+    "inputs": {
+      "title": "Données fiscales de {name} · {year}",
+      "loading": "Chargement des données fiscales…",
+      "loadError": "Les données fiscales n’ont pas pu être chargées.",
+      "saveError": "L’enregistrement a échoué. Réessayez.",
+      "invalid": "Certaines valeurs sont invalides : vérifiez les dates (dans l’année), les montants (positifs) et l’employeur.",
+      "remove": "Supprimer",
+      "salaries": {
+        "title": "Salaire net imposable {year}",
+        "empty": "Aucun salaire net imposable saisi pour {year} : la comparaison ne peut pas être calculée.",
+        "row": "{employer} · du {start} au {end} · {amount}",
+        "employer": "Employeur",
+        "amount": "Montant net imposable (€)",
+        "periodStart": "Début de période",
+        "periodEnd": "Fin de période",
+        "help": "Montant net imposable figurant sur vos bulletins de paie (cumul annuel) ; saisissez une ligne par employeur ou par période.",
+        "add": "Ajouter ce salaire"
+      },
+      "reimbursements": {
+        "title": "Remboursements employeur {year}",
+        "empty": "Aucun remboursement employeur saisi.",
+        "row": "{employer} · {category} · {amount} · {date}",
+        "noDate": "date non renseignée",
+        "toReintegrate": "À réintégrer au revenu imposable ?",
+        "notIndicated": "Non indiqué",
+        "yes": "Oui, à réintégrer",
+        "no": "Non",
+        "linkedExpense": "Lié à une dépense saisie dans FraisZen",
+        "linkedExpenseMissing": "La dépense liée {expenseId} est introuvable pour {year}",
+        "unlink": "Retirer le lien avec la dépense",
+        "employer": "Employeur",
+        "amount": "Montant (€)",
+        "category": "Nature",
+        "date": "Date (facultative)",
+        "add": "Ajouter ce remboursement"
+      },
+      "categories": {
+        "transport": "Transport",
+        "meal": "Repas",
+        "mileage": "Indemnités kilométriques",
+        "remote_work": "Télétravail",
+        "other": "Autre"
+      }
+    },
+    "closure": {
+      "title": "Clôture de l’année {year}",
+      "closedBadge": "Clôturée",
+      "closedNotice": "Année clôturée le {date} (version {version}) : le résultat affiché est l’instantané enregistré à la clôture (montants, données retenues, règles fiscales et leur version). Ce n’est pas le calcul définitif de votre impôt.",
+      "unchangedSinceClosure": "Vos données et les règles fiscales n’ont pas changé depuis la clôture.",
+      "changedAfterClosure": "Des données ou des règles fiscales ont changé depuis la clôture. Le résultat clôturé n’est pas modifié et reste dans l’historique.",
+      "currentDifference": "Avec les données actuelles, l’écart estimé de revenu imposable serait de {amount}.",
+      "currentUnavailable": "Avec les données actuelles, la comparaison n’est pas disponible (informations manquantes).",
+      "reopenToRecalculate": "Rouvrez l’année pour recalculer avec les données actuelles, puis clôturez-la de nouveau.",
+      "reopen": "Rouvrir l’année",
+      "confirmReopen": "Rouvrir l’année ? La clôture (version {version}) est conservée dans l’historique et le calcul suivra de nouveau vos données actuelles jusqu’à une nouvelle clôture.",
+      "confirmReopenButton": "Confirmer la réouverture",
+      "openNotice": "Lorsque vos saisies sont complètes, vous pouvez valider ce calcul et clôturer l’année : un instantané sera conservé et ne sera plus remplacé par vos modifications.",
+      "validateAndClose": "Valider et clôturer l’année",
+      "confirmClose": "Vous validez le calcul affiché pour {year}. Un instantané (montants, données retenues, règles fiscales, version, source, date d’entrée en vigueur et date de clôture) sera enregistré. Il s’agit d’une estimation, pas du calcul définitif de votre impôt. Vous pourrez rouvrir l’année explicitement.",
+      "confirmCloseButton": "Confirmer la clôture",
+      "cancel": "Annuler",
+      "notClosable": "La clôture sera possible lorsque le calcul sera complet.",
+      "conflict": "Le calcul a changé ou l’année a été modifiée entre-temps : le résultat a été rechargé, vérifiez-le avant de recommencer.",
+      "error": "L’opération n’a pas pu aboutir. Réessayez.",
+      "historyTitle": "Historique des clôtures",
+      "historyClosed": "Version {version} : clôturée le {closedAt} (en vigueur)",
+      "historyReopened": "Version {version} : clôturée le {closedAt}, rouverte le {reopenedAt}"
+    }
+  }
+}

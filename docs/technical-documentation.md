@@ -291,6 +291,21 @@ Cette séparation garde le domaine indépendant de Doctrine.
 
 Les routes admin sont préfixées par `/api/admin/` et protégées par `ROLE_ADMIN`. Elles couvrent les utilisateurs, les statistiques, la configuration fiscale et les barèmes kilométriques.
 
+| Méthode | Route | Description |
+|--------|-------|-------------|
+| GET | `/api/admin/fiscal-config` | Liste des configurations fiscales annuelles (`FiscalConfig::toArray()`) |
+| GET | `/api/admin/fiscal-config/{year}` | Configuration d'une année (404 si absente) |
+| PUT | `/api/admin/fiscal-config/{year}` | Création / mise à jour (`UpsertFiscalConfigCommand`) ; 400 si `remoteWorkDailyAllowance` / `homeMealValue` invalides, 422 si les paramètres du forfait violent une règle du domaine |
+
+Contrat JSON de `FiscalConfig::toArray()` (réponse des trois routes) : `year`, `remoteWorkDailyAllowance` et
+`homeMealValue` (euros, inchangés), puis les paramètres du forfait 10 % — `forfaitRatePercent` (entier, %),
+`forfaitMinimumCents` et `forfaitMaximumCents` (**entiers en centimes**, jamais en euros), `version`, `source`,
+`effectiveFrom` (`YYYY-MM-DD`) — tous `null` tant qu'ils ne sont pas saisis, plus `taxComparisonComplete` (booléen)
+et `missingTaxComparisonFields` (liste des paramètres manquants). Le PUT accepte les mêmes clés : les six paramètres
+sont optionnels **en bloc** (tous fournis → `FiscalConfig::defineTaxComparisonRules()` ; tous absents → les
+paramètres déjà enregistrés pour l'année sont conservés ; groupe partiel → 422). Voir aussi
+« Saisie des paramètres du forfait dans le back-office ».
+
 ### Jours fériés
 
 `/api/public-holidays/{year}` expose les jours fériés d’une année via le `SharedKernel`.
@@ -341,6 +356,152 @@ frontend/src/
 - `/admin/*`.
 
 Le routeur protège les routes privées par présence du token JWT et protège les routes admin par `ROLE_ADMIN`.
+
+## Comparaison fiscale forfait / frais réels (contexte `Tax`)
+
+Données par personne et par année :
+
+- `net_taxable_salary` (`App\Tax\Domain\Entity\NetTaxableSalary`) : salaire **net imposable** annuel en centimes,
+  par personne, employeur, période (`period_start`/`period_end` dans l'année) et année. Aucun salaire brut, net versé,
+  revenu fiscal de référence ni cumul de dépenses n'est modélisé ni utilisé.
+- `employer_reimbursement` (`App\Tax\Domain\Entity\EmployerReimbursement`) : montant en centimes, employeur, année
+  et date optionnelle (dans l'année), catégorie, indicateur `to_reintegrate` (nullable : `NULL` = information non
+  renseignée → résultat `incomplete`) et `expense_id` optionnel vers la dépense concernée.
+- Adaptation de schéma : la table existante `fiscal_config` (une ligne par année) est réutilisée et étendue par des
+  colonnes nullables `forfait_rate_percent`, `forfait_minimum_cents`, `forfait_maximum_cents`, `version`, `source`,
+  `effective_from`. Les lignes existantes restent valides ; tant que ces paramètres ne sont pas renseignés
+  (`FiscalConfig::defineTaxComparisonRules()`), la comparaison renvoie `configuration_missing`. L'ordre des arguments
+  historiques du constructeur est conservé (nouveaux arguments ajoutés en fin, optionnels).
+- Migration : `Version20261028000000`. Repositories : `NetTaxableSalaryRepositoryInterface`,
+  `EmployerReimbursementRepositoryInterface` (implémentations Doctrine dans `src/Tax/Infrastructure/Persistence`).
+
+Moteur `App\Tax\Domain\Service\TaxComparisonService::compare(personId, year, salaires, remboursements, dépenses, config, indemnitéKmCentimes = null)` :
+déterministe, en entiers (centimes), filtre toutes les collections par personne **et** année.
+
+- forfait théorique = `floor(salaire × taux / 100)` ; forfait final = forfait théorique borné par le minimum et le
+  plafond de l'année ;
+- base forfait = salaire − forfait final ; base frais réels = salaire + remboursements réintégrés − frais réels ;
+- écart = base forfait − base frais réels ; décision `advantageous` (> 0, les frais réels réduisent la base),
+  `less_advantageous` (< 0) ou `equivalent` (= 0) ;
+- frais réels = somme des montants déductibles des dépenses de l'année, indépendante des remboursements ;
+  `TravelExpense::amount()` vaut toujours 0 (le barème kilométrique dépend du cumul annuel) : l'indemnité
+  kilométrique annuelle de la personne, calculée avec le barème de l'année (ex. `KilometricAllowanceCalculator`),
+  est fournie en centimes par l'appelant et ajoutée aux frais réels (règle `travel_kilometric_allowance_cents`).
+  Si la personne a des trajets dans l'année sans indemnité fournie (ou avec une indemnité négative), le résultat est
+  `incomplete` avec `travel_allowance[<année>]` dans `missing` (jamais compté silencieusement à 0) ;
+- seuls les remboursements `to_reintegrate = true` sont réintégrés ; pour un remboursement lié à un repas
+  (`MealExpense` avec justificatif), la part couverte par la contribution employeur déjà déduite du repas est exclue
+  (pas de double comptage), avec avertissement ;
+- statuts : `configuration_missing` (configuration absente, d'une autre année — jamais utilisée en repli — ou
+  incomplète), `incomplete` (salaire absent, indicateur de réintégration absent, dépense liée introuvable pour la
+  personne, indemnité kilométrique absente) avec la liste exacte `missing`, sinon `available` avec `amounts`, `rules` (code, valeur, version, source,
+  date d'entrée en vigueur), `configuration` et `warnings`.
+
+### Affichage de la comparaison (F6-T2)
+
+- Endpoint : `GET /api/persons/{personId}/tax-comparison/{year}` (`App\Tax\Infrastructure\Http\TaxComparisonController`,
+  propriété de la personne vérifiée par `OwnershipGuardInterface`). Une requête = une personne et une année ; le
+  tableau de bord appelle l'endpoint une fois par personne et n'additionne jamais les écarts.
+- `GetTaxComparisonQueryHandler` charge salaires, remboursements, dépenses et configuration de la personne et de
+  l'année, calcule l'indemnité kilométrique annuelle avec `KilometricAllowanceCalculator` (barème de l'année), appelle
+  le moteur puis `TaxComparisonPresenter`, qui ajoute `origins` (origine des montants) et `display` :
+  `showBanner` (uniquement `available` et écart exact > 0), `outcome`, `roundedDifferenceEuros` (euro le plus proche,
+  demi-euro arrondi en s'éloignant de zéro), `differenceBelowOneEuro` (|écart| < 1 €, écart non nul),
+  `temporalQualification` (`provisional_estimate` pour l'année civile en cours ou future, `annual_estimate_to_verify`
+  pour une année échue non clôturée, `closed_estimate` pour une année clôturée), `missingFields` (clé de traduction +
+  lien direct) et `disclaimerKey`.
+- Frontend : `components/tax/TaxComparisonCard.vue` (bandeau, « Comprendre le calcul », états incomplets) et
+  `TaxComparisonDetail.vue` (montants, formules, règles, version, source, date d'entrée en vigueur, origines,
+  avertissement fiscal), utilisés par `PersonsView` (une carte par personne), `SummaryView` et `CalendarView`
+  (personne active). Les libellés passent par `frontend/src/i18n` (`t(clé, paramètres)`, catalogue
+  `locales/fr.json`).
+- Tableau de bord du foyer : FraisZen n'a pas de page « tableau de bord » dédiée ; la page **Personnes**
+  (`/persons`, « Votre foyer fiscal ») en tient lieu. C'est une hypothèse de mise en œuvre, à confirmer par le
+  produit : elle affiche une carte de comparaison indépendante par personne et, sous chacune, le panneau
+  « Données fiscales » de cette seule personne.
+- Saisie des informations manquantes : `TaxInputsController` (`/api/persons/{personId}/tax-inputs/...`, propriété
+  vérifiée par `OwnershipGuardInterface`) et `TaxInputsService` permettent de lister/ajouter/supprimer les salaires
+  nets imposables, d'ajouter/supprimer un remboursement employeur, d'indiquer s'il doit être réintégré
+  (`PATCH {"toReintegrate": true|false|null}`) et de retirer le lien vers une dépense introuvable
+  (`PATCH {"unlinkExpense": true}`). Un identifiant d'une autre personne (même du même foyer) répond 404.
+- Liens directs : `missingFields[].link` = `{path, query: {personId, year}, hash}` ; le hash est l'id DOM du champ
+  (`TaxComparisonPresenter::anchor()` ↔ `frontend/src/utils/fieldAnchor.ts`) : `tax-field-net-taxable-salary-{personId}`
+  (champ employeur du formulaire salaire), `tax-field-employer-reimbursement-{id}` (sélecteur de réintégration),
+  `tax-field-employer-reimbursement-expense-{id}` (action « Retirer le lien »), `tax-field-travel-allowance` (déduction
+  annuelle de `/trips`). `PersonsView` ouvre le panneau de la personne demandée et y place le focus. Les paramètres
+  de la configuration fiscale (taux, minimum, plafond, version, source, date) n'ont encore aucun écran de saisie :
+  aucun lien n'est proposé pour eux, le libellé indique qu'ils relèvent de l'administration.
+- Avertissements du moteur : `display.warnings` = codes + paramètres (`TaxComparisonPresenter::warning()`), traduits
+  par `tax.comparison.warning.*` ; le texte anglais brut de `warnings` n'est jamais affiché.
+- Tests : PHP (`tests/Unit/Tax`, dont `Infrastructure/TaxHttpTest` : routes, HttpKernel, OwnershipGuard et
+  ExceptionListener réels sur dépôts en mémoire) et frontend (`cd frontend && npm test` : composants compilés par
+  Vite et rendus par `vue/server-renderer`, sans dépendance supplémentaire).
+
+### Validation, clôture annuelle et réouverture (F6-T3)
+
+- Droits : mêmes conventions que les autres ressources d'une personne — utilisateur authentifié (pare-feu JWT,
+  abonnement actif via `SubscriptionMiddleware`) propriétaire de la personne (`OwnershipGuardInterface`, 404 sinon).
+  Le propriétaire du foyer peut clôturer et rouvrir l'année de chacune de ses personnes ; aucun droit supplémentaire
+  (administrateur, autre foyer) n'est créé.
+- Parcours : 1) `GET .../tax-comparison/{year}` renvoie `closure` (`state` `open`, `closable`, `calculationFingerprint`
+  = empreinte SHA-256 des données retenues + résultat) ; 2) l'utilisateur confirme dans l'interface ;
+  3) `POST /api/persons/{personId}/tax-comparison/{year}/closure` `{"confirm": true, "calculationFingerprint": ...}`
+  (`CloseTaxYearCommand`) → 201. Refus : 422 sans confirmation ou si le calcul n'est pas `available`
+  (`incomplete`, `configuration_missing`), 409 si le calcul a changé depuis sa consultation (empreinte différente) ou
+  si l'année est déjà clôturée.
+- Instantané (`TaxYearClosure`, table `tax_year_closure`, colonne JSON `snapshot`) : `calculation` (résultat complet,
+  centimes), `origins`, `retainedData` (salaires, remboursements, dépenses, indemnité kilométrique, configuration
+  fiscale utilisée), `fiscalRules` (règles avec version, source, date d'entrée en vigueur), `closedAt`, `fingerprint`.
+  Aucun mutateur : la lecture d'une année clôturée reconstruit le résultat depuis l'instantané
+  (`TaxComparisonResult::fromArray`), indépendamment de la configuration fiscale courante.
+- Avant clôture : rien n'est mis en cache, chaque lecture recalcule depuis les données courantes ; toute modification
+  (salaire, dépense, remboursement, règle fiscale, rattachement d'une dépense à une personne) change le résultat et
+  l'empreinte, et une clôture avec l'ancienne empreinte est refusée (409).
+- Après clôture (comportement retenu : affichage d'un écart + réouverture explicite) : les saisies restent possibles,
+  mais l'instantané n'est jamais remplacé ; la réponse a le statut `closed`, `display.temporalQualification =
+  closed_estimate` et `closure.afterClosure` (`dataChanged`, `currentStatus`, `currentDifferenceCents`) indique l'écart
+  avec les données courantes. Pour recalculer, l'utilisateur rouvre explicitement :
+  `POST .../closure/reopen` `{"confirm": true, "version": n}` (`ReopenTaxYearCommand`, 409 si la version n'est pas
+  celle en vigueur). La clôture rouverte est conservée (`reopened_at`, `reopened_by`) dans `closure.history` ; une
+  nouvelle clôture crée la version n+1.
+- Concurrence : contrainte unique `(person_id, year, version)` (deux clôtures simultanées → 409 pour la seconde) et
+  verrou optimiste Doctrine (`revision`) sur la réouverture.
+- Interface : `TaxClosurePanel.vue` (bouton « Valider et clôturer l'année » + confirmation, badge « Clôturée », date
+  et version, écart après clôture, réouverture confirmée, historique) ; le résultat clôturé est toujours qualifié
+  d'estimation, jamais de calcul définitif de l'impôt.
+- Tests : `Application/TaxYearClosureTest`, `Infrastructure/TaxYearClosurePersistenceTest` (SQLite : aller-retour,
+  unicité de version, verrou optimiste), `Infrastructure/TaxHttpTest` (parcours HTTP et droits), `frontend/tests`.
+
+### Saisie des paramètres du forfait dans le back-office (issue #73)
+
+Les six paramètres de `fiscal_config` utilisés par la comparaison sont saisis par l'administrateur dans l'écran
+« Configuration fiscale » (`frontend/src/views/admin/AdminFiscalConfigView.vue`), par année, sous les champs
+historiques (indemnité télétravail, valeur repas) qui restent inchangés.
+
+- Écran : pour chaque année (et dans le bloc « Ajouter une année »), le composant réutilisable
+  `components/admin/AdminForfaitFields.vue` affiche taux (%), minimum (€), plafond (€), version, source et date
+  d'entrée en vigueur, puis un état : « Comparaison forfait / frais réels disponible pour <année> » ou « … non
+  disponible pour <année> : paramètres du forfait incomplets (<champs manquants>) ». Les erreurs sont affichées dans
+  le formulaire (`role="alert"`), sans enregistrement partiel.
+- Montants : saisis en **euros** dans l'UI, envoyés et stockés en **centimes** (`utils/money.ts` : `eurosToCents`,
+  `centsToEurosInput` ; `14 555,00 € → 1455500`, sans perte flottante). L'API admin n'expose jamais ces montants en
+  euros ; la conversion est exclusivement côté frontend (`utils/fiscalConfigForm.ts` : brouillon → payload, règle
+  « les six paramètres ensemble ou aucun », libellés français des champs manquants).
+- Backend : `UpsertFiscalConfigCommand` porte les six paramètres (nullable, `effectiveFrom` en `Y-m-d`) ;
+  `UpsertFiscalConfigCommandHandler` vérifie le groupe, convertit la date et appelle
+  `FiscalConfig::defineTaxComparisonRules()` **avant** toute autre mutation de l'entité ; une
+  `\InvalidArgumentException` du domaine (taux hors 1–100, montant négatif, minimum > plafond, version/source
+  vides) ou une date invalide devient `App\Admin\Application\Exception\InvalidFiscalConfigException`
+  (`\DomainException` → 422 par l'`ExceptionListener` partagé, message lisible dans `error`). Le contrôleur
+  `AdminFiscal\UpsertController` ne fait que le mapping de transport (types des clés) et redispatche la query de
+  lecture. Le moteur de comparaison n'est pas modifié : une fois l'année complète, `TaxComparisonService` passe de
+  `configuration_missing` au calcul effectif.
+- Tests : `tests/Unit/Admin/Application/Command/UpsertFiscalConfigCommandHandlerTest.php` (complet, partiel,
+  chaque violation), `tests/Unit/Admin/Infrastructure/AdminFiscalConfigHttpTest.php` (GET/liste avec les six
+  champs en centimes, PUT 200/400/422, comparaison `configuration_missing` → `available` après saisie complète),
+  `frontend/tests/adminFiscalConfig.test.mjs` (conversion euros ⇄ centimes, brouillon → payload, composant).
+- Valeurs de référence (non codées en dur, à saisir par l'administrateur) : revenus 2025 → 509 € / 14 555 € ;
+  2024 → 504 € / 14 426 € ; 2023 → 495 € / 14 171 €.
 
 ## Docker Compose
 

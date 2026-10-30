@@ -159,3 +159,156 @@ export interface FavoriteRoute {
 }
 
 export type CreateFavoriteRouteDto = Omit<FavoriteRoute, 'id' | 'personId' | 'createdAt'>
+
+/** 'closed': the year was closed by the user, the payload is read from the immutable snapshot. */
+export type TaxComparisonStatus = 'available' | 'incomplete' | 'configuration_missing' | 'closed'
+
+export interface TaxComparisonAmounts {
+  netTaxableSalaryCents: number
+  forfaitRatePercent: number
+  theoreticalForfaitCents: number
+  forfaitMinimumCents: number
+  forfaitMaximumCents: number
+  forfaitLimitApplied: 'none' | 'minimum' | 'maximum'
+  forfaitCents: number
+  realExpensesCents: number
+  reintegratedReimbursementsCents: number
+  excludedAlreadyDeductedContributionCents: number
+  baseForfaitCents: number
+  baseRealExpensesCents: number
+  differenceCents: number
+}
+
+export interface TaxComparisonRule {
+  code: string
+  value: number | null
+  version: string
+  source: string
+  effectiveFrom: string
+}
+
+export interface TaxComparisonMissingField {
+  code: string
+  field: string
+  params: Record<string, string>
+  link: { path: string; query: Record<string, string>; hash: string } | null
+}
+
+/** Result of ONE person for ONE year (GET /api/persons/{id}/tax-comparison/{year}). */
+export interface TaxComparison {
+  status: TaxComparisonStatus
+  personId: string
+  year: number
+  amounts: TaxComparisonAmounts | null
+  decision: 'advantageous' | 'less_advantageous' | 'equivalent' | null
+  missing: string[]
+  rules: TaxComparisonRule[]
+  configuration: { year: number; version: string | null; source: string | null; effectiveFrom: string | null } | null
+  warnings: string[]
+  origins: {
+    netTaxableSalary: { entries: number; employers: string[] }
+    realExpenses: { entries: number; trips: number; travelAllowanceCents: number | null }
+    reimbursements: { entries: number; reintegrated: number }
+  }
+  display: {
+    temporalQualification: 'provisional_estimate' | 'annual_estimate_to_verify' | 'closed_estimate'
+    showBanner: boolean
+    outcome: 'advantageous' | 'equivalent' | 'less_advantageous' | null
+    roundedDifferenceEuros: number | null
+    differenceBelowOneEuro: boolean
+    missingFields: TaxComparisonMissingField[]
+    /** Engine warnings converted to translation codes (tax.comparison.warning.<code>). */
+    warnings: TaxComparisonWarning[]
+    disclaimerKey: string
+  }
+  closure: TaxComparisonClosure
+}
+
+export interface TaxClosureHistoryEntry {
+  version: number
+  state: 'closed' | 'reopened'
+  closedAt: string
+  reopenedAt: string | null
+}
+
+/** Closing state of the year (validation, snapshot in force, difference with the current data, history). */
+export interface TaxComparisonClosure {
+  state: 'open' | 'closed'
+  /** true when the open calculation is complete and can be validated and closed. */
+  closable: boolean
+  /** Fingerprint of the CURRENT calculation: sent back when closing to validate exactly what was reviewed. */
+  calculationFingerprint: string | null
+  version: number | null
+  closedAt: string | null
+  snapshotFingerprint: string | null
+  /** Closed year only: the snapshot is kept, the current data are compared with it. */
+  afterClosure: {
+    policy: 'snapshot_kept_reopen_to_recalculate'
+    dataChanged: boolean
+    currentStatus: string
+    currentDifferenceCents: number | null
+    currentRoundedDifferenceEuros: number | null
+  } | null
+  history: TaxClosureHistoryEntry[]
+}
+
+export interface TaxClosureSummary {
+  personId: string
+  year: number
+  version: number
+  state: 'closed' | 'reopened'
+  closedAt: string
+  reopenedAt: string | null
+}
+
+export interface TaxComparisonWarning {
+  code: string
+  params: Record<string, string>
+}
+
+export interface NetTaxableSalaryInput {
+  id: string
+  employer: string
+  year: number
+  periodStart: string
+  periodEnd: string
+  amountCents: number
+}
+
+export interface EmployerReimbursementInput {
+  id: string
+  employer: string
+  year: number
+  date: string | null
+  amountCents: number
+  category: string
+  /** null = not indicated yet: the comparison stays incomplete. */
+  toReintegrate: boolean | null
+  expenseId: string | null
+  /** null when no expense is linked; false when the linked expense does not exist for this person and year. */
+  linkedExpenseFound: boolean | null
+}
+
+/** Inputs of ONE person for ONE year (GET /api/persons/{id}/tax-inputs/{year}). */
+export interface TaxInputs {
+  personId: string
+  year: number
+  salaries: NetTaxableSalaryInput[]
+  reimbursements: EmployerReimbursementInput[]
+  categories: string[]
+}
+
+export interface NewNetTaxableSalary {
+  employer: string
+  periodStart: string
+  periodEnd: string
+  amountCents: number
+}
+
+export interface NewEmployerReimbursement {
+  employer: string
+  amountCents: number
+  category: string
+  toReintegrate: boolean | null
+  date: string | null
+}

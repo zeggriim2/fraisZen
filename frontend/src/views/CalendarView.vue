@@ -11,6 +11,7 @@
         <div><span class="overview-icon mint"><AppIcon name="home" /></span><div><span>Télétravail</span><strong>{{ stats.remoteCount }} <small>jours</small></strong></div><span class="overview-note">{{ stats.remoteTotalAmount.toFixed(2) }} €</span></div>
         <div><span class="overview-icon peach"><AppIcon name="receipt" /></span><div><span>Péages</span><strong>{{ stats.tollAmount.toFixed(2) }} <small>€</small></strong></div><span class="overview-note">{{ stats.tollCount }} frais</span></div>
       </div>
+      <TaxComparisonCard v-if="personStore.activePerson" :key="personStore.activePerson.id" :person="personStore.activePerson" :year="year" class="mb-6" />
       <div class="calendar-layout">
         <section class="calendar-panel">
           <div class="calendar-toolbar">
@@ -70,6 +71,7 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue'
 import { usePersonStore } from '@/stores/personStore'
+import TaxComparisonCard from '@/components/tax/TaxComparisonCard.vue'
 import { useExpenseStore } from '@/stores/expenseStore'
 import { useAuthStore } from '@/stores/authStore'
 import { useToast } from '@/composables/useToast'

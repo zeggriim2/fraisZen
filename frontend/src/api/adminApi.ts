@@ -44,6 +44,32 @@ export interface FiscalConfig {
   year: number
   remoteWorkDailyAllowance: number
   homeMealValue: number
+  /** Forfait 10 % parameters (F6). Amounts are integer cents; all six are null while not configured. */
+  forfaitRatePercent: number | null
+  forfaitMinimumCents: number | null
+  forfaitMaximumCents: number | null
+  version: string | null
+  source: string | null
+  /** ISO date `YYYY-MM-DD`. */
+  effectiveFrom: string | null
+  taxComparisonComplete: boolean
+  missingTaxComparisonFields: string[]
+}
+
+/** Optional group: either the six parameters are all provided, or none (the API rejects a partial group with 422). */
+export interface ForfaitParametersInput {
+  forfaitRatePercent: number
+  forfaitMinimumCents: number
+  forfaitMaximumCents: number
+  version: string
+  source: string
+  effectiveFrom: string
+}
+
+export interface FiscalConfigInput {
+  remoteWorkDailyAllowance: number
+  homeMealValue: number
+  forfait?: ForfaitParametersInput | null
 }
 
 export interface TrancheTaux {
@@ -90,8 +116,12 @@ export const adminApi = {
   listFiscalConfigs: () =>
     http.get<FiscalConfig[]>('/admin/fiscal-config').then(r => r.data),
 
-  upsertFiscalConfig: (year: number, remoteWorkDailyAllowance: number, homeMealValue: number) =>
-    http.put<FiscalConfig>(`/admin/fiscal-config/${year}`, { remoteWorkDailyAllowance, homeMealValue }).then(r => r.data),
+  upsertFiscalConfig: (year: number, input: FiscalConfigInput) =>
+    http.put<FiscalConfig>(`/admin/fiscal-config/${year}`, {
+      remoteWorkDailyAllowance: input.remoteWorkDailyAllowance,
+      homeMealValue: input.homeMealValue,
+      ...(input.forfait ?? {}),
+    }).then(r => r.data),
 
   listBaremes: () =>
     http.get<BaremeKilometrique[]>('/admin/bareme-kilometrique').then(r => r.data),
