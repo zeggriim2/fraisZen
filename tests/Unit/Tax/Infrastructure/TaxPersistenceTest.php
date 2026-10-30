@@ -86,6 +86,36 @@ final class TaxPersistenceTest extends TestCase
         self::assertFalse($byId['r3']->toReintegrate());
     }
 
+    public function testInputsEditedFromTheFiscalDataPanelRoundTrip(): void
+    {
+        $salaries = new DoctrineNetTaxableSalaryRepository($this->em);
+        $reimbursements = new DoctrineEmployerReimbursementRepository($this->em);
+        $salaries->save(new NetTaxableSalary('s1', 'person-a', 'Employer A', 2026, new \DateTimeImmutable('2026-01-01'), new \DateTimeImmutable('2026-12-31'), 1_000_000));
+        $reimbursements->save(new EmployerReimbursement('r1', 'person-a', 'Employer A', 2026, 1_234, 'meal', null, null, '11111111-1111-4111-8111-111111111111'));
+        $this->em->clear();
+
+        $reimbursement = $reimbursements->findById('r1');
+        self::assertNotNull($reimbursement);
+        $reimbursement->indicateReintegration(true);
+        $reimbursement->unlinkExpense();
+        $reimbursements->save($reimbursement);
+        $salary = $salaries->findById('s1');
+        self::assertNotNull($salary);
+        $salaries->remove($salary);
+        $this->em->clear();
+
+        $reloaded = $reimbursements->findById('r1');
+        self::assertNotNull($reloaded);
+        self::assertTrue($reloaded->toReintegrate());
+        self::assertNull($reloaded->expenseId());
+        self::assertNull($salaries->findById('s1'));
+        self::assertNull($reimbursements->findById('unknown'));
+
+        $reimbursements->remove($reloaded);
+        $this->em->clear();
+        self::assertSame([], $reimbursements->findByPersonAndYear('person-a', 2026));
+    }
+
     public function testVersionedFiscalConfigurationRoundTripAndLegacyRowStaysIncomplete(): void
     {
         $repository = new DoctrineFiscalConfigRepository($this->em);

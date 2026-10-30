@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Tests\Unit\Tax\Application;
 
 use App\Tax\Application\Presenter\TaxComparisonPresenter;
+use App\Tax\Application\Service\TaxInputsService;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -58,6 +59,20 @@ final class TaxComparisonTranslationsTest extends TestCase
         foreach (['none', 'minimum', 'maximum'] as $limit) {
             $keys[] = 'tax.comparison.detail.forfaitLimit.'.$limit;
         }
+        foreach ([
+            'The provided kilometric allowance is negative and was rejected.',
+            'The fiscal configuration of year 2025 was ignored: only the configuration of year 2026 can be used.',
+            'A kilometric allowance of 100 cents was provided although no travel expense exists for year 2026.',
+            'Reimbursement r: 100 cents already deducted as employer contribution of meal expense e were not counted twice.',
+            '1 reimbursement(s) not marked for reintegration were not added to the real expenses base.',
+            'The forfait minimum exceeds the net taxable salary: the forfait base is negative.',
+            'Unknown sentence.',
+        ] as $warning) {
+            $keys[] = 'tax.comparison.warning.'.TaxComparisonPresenter::warning($warning)['code'];
+        }
+        foreach (TaxInputsService::CATEGORIES as $category) {
+            $keys[] = 'tax.inputs.categories.'.$category;
+        }
 
         foreach ($keys as $key) {
             self::assertArrayHasKey($key, $this->messages, $key);
@@ -70,6 +85,9 @@ final class TaxComparisonTranslationsTest extends TestCase
         $files = [
             self::FRONTEND.'/components/tax/TaxComparisonCard.vue',
             self::FRONTEND.'/components/tax/TaxComparisonDetail.vue',
+            self::FRONTEND.'/components/tax/TaxComparisonResult.vue',
+            self::FRONTEND.'/components/tax/TaxInputsEditor.vue',
+            self::FRONTEND.'/components/tax/TaxInputsPanel.vue',
             self::FRONTEND.'/utils/taxComparison.ts',
             self::FRONTEND.'/views/PersonsView.vue',
         ];
@@ -84,6 +102,17 @@ final class TaxComparisonTranslationsTest extends TestCase
         self::assertNotEmpty($used);
         foreach ($used as $key) {
             self::assertArrayHasKey($key, $this->messages, $key);
+        }
+    }
+
+    public function testComponentsNeverDisplayRawEngineOrApiText(): void
+    {
+        foreach (['TaxComparisonCard.vue', 'TaxComparisonResult.vue', 'TaxComparisonDetail.vue', 'TaxInputsEditor.vue', 'TaxInputsPanel.vue'] as $component) {
+            $source = file_get_contents(self::FRONTEND.'/components/tax/'.$component);
+            self::assertIsString($source);
+            self::assertStringNotContainsString('lang="en"', $source, $component);
+            self::assertStringNotContainsString('comparison.warnings', $source, $component.' must use display.warnings (translated codes)');
+            self::assertStringNotContainsString('extractApiError', $source, $component.' must not show untranslated API messages');
         }
     }
 

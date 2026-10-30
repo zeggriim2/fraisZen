@@ -11,6 +11,10 @@ interface NetTaxableSalaryRepositoryInterface
 {
     public function save(NetTaxableSalary $salary): void;
 
+    public function remove(NetTaxableSalary $salary): void;
+
+    public function findById(string $id): ?NetTaxableSalary;
+
     /** @return list<NetTaxableSalary> */
     public function findByPersonAndYear(string $personId, int $year): array;
 }

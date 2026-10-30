@@ -400,6 +400,27 @@ déterministe, en entiers (centimes), filtre toutes les collections par personne
   avertissement fiscal), utilisés par `PersonsView` (une carte par personne), `SummaryView` et `CalendarView`
   (personne active). Les libellés passent par `frontend/src/i18n` (`t(clé, paramètres)`, catalogue
   `locales/fr.json`).
+- Tableau de bord du foyer : FraisZen n'a pas de page « tableau de bord » dédiée ; la page **Personnes**
+  (`/persons`, « Votre foyer fiscal ») en tient lieu. C'est une hypothèse de mise en œuvre, à confirmer par le
+  produit : elle affiche une carte de comparaison indépendante par personne et, sous chacune, le panneau
+  « Données fiscales » de cette seule personne.
+- Saisie des informations manquantes : `TaxInputsController` (`/api/persons/{personId}/tax-inputs/...`, propriété
+  vérifiée par `OwnershipGuardInterface`) et `TaxInputsService` permettent de lister/ajouter/supprimer les salaires
+  nets imposables, d'ajouter/supprimer un remboursement employeur, d'indiquer s'il doit être réintégré
+  (`PATCH {"toReintegrate": true|false|null}`) et de retirer le lien vers une dépense introuvable
+  (`PATCH {"unlinkExpense": true}`). Un identifiant d'une autre personne (même du même foyer) répond 404.
+- Liens directs : `missingFields[].link` = `{path, query: {personId, year}, hash}` ; le hash est l'id DOM du champ
+  (`TaxComparisonPresenter::anchor()` ↔ `frontend/src/utils/fieldAnchor.ts`) : `tax-field-net-taxable-salary-{personId}`
+  (champ employeur du formulaire salaire), `tax-field-employer-reimbursement-{id}` (sélecteur de réintégration),
+  `tax-field-employer-reimbursement-expense-{id}` (action « Retirer le lien »), `tax-field-travel-allowance` (déduction
+  annuelle de `/trips`). `PersonsView` ouvre le panneau de la personne demandée et y place le focus. Les paramètres
+  de la configuration fiscale (taux, minimum, plafond, version, source, date) n'ont encore aucun écran de saisie :
+  aucun lien n'est proposé pour eux, le libellé indique qu'ils relèvent de l'administration.
+- Avertissements du moteur : `display.warnings` = codes + paramètres (`TaxComparisonPresenter::warning()`), traduits
+  par `tax.comparison.warning.*` ; le texte anglais brut de `warnings` n'est jamais affiché.
+- Tests : PHP (`tests/Unit/Tax`, dont `Infrastructure/TaxHttpTest` : routes, HttpKernel, OwnershipGuard et
+  ExceptionListener réels sur dépôts en mémoire) et frontend (`cd frontend && npm test` : composants compilés par
+  Vite et rendus par `vue/server-renderer`, sans dépendance supplémentaire).
 
 ## Docker Compose
 

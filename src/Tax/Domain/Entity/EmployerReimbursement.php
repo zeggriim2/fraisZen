@@ -130,4 +130,16 @@ class EmployerReimbursement
     {
         return $this->expenseId;
     }
+
+    /** Explicit answer of the person; null puts the indicator back to "not indicated yet". */
+    public function indicateReintegration(?bool $toReintegrate): void
+    {
+        $this->toReintegrate = $toReintegrate;
+    }
+
+    /** Removes the link to an expense (e.g. the linked expense was deleted or belongs to another year). */
+    public function unlinkExpense(): void
+    {
+        $this->expenseId = null;
+    }
 }
