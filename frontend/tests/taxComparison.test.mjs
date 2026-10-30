@@ -44,8 +44,8 @@ async function render(component, props) {
 
 const text = html => html.replace(/<[^>]+>/g, ' ').replace(/&#39;/g, '\'').replace(/&amp;/g, '&').replace(/\s+/g, ' ')
 
-function comparison({ personId = PERSON_A, year = 2026, status = 'available', difference = 123_456, display = {}, warnings = [] } = {}) {
-  const available = status === 'available'
+function comparison({ personId = PERSON_A, year = 2026, status = 'available', difference = 123_456, display = {}, warnings = [], closure = {} } = {}) {
+  const available = status === 'available' || status === 'closed'
   const rounded = Math.sign(difference) * Math.floor((Math.abs(difference) + 50) / 100)
   return {
     status,
@@ -77,6 +77,19 @@ function comparison({ personId = PERSON_A, year = 2026, status = 'available', di
       warnings,
       disclaimerKey: 'tax.comparison.disclaimer',
       ...display,
+    },
+    closure: {
+      state: status === 'closed' ? 'closed' : 'open',
+      closable: status === 'available',
+      calculationFingerprint: 'f'.repeat(64),
+      version: status === 'closed' ? 1 : null,
+      closedAt: status === 'closed' ? '2027-02-10T09:30:00+00:00' : null,
+      snapshotFingerprint: status === 'closed' ? 'f'.repeat(64) : null,
+      afterClosure: status === 'closed'
+        ? { policy: 'snapshot_kept_reopen_to_recalculate', dataChanged: false, currentStatus: 'available', currentDifferenceCents: difference, currentRoundedDifferenceEuros: rounded }
+        : null,
+      history: status === 'closed' ? [{ version: 1, state: 'closed', closedAt: '2027-02-10T09:30:00+00:00', reopenedAt: null }] : [],
+      ...closure,
     },
   }
 }
@@ -296,5 +309,89 @@ describe('translations', () => {
   test('every warning code produced by the API is translated', () => {
     const codes = ['negative_travel_allowance', 'other_year_configuration_ignored', 'travel_allowance_without_trip', 'meal_contribution_not_counted_twice', 'reimbursements_not_reintegrated', 'forfait_exceeds_salary', 'unknown']
     for (const code of codes) assert.equal(typeof fr.tax.comparison.warning[code], 'string', code)
+  })
+})
+
+describe('year closing', () => {
+  test('an open available year offers the explicit "validate and close" flow, not a closed state', async () => {
+    const html = await render(Result, { comparison: comparison(), baseId: 'c' })
+    const content = text(html)
+    assert.match(html, /data-testid="tax-closure-close"/)
+    assert.ok(content.includes(fr.tax.closure.validateAndClose))
+    assert.doesNotMatch(html, /data-testid="tax-closure-badge"/)
+    assert.doesNotMatch(html, /data-testid="tax-closure-reopen"/)
+    assert.ok(content.includes('Estimation provisoire'))
+  })
+
+  test('incomplete and configuration_missing results are unchanged and cannot be closed', async () => {
+    for (const status of ['incomplete', 'configuration_missing']) {
+      const html = await render(Result, { comparison: comparison({ status, display: { missingFields: [] } }), baseId: 'c' })
+      assert.match(html, /data-testid="tax-missing"/, status)
+      assert.doesNotMatch(html, /data-testid="tax-closure-close"/, status)
+      assert.match(html, /data-testid="tax-closure-not-closable"/, status)
+      assert.doesNotMatch(html, /data-testid="tax-closure-badge"/, status)
+    }
+  })
+
+  test('a closed year shows the snapshot amounts, the closed badge and date, and is not presented as the final tax', async () => {
+    const html = await render(Result, { comparison: comparison({ status: 'closed', display: { temporalQualification: 'closed_estimate' } }), baseId: 'c' })
+    const content = text(html)
+    assert.match(html, /data-testid="tax-banner"/)
+    assert.match(html, /data-testid="tax-closure-badge"/)
+    assert.ok(content.includes('Clôturée'))
+    assert.ok(content.includes('10 février 2027'), content)
+    assert.ok(content.includes('version 1'))
+    assert.ok(content.includes('pas le calcul définitif de votre impôt'))
+    assert.ok(content.includes('Estimation clôturée'))
+    assert.match(html, /data-testid="tax-closure-unchanged"/)
+    assert.match(html, /data-testid="tax-closure-reopen"/)
+    assert.doesNotMatch(html, /data-testid="tax-closure-close"/)
+    assert.ok(content.includes('Version 1 : clôturée le 10 février 2027 (en vigueur)'))
+    assert.match(html, /data-testid="tax-disclaimer"/)
+  })
+
+  test('a modification after closing is visible: the snapshot is kept and the current difference is shown', async () => {
+    const html = await render(Result, {
+      comparison: comparison({
+        status: 'closed',
+        difference: 100_000,
+        closure: {
+          afterClosure: { policy: 'snapshot_kept_reopen_to_recalculate', dataChanged: true, currentStatus: 'available', currentDifferenceCents: 43_000, currentRoundedDifferenceEuros: 430 },
+          history: [
+            { version: 1, state: 'reopened', closedAt: '2027-02-10T09:30:00+00:00', reopenedAt: '2027-03-01T08:00:00+00:00' },
+            { version: 2, state: 'closed', closedAt: '2027-03-05T10:00:00+00:00', reopenedAt: null },
+          ],
+          version: 2,
+        },
+      }),
+      baseId: 'c',
+    })
+    const content = text(html)
+    assert.match(html, /data-testid="tax-closure-changed"/)
+    assert.ok(content.includes(fr.tax.closure.changedAfterClosure))
+    assert.ok(/430,00\s€/.test(content), content)
+    assert.ok(content.includes(fr.tax.closure.reopenToRecalculate))
+    assert.ok(content.includes('Version 1 : clôturée le 10 février 2027, rouverte le 1 mars 2027') || content.includes('Version 1 : clôturée le 10 février 2027, rouverte le 1er mars 2027'), content)
+    assert.ok(content.includes('Version 2 : clôturée le 5 mars 2027 (en vigueur)'))
+    // The snapshot (difference 1 000 €) is still the displayed result.
+    assert.ok(/1\s000\s€/.test(text(html)), content)
+  })
+
+  test('a closed year whose current data became incomplete says the comparison is unavailable', async () => {
+    const html = await render(Result, {
+      comparison: comparison({ status: 'closed', closure: { afterClosure: { policy: 'snapshot_kept_reopen_to_recalculate', dataChanged: true, currentStatus: 'configuration_missing', currentDifferenceCents: null, currentRoundedDifferenceEuros: null } } }),
+      baseId: 'c',
+    })
+    assert.ok(text(html).includes(fr.tax.closure.currentUnavailable))
+  })
+
+  test('closure wording never presents the result as a final tax calculation', () => {
+    const messages = [...Object.values(fr.tax.closure), fr.tax.comparison.temporal.closed_estimate]
+    for (const message of messages) {
+      const normalized = message.toLowerCase()
+      if (normalized.includes('définitif')) assert.match(normalized, /(pas|n’est pas|ne constitue pas)[^.]*définitif/, message)
+    }
+    assert.equal(utils.fmtClosureDate(null), '')
+    assert.equal(utils.fmtClosureDate('not-a-date'), 'not-a-date')
   })
 })

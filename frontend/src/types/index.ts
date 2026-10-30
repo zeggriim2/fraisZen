@@ -160,7 +160,8 @@ export interface FavoriteRoute {
 
 export type CreateFavoriteRouteDto = Omit<FavoriteRoute, 'id' | 'personId' | 'createdAt'>
 
-export type TaxComparisonStatus = 'available' | 'incomplete' | 'configuration_missing'
+/** 'closed': the year was closed by the user, the payload is read from the immutable snapshot. */
+export type TaxComparisonStatus = 'available' | 'incomplete' | 'configuration_missing' | 'closed'
 
 export interface TaxComparisonAmounts {
   netTaxableSalaryCents: number
@@ -210,7 +211,7 @@ export interface TaxComparison {
     reimbursements: { entries: number; reintegrated: number }
   }
   display: {
-    temporalQualification: 'provisional_estimate' | 'annual_estimate_to_verify'
+    temporalQualification: 'provisional_estimate' | 'annual_estimate_to_verify' | 'closed_estimate'
     showBanner: boolean
     outcome: 'advantageous' | 'equivalent' | 'less_advantageous' | null
     roundedDifferenceEuros: number | null
@@ -220,6 +221,44 @@ export interface TaxComparison {
     warnings: TaxComparisonWarning[]
     disclaimerKey: string
   }
+  closure: TaxComparisonClosure
+}
+
+export interface TaxClosureHistoryEntry {
+  version: number
+  state: 'closed' | 'reopened'
+  closedAt: string
+  reopenedAt: string | null
+}
+
+/** Closing state of the year (validation, snapshot in force, difference with the current data, history). */
+export interface TaxComparisonClosure {
+  state: 'open' | 'closed'
+  /** true when the open calculation is complete and can be validated and closed. */
+  closable: boolean
+  /** Fingerprint of the CURRENT calculation: sent back when closing to validate exactly what was reviewed. */
+  calculationFingerprint: string | null
+  version: number | null
+  closedAt: string | null
+  snapshotFingerprint: string | null
+  /** Closed year only: the snapshot is kept, the current data are compared with it. */
+  afterClosure: {
+    policy: 'snapshot_kept_reopen_to_recalculate'
+    dataChanged: boolean
+    currentStatus: string
+    currentDifferenceCents: number | null
+    currentRoundedDifferenceEuros: number | null
+  } | null
+  history: TaxClosureHistoryEntry[]
+}
+
+export interface TaxClosureSummary {
+  personId: string
+  year: number
+  version: number
+  state: 'closed' | 'reopened'
+  closedAt: string
+  reopenedAt: string | null
 }
 
 export interface TaxComparisonWarning {

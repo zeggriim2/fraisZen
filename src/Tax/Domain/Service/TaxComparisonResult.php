@@ -99,6 +99,39 @@ final class TaxComparisonResult
         return new self(self::STATUS_CONFIGURATION_MISSING, $personId, $year, null, null, $missing, [], $configuration, $warnings);
     }
 
+    /**
+     * Rebuilds a result from its serialized form (toArray()), e.g. from a closure snapshot.
+     * It goes through the same named factories, so a stored result keeps its invariants, and the
+     * amounts are re-keyed in their canonical order (a JSON store may reorder object keys).
+     *
+     * @param array<array-key, mixed> $data
+     */
+    public static function fromArray(array $data): self
+    {
+        $personId = $data['personId'] ?? null;
+        $year = $data['year'] ?? null;
+        $status = $data['status'] ?? null;
+        if (!\is_string($personId) || !\is_int($year) || !\is_string($status)) {
+            throw new \InvalidArgumentException('Invalid serialized comparison result.');
+        }
+        $configuration = self::configurationFrom($data['configuration'] ?? null);
+        $warnings = self::stringList($data['warnings'] ?? []);
+
+        return match ($status) {
+            self::STATUS_AVAILABLE => self::available(
+                $personId,
+                $year,
+                self::amountsFrom($data['amounts'] ?? null),
+                self::rulesFrom($data['rules'] ?? []),
+                $configuration ?? throw new \InvalidArgumentException('An available result has a configuration.'),
+                $warnings,
+            ),
+            self::STATUS_INCOMPLETE => self::incomplete($personId, $year, self::stringList($data['missing'] ?? []), $configuration, $warnings),
+            self::STATUS_CONFIGURATION_MISSING => self::configurationMissing($personId, $year, self::stringList($data['missing'] ?? []), $configuration, $warnings),
+            default => throw new \InvalidArgumentException(\sprintf('Unknown comparison status "%s".', $status)),
+        };
+    }
+
     public function status(): string
     {
         return $this->status;
@@ -175,5 +208,104 @@ final class TaxComparisonResult
             'configuration' => $this->configuration,
             'warnings' => $this->warnings,
         ];
+    }
+
+    /** @return Amounts */
+    private static function amountsFrom(mixed $value): array
+    {
+        if (!\is_array($value)) {
+            throw new \InvalidArgumentException('An available result has amounts.');
+        }
+        $int = static function (string $key) use ($value): int {
+            $v = $value[$key] ?? null;
+            if (!\is_int($v)) {
+                throw new \InvalidArgumentException(\sprintf('Invalid amount "%s".', $key));
+            }
+
+            return $v;
+        };
+        $limit = $value['forfaitLimitApplied'] ?? null;
+        if ('none' !== $limit && 'minimum' !== $limit && 'maximum' !== $limit) {
+            throw new \InvalidArgumentException('Invalid forfait limit.');
+        }
+
+        return [
+            'netTaxableSalaryCents' => $int('netTaxableSalaryCents'),
+            'forfaitRatePercent' => $int('forfaitRatePercent'),
+            'theoreticalForfaitCents' => $int('theoreticalForfaitCents'),
+            'forfaitMinimumCents' => $int('forfaitMinimumCents'),
+            'forfaitMaximumCents' => $int('forfaitMaximumCents'),
+            'forfaitLimitApplied' => $limit,
+            'forfaitCents' => $int('forfaitCents'),
+            'realExpensesCents' => $int('realExpensesCents'),
+            'reintegratedReimbursementsCents' => $int('reintegratedReimbursementsCents'),
+            'excludedAlreadyDeductedContributionCents' => $int('excludedAlreadyDeductedContributionCents'),
+            'baseForfaitCents' => $int('baseForfaitCents'),
+            'baseRealExpensesCents' => $int('baseRealExpensesCents'),
+            'differenceCents' => $int('differenceCents'),
+        ];
+    }
+
+    /** @return list<Rule> */
+    private static function rulesFrom(mixed $value): array
+    {
+        if (!\is_array($value)) {
+            throw new \InvalidArgumentException('Invalid rules.');
+        }
+        $rules = [];
+        foreach ($value as $rule) {
+            if (!\is_array($rule)) {
+                throw new \InvalidArgumentException('Invalid rule.');
+            }
+            $code = $rule['code'] ?? null;
+            $ruleValue = $rule['value'] ?? null;
+            $version = $rule['version'] ?? null;
+            $source = $rule['source'] ?? null;
+            $effectiveFrom = $rule['effectiveFrom'] ?? null;
+            if (!\is_string($code) || (null !== $ruleValue && !\is_int($ruleValue)) || !\is_string($version) || !\is_string($source) || !\is_string($effectiveFrom)) {
+                throw new \InvalidArgumentException('Invalid rule.');
+            }
+            $rules[] = ['code' => $code, 'value' => $ruleValue, 'version' => $version, 'source' => $source, 'effectiveFrom' => $effectiveFrom];
+        }
+
+        return $rules;
+    }
+
+    /** @return Configuration|null */
+    private static function configurationFrom(mixed $value): ?array
+    {
+        if (null === $value) {
+            return null;
+        }
+        if (!\is_array($value) || !\is_int($value['year'] ?? null)) {
+            throw new \InvalidArgumentException('Invalid configuration.');
+        }
+        $optional = static function (string $key) use ($value): ?string {
+            $v = $value[$key] ?? null;
+            if (null !== $v && !\is_string($v)) {
+                throw new \InvalidArgumentException(\sprintf('Invalid configuration "%s".', $key));
+            }
+
+            return $v;
+        };
+
+        return ['year' => $value['year'], 'version' => $optional('version'), 'source' => $optional('source'), 'effectiveFrom' => $optional('effectiveFrom')];
+    }
+
+    /** @return list<string> */
+    private static function stringList(mixed $value): array
+    {
+        if (!\is_array($value)) {
+            throw new \InvalidArgumentException('Invalid list.');
+        }
+        $list = [];
+        foreach ($value as $item) {
+            if (!\is_string($item)) {
+                throw new \InvalidArgumentException('Invalid list item.');
+            }
+            $list[] = $item;
+        }
+
+        return $list;
     }
 }

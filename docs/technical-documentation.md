@@ -393,8 +393,8 @@ déterministe, en entiers (centimes), filtre toutes les collections par personne
   `showBanner` (uniquement `available` et écart exact > 0), `outcome`, `roundedDifferenceEuros` (euro le plus proche,
   demi-euro arrondi en s'éloignant de zéro), `differenceBelowOneEuro` (|écart| < 1 €, écart non nul),
   `temporalQualification` (`provisional_estimate` pour l'année civile en cours ou future, `annual_estimate_to_verify`
-  pour une année échue — aucune clôture d'année n'existe encore), `missingFields` (clé de traduction + lien direct) et
-  `disclaimerKey`.
+  pour une année échue non clôturée, `closed_estimate` pour une année clôturée), `missingFields` (clé de traduction +
+  lien direct) et `disclaimerKey`.
 - Frontend : `components/tax/TaxComparisonCard.vue` (bandeau, « Comprendre le calcul », états incomplets) et
   `TaxComparisonDetail.vue` (montants, formules, règles, version, source, date d'entrée en vigueur, origines,
   avertissement fiscal), utilisés par `PersonsView` (une carte par personne), `SummaryView` et `CalendarView`
@@ -421,6 +421,41 @@ déterministe, en entiers (centimes), filtre toutes les collections par personne
 - Tests : PHP (`tests/Unit/Tax`, dont `Infrastructure/TaxHttpTest` : routes, HttpKernel, OwnershipGuard et
   ExceptionListener réels sur dépôts en mémoire) et frontend (`cd frontend && npm test` : composants compilés par
   Vite et rendus par `vue/server-renderer`, sans dépendance supplémentaire).
+
+### Validation, clôture annuelle et réouverture (F6-T3)
+
+- Droits : mêmes conventions que les autres ressources d'une personne — utilisateur authentifié (pare-feu JWT,
+  abonnement actif via `SubscriptionMiddleware`) propriétaire de la personne (`OwnershipGuardInterface`, 404 sinon).
+  Le propriétaire du foyer peut clôturer et rouvrir l'année de chacune de ses personnes ; aucun droit supplémentaire
+  (administrateur, autre foyer) n'est créé.
+- Parcours : 1) `GET .../tax-comparison/{year}` renvoie `closure` (`state` `open`, `closable`, `calculationFingerprint`
+  = empreinte SHA-256 des données retenues + résultat) ; 2) l'utilisateur confirme dans l'interface ;
+  3) `POST /api/persons/{personId}/tax-comparison/{year}/closure` `{"confirm": true, "calculationFingerprint": ...}`
+  (`CloseTaxYearCommand`) → 201. Refus : 422 sans confirmation ou si le calcul n'est pas `available`
+  (`incomplete`, `configuration_missing`), 409 si le calcul a changé depuis sa consultation (empreinte différente) ou
+  si l'année est déjà clôturée.
+- Instantané (`TaxYearClosure`, table `tax_year_closure`, colonne JSON `snapshot`) : `calculation` (résultat complet,
+  centimes), `origins`, `retainedData` (salaires, remboursements, dépenses, indemnité kilométrique, configuration
+  fiscale utilisée), `fiscalRules` (règles avec version, source, date d'entrée en vigueur), `closedAt`, `fingerprint`.
+  Aucun mutateur : la lecture d'une année clôturée reconstruit le résultat depuis l'instantané
+  (`TaxComparisonResult::fromArray`), indépendamment de la configuration fiscale courante.
+- Avant clôture : rien n'est mis en cache, chaque lecture recalcule depuis les données courantes ; toute modification
+  (salaire, dépense, remboursement, règle fiscale, rattachement d'une dépense à une personne) change le résultat et
+  l'empreinte, et une clôture avec l'ancienne empreinte est refusée (409).
+- Après clôture (comportement retenu : affichage d'un écart + réouverture explicite) : les saisies restent possibles,
+  mais l'instantané n'est jamais remplacé ; la réponse a le statut `closed`, `display.temporalQualification =
+  closed_estimate` et `closure.afterClosure` (`dataChanged`, `currentStatus`, `currentDifferenceCents`) indique l'écart
+  avec les données courantes. Pour recalculer, l'utilisateur rouvre explicitement :
+  `POST .../closure/reopen` `{"confirm": true, "version": n}` (`ReopenTaxYearCommand`, 409 si la version n'est pas
+  celle en vigueur). La clôture rouverte est conservée (`reopened_at`, `reopened_by`) dans `closure.history` ; une
+  nouvelle clôture crée la version n+1.
+- Concurrence : contrainte unique `(person_id, year, version)` (deux clôtures simultanées → 409 pour la seconde) et
+  verrou optimiste Doctrine (`revision`) sur la réouverture.
+- Interface : `TaxClosurePanel.vue` (bouton « Valider et clôturer l'année » + confirmation, badge « Clôturée », date
+  et version, écart après clôture, réouverture confirmée, historique) ; le résultat clôturé est toujours qualifié
+  d'estimation, jamais de calcul définitif de l'impôt.
+- Tests : `Application/TaxYearClosureTest`, `Infrastructure/TaxYearClosurePersistenceTest` (SQLite : aller-retour,
+  unicité de version, verrou optimiste), `Infrastructure/TaxHttpTest` (parcours HTTP et droits), `frontend/tests`.
 
 ## Docker Compose
 

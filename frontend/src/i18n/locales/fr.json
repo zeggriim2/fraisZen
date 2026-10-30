@@ -8,7 +8,8 @@
       "retry": "Réessayer",
       "temporal": {
         "provisional_estimate": "Estimation provisoire : l’année {year} n’est pas terminée, le résultat évoluera avec vos saisies.",
-        "annual_estimate_to_verify": "Estimation annuelle à vérifier : l’année {year} est échue mais n’est pas clôturée."
+        "annual_estimate_to_verify": "Estimation annuelle à vérifier : l’année {year} est échue mais n’est pas clôturée.",
+        "closed_estimate": "Estimation clôturée : le résultat {year} est figé à la date de clôture. Il reste une estimation et ne constitue pas le calcul définitif de votre impôt."
       },
       "banner": {
         "title": "Les frais réels pourraient réduire votre revenu imposable",
@@ -156,6 +157,30 @@
         "remote_work": "Télétravail",
         "other": "Autre"
       }
+    },
+    "closure": {
+      "title": "Clôture de l’année {year}",
+      "closedBadge": "Clôturée",
+      "closedNotice": "Année clôturée le {date} (version {version}) : le résultat affiché est l’instantané enregistré à la clôture (montants, données retenues, règles fiscales et leur version). Ce n’est pas le calcul définitif de votre impôt.",
+      "unchangedSinceClosure": "Vos données et les règles fiscales n’ont pas changé depuis la clôture.",
+      "changedAfterClosure": "Des données ou des règles fiscales ont changé depuis la clôture. Le résultat clôturé n’est pas modifié et reste dans l’historique.",
+      "currentDifference": "Avec les données actuelles, l’écart estimé de revenu imposable serait de {amount}.",
+      "currentUnavailable": "Avec les données actuelles, la comparaison n’est pas disponible (informations manquantes).",
+      "reopenToRecalculate": "Rouvrez l’année pour recalculer avec les données actuelles, puis clôturez-la de nouveau.",
+      "reopen": "Rouvrir l’année",
+      "confirmReopen": "Rouvrir l’année ? La clôture (version {version}) est conservée dans l’historique et le calcul suivra de nouveau vos données actuelles jusqu’à une nouvelle clôture.",
+      "confirmReopenButton": "Confirmer la réouverture",
+      "openNotice": "Lorsque vos saisies sont complètes, vous pouvez valider ce calcul et clôturer l’année : un instantané sera conservé et ne sera plus remplacé par vos modifications.",
+      "validateAndClose": "Valider et clôturer l’année",
+      "confirmClose": "Vous validez le calcul affiché pour {year}. Un instantané (montants, données retenues, règles fiscales, version, source, date d’entrée en vigueur et date de clôture) sera enregistré. Il s’agit d’une estimation, pas du calcul définitif de votre impôt. Vous pourrez rouvrir l’année explicitement.",
+      "confirmCloseButton": "Confirmer la clôture",
+      "cancel": "Annuler",
+      "notClosable": "La clôture sera possible lorsque le calcul sera complet.",
+      "conflict": "Le calcul a changé ou l’année a été modifiée entre-temps : le résultat a été rechargé, vérifiez-le avant de recommencer.",
+      "error": "L’opération n’a pas pu aboutir. Réessayez.",
+      "historyTitle": "Historique des clôtures",
+      "historyClosed": "Version {version} : clôturée le {closedAt} (en vigueur)",
+      "historyReopened": "Version {version} : clôturée le {closedAt}, rouverte le {reopenedAt}"
     }
   }
 }

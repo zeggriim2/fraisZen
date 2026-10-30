@@ -91,6 +91,9 @@ services:
     App\Tax\Domain\Repository\EmployerReimbursementRepositoryInterface:
         class: App\Tax\Infrastructure\Persistence\DoctrineEmployerReimbursementRepository
 
+    App\Tax\Domain\Repository\TaxYearClosureRepositoryInterface:
+        class: App\Tax\Infrastructure\Persistence\DoctrineTaxYearClosureRepository
+
     # Tag command & query handlers to their respective buses
     _instanceof:
         App\SharedKernel\Application\Bus\CommandHandlerInterface:
