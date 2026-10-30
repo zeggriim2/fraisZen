@@ -17,3 +17,6 @@ person:
 
 shared:
     resource: routes/api/shared.yaml
+
+tax:
+    resource: routes/api/tax.yaml

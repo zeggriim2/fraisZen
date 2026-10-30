@@ -159,3 +159,63 @@ export interface FavoriteRoute {
 }
 
 export type CreateFavoriteRouteDto = Omit<FavoriteRoute, 'id' | 'personId' | 'createdAt'>
+
+export type TaxComparisonStatus = 'available' | 'incomplete' | 'configuration_missing'
+
+export interface TaxComparisonAmounts {
+  netTaxableSalaryCents: number
+  forfaitRatePercent: number
+  theoreticalForfaitCents: number
+  forfaitMinimumCents: number
+  forfaitMaximumCents: number
+  forfaitLimitApplied: 'none' | 'minimum' | 'maximum'
+  forfaitCents: number
+  realExpensesCents: number
+  reintegratedReimbursementsCents: number
+  excludedAlreadyDeductedContributionCents: number
+  baseForfaitCents: number
+  baseRealExpensesCents: number
+  differenceCents: number
+}
+
+export interface TaxComparisonRule {
+  code: string
+  value: number | null
+  version: string
+  source: string
+  effectiveFrom: string
+}
+
+export interface TaxComparisonMissingField {
+  code: string
+  field: string
+  params: Record<string, string>
+  link: { path: string; query: Record<string, string>; hash: string } | null
+}
+
+/** Result of ONE person for ONE year (GET /api/persons/{id}/tax-comparison/{year}). */
+export interface TaxComparison {
+  status: TaxComparisonStatus
+  personId: string
+  year: number
+  amounts: TaxComparisonAmounts | null
+  decision: 'advantageous' | 'less_advantageous' | 'equivalent' | null
+  missing: string[]
+  rules: TaxComparisonRule[]
+  configuration: { year: number; version: string | null; source: string | null; effectiveFrom: string | null } | null
+  warnings: string[]
+  origins: {
+    netTaxableSalary: { entries: number; employers: string[] }
+    realExpenses: { entries: number; trips: number; travelAllowanceCents: number | null }
+    reimbursements: { entries: number; reintegrated: number }
+  }
+  display: {
+    temporalQualification: 'provisional_estimate' | 'annual_estimate_to_verify'
+    showBanner: boolean
+    outcome: 'advantageous' | 'equivalent' | 'less_advantageous' | null
+    roundedDifferenceEuros: number | null
+    differenceBelowOneEuro: boolean
+    missingFields: TaxComparisonMissingField[]
+    disclaimerKey: string
+  }
+}

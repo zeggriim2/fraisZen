@@ -16,6 +16,16 @@
       </article>
       <button class="add-person-card" @click="openCreate"><span>＋</span><strong>Un nouveau profil</strong><small>Ajoutez un membre de votre foyer</small></button>
     </div>
+    <section v-if="!store.loading && store.persons.length" class="mt-8" aria-labelledby="household-tax-comparison-title">
+      <div class="flex flex-wrap items-end justify-between gap-3 mb-4">
+        <div><h3 id="household-tax-comparison-title" class="text-base font-semibold text-gray-900">{{ t('tax.comparison.dashboard.title') }}</h3><p class="text-sm text-gray-500">{{ t('tax.comparison.dashboard.subtitle') }}</p></div>
+        <label class="text-sm text-gray-600 flex items-center gap-2">{{ t('tax.comparison.dashboard.year') }}<select v-model.number="comparisonYear" class="rounded-lg border-gray-300 shadow-sm text-sm"><option v-for="y in comparisonYears" :key="y" :value="y">{{ y }}</option></select></label>
+      </div>
+      <!-- Une carte indépendante par personne : aucun écart n'est additionné ni comparé entre personnes. -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <TaxComparisonCard v-for="p in store.persons" :key="p.id" :person="p" :year="comparisonYear" :show-person-name="true" />
+      </div>
+    </section>
     <PersonModal v-if="showModal" :person="editing" :initial-tab="initialTab" @close="closeModal" @saved="onSaved" />
 
     <ConfirmModal
@@ -39,8 +49,17 @@ import type { Person } from '@/types'
 import AppIcon from '@/components/ui/AppIcon.vue'
 import PersonModal from '@/components/person/PersonModal.vue'
 import ConfirmModal from '@/components/ui/ConfirmModal.vue'
+import TaxComparisonCard from '@/components/tax/TaxComparisonCard.vue'
+import { t } from '@/i18n'
+import { useRoute } from 'vue-router'
 
 const store = usePersonStore()
+const route = useRoute()
+const currentYear = new Date().getFullYear()
+// Jan–juin : campagne de déclaration de l'année N-1 ; ensuite, année en cours. Un lien direct (?year=) prime.
+const requestedYear = Number(route.query.year)
+const comparisonYears = Array.from({ length: 6 }, (_, i) => currentYear - i)
+const comparisonYear = ref(comparisonYears.includes(requestedYear) ? requestedYear : (new Date().getMonth() < 6 ? currentYear - 1 : currentYear))
 const search = ref('')
 const favoritesOnly = ref(false)
 const initialTab = ref<'identity' | 'routes'>('identity')

@@ -382,6 +382,25 @@ déterministe, en entiers (centimes), filtre toutes les collections par personne
   personne, indemnité kilométrique absente) avec la liste exacte `missing`, sinon `available` avec `amounts`, `rules` (code, valeur, version, source,
   date d'entrée en vigueur), `configuration` et `warnings`.
 
+### Affichage de la comparaison (F6-T2)
+
+- Endpoint : `GET /api/persons/{personId}/tax-comparison/{year}` (`App\Tax\Infrastructure\Http\TaxComparisonController`,
+  propriété de la personne vérifiée par `OwnershipGuardInterface`). Une requête = une personne et une année ; le
+  tableau de bord appelle l'endpoint une fois par personne et n'additionne jamais les écarts.
+- `GetTaxComparisonQueryHandler` charge salaires, remboursements, dépenses et configuration de la personne et de
+  l'année, calcule l'indemnité kilométrique annuelle avec `KilometricAllowanceCalculator` (barème de l'année), appelle
+  le moteur puis `TaxComparisonPresenter`, qui ajoute `origins` (origine des montants) et `display` :
+  `showBanner` (uniquement `available` et écart exact > 0), `outcome`, `roundedDifferenceEuros` (euro le plus proche,
+  demi-euro arrondi en s'éloignant de zéro), `differenceBelowOneEuro` (|écart| < 1 €, écart non nul),
+  `temporalQualification` (`provisional_estimate` pour l'année civile en cours ou future, `annual_estimate_to_verify`
+  pour une année échue — aucune clôture d'année n'existe encore), `missingFields` (clé de traduction + lien direct) et
+  `disclaimerKey`.
+- Frontend : `components/tax/TaxComparisonCard.vue` (bandeau, « Comprendre le calcul », états incomplets) et
+  `TaxComparisonDetail.vue` (montants, formules, règles, version, source, date d'entrée en vigueur, origines,
+  avertissement fiscal), utilisés par `PersonsView` (une carte par personne), `SummaryView` et `CalendarView`
+  (personne active). Les libellés passent par `frontend/src/i18n` (`t(clé, paramètres)`, catalogue
+  `locales/fr.json`).
+
 ## Docker Compose
 
 ### Services
