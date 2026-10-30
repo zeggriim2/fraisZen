@@ -30,6 +30,14 @@ use App\Tax\Domain\Repository\EmployerReimbursementRepositoryInterface;
 use App\Tax\Domain\Repository\NetTaxableSalaryRepositoryInterface;
 use App\Tax\Infrastructure\Http\TaxComparisonController;
 use App\Tax\Infrastructure\Http\TaxInputsController;
+use App\Tax\Infrastructure\Http\TaxYearClosureController;
+use App\Tax\Application\Command\CloseTaxYear\CloseTaxYearCommand;
+use App\Tax\Application\Command\CloseTaxYear\CloseTaxYearCommandHandler;
+use App\Tax\Application\Command\ReopenTaxYear\ReopenTaxYearCommand;
+use App\Tax\Application\Command\ReopenTaxYear\ReopenTaxYearCommandHandler;
+use App\Tax\Application\Service\TaxComparisonCalculator;
+use App\SharedKernel\Application\Bus\CommandBusInterface;
+use App\Tests\Unit\Tax\Support\InMemoryTaxYearClosures;
 use PHPUnit\Framework\TestCase;
 use Symfony\Bundle\FrameworkBundle\Routing\AttributeRouteControllerLoader;
 use Symfony\Component\Clock\MockClock;
@@ -68,6 +76,9 @@ final class TaxHttpTest extends TestCase
     private InMemorySalaries $salaries;
     private InMemoryReimbursements $reimbursements;
     private TokenStorage $tokenStorage;
+    private InMemoryTaxYearClosures $closures;
+    /** @var \ArrayObject<int, object> */
+    private \ArrayObject $dispatchedCommands;
     /** @var \ArrayObject<int, GetTaxComparisonQuery> */
     private \ArrayObject $askedQueries;
     private HttpKernel $kernel;
@@ -78,6 +89,8 @@ final class TaxHttpTest extends TestCase
         $this->reimbursements = new InMemoryReimbursements();
         $this->tokenStorage = new TokenStorage();
         $this->askedQueries = new \ArrayObject();
+        $this->closures = new InMemoryTaxYearClosures();
+        $this->dispatchedCommands = new \ArrayObject();
 
         $persons = [
             self::ALICE_PERSON => new Person(PersonId::fromString(self::ALICE_PERSON), self::ALICE, 'Alice', 'Martin'),
@@ -100,13 +113,30 @@ final class TaxHttpTest extends TestCase
         $config = new FiscalConfig(2026, '2.70', '5.35', 10, 50_000, 1_400_000, '2026.1', 'BOFiP-IR-BASE', new \DateTimeImmutable('2026-01-01'));
         $configs = $this->createStub(FiscalConfigRepositoryInterface::class);
         $configs->method('findByYear')->willReturnCallback(static fn (int $year): ?FiscalConfig => 2026 === $year ? $config : null);
+        $kilometric = new KilometricAllowanceCalculator($this->createStub(BaremeKilometriqueRepositoryInterface::class));
         $handler = new GetTaxComparisonQueryHandler(
             $this->salaries,
             $this->reimbursements,
             $expenseRepository,
             $configs,
-            new KilometricAllowanceCalculator($this->createStub(BaremeKilometriqueRepositoryInterface::class)),
+            $kilometric,
+            closures: $this->closures,
         );
+        $closeHandler = new CloseTaxYearCommandHandler(new TaxComparisonCalculator($this->salaries, $this->reimbursements, $expenseRepository, $configs, $kilometric), $this->closures);
+        $reopenHandler = new ReopenTaxYearCommandHandler($this->closures);
+        $commandBus = new class($closeHandler, $reopenHandler, $this->dispatchedCommands) implements CommandBusInterface {
+            /** @param \ArrayObject<int, object> $dispatched */
+            public function __construct(private CloseTaxYearCommandHandler $close, private ReopenTaxYearCommandHandler $reopen, private \ArrayObject $dispatched)
+            {
+            }
+
+            public function dispatch(object $command): mixed
+            {
+                $this->dispatched[] = $command;
+
+                return $command instanceof CloseTaxYearCommand ? ($this->close)($command) : ($this->reopen)($command instanceof ReopenTaxYearCommand ? $command : throw new \LogicException());
+            }
+        };
         $queryBus = new class($handler, $this->askedQueries) implements QueryBusInterface {
             /** @param \ArrayObject<int, GetTaxComparisonQuery> $asked */
             public function __construct(private GetTaxComparisonQueryHandler $handler, private \ArrayObject $asked)
@@ -128,17 +158,20 @@ final class TaxHttpTest extends TestCase
         $comparison->setContainer($container);
         $inputs = new TaxInputsController(new TaxInputsService($this->salaries, $this->reimbursements, $expenseRepository), $guard);
         $inputs->setContainer($container);
+        $closure = new TaxYearClosureController($commandBus, $guard, new MockClock('2027-02-10 09:30:00'));
+        $closure->setContainer($container);
 
         $routes = new RouteCollection();
         $loader = new AttributeRouteControllerLoader();
         $routes->addCollection($loader->load(TaxComparisonController::class));
         $routes->addCollection($loader->load(TaxInputsController::class));
+        $routes->addCollection($loader->load(TaxYearClosureController::class));
 
         $requestStack = new RequestStack();
         $dispatcher = new EventDispatcher();
         $dispatcher->addSubscriber(new RouterListener(new UrlMatcher($routes, new RequestContext()), $requestStack));
         $dispatcher->addListener(KernelEvents::EXCEPTION, new ExceptionListener());
-        $controllers = [TaxComparisonController::class => $comparison, TaxInputsController::class => $inputs];
+        $controllers = [TaxComparisonController::class => $comparison, TaxInputsController::class => $inputs, TaxYearClosureController::class => $closure];
         $resolver = new class($controllers) implements ControllerResolverInterface {
             /** @param array<string, object> $controllers */
             public function __construct(private array $controllers)
@@ -308,6 +341,87 @@ final class TaxHttpTest extends TestCase
         self::assertSame(422, $this->json('PATCH', '/api/persons/'.self::ALICE_PERSON.'/tax-inputs/reimbursements/'.$id, [])['status']);
         self::assertSame(204, $this->json('DELETE', '/api/persons/'.self::ALICE_PERSON.'/tax-inputs/reimbursements/'.$id)['status']);
         self::assertSame([], $this->reimbursements->findByPersonAndYear(self::ALICE_PERSON, 2026));
+    }
+
+    public function testTheOwnerValidatesClosesAndExplicitlyReopensAYearWithoutLosingTheSnapshot(): void
+    {
+        $this->loginAs(self::ALICE);
+        $this->salaries->save(new NetTaxableSalary('s-alice', self::ALICE_PERSON, 'ACME', 2026, new \DateTimeImmutable('2026-01-01'), new \DateTimeImmutable('2026-12-31'), 2_000_000));
+        $comparisonPath = '/api/persons/'.self::ALICE_PERSON.'/tax-comparison/2026';
+        $closurePath = $comparisonPath.'/closure';
+
+        // 1. Review: the open calculation exposes the fingerprint to validate.
+        $reviewed = $this->json('GET', $comparisonPath)['body'];
+        self::assertSame('available', $reviewed['status']);
+        self::assertSame('open', $reviewed['closure']['state']);
+        self::assertTrue($reviewed['closure']['closable']);
+        $fingerprint = $reviewed['closure']['calculationFingerprint'];
+
+        // 2. Explicit confirmation and the reviewed fingerprint are required.
+        self::assertSame(422, $this->json('POST', $closurePath, ['calculationFingerprint' => $fingerprint])['status']);
+        self::assertSame(422, $this->json('POST', $closurePath, ['confirm' => true, 'calculationFingerprint' => 'abc'])['status']);
+        self::assertSame(400, $this->json('POST', $closurePath, null)['status']);
+        self::assertSame(409, $this->json('POST', $closurePath, ['confirm' => true, 'calculationFingerprint' => str_repeat('0', 64)])['status']);
+        self::assertSame([], $this->closures->rows);
+
+        // 3. Closing.
+        $closed = $this->json('POST', $closurePath, ['confirm' => true, 'calculationFingerprint' => $fingerprint]);
+        self::assertSame(201, $closed['status']);
+        self::assertSame(['personId' => self::ALICE_PERSON, 'year' => 2026, 'version' => 1, 'state' => 'closed', 'closedAt' => '2027-02-10T09:30:00+00:00', 'reopenedAt' => null], $closed['body']);
+        self::assertSame(self::ALICE, $this->closures->rows[0]->closedBy());
+
+        $read = $this->json('GET', $comparisonPath)['body'];
+        self::assertSame('closed', $read['status']);
+        self::assertSame('closed_estimate', $read['display']['temporalQualification']);
+        self::assertSame(100_000, $read['amounts']['differenceCents']);
+
+        // 4. A modification after closing does not replace the snapshot: the difference is shown.
+        self::assertSame(201, $this->json('POST', '/api/persons/'.self::ALICE_PERSON.'/tax-inputs/2026/salaries', ['employer' => 'Beta', 'periodStart' => '2026-07-01', 'periodEnd' => '2026-12-31', 'amountCents' => 500_000])['status']);
+        $afterChange = $this->json('GET', $comparisonPath)['body'];
+        self::assertSame('closed', $afterChange['status']);
+        self::assertSame(2_000_000, $afterChange['amounts']['netTaxableSalaryCents']);
+        self::assertTrue($afterChange['closure']['afterClosure']['dataChanged']);
+        self::assertSame(50_000, $afterChange['closure']['afterClosure']['currentDifferenceCents']);
+        self::assertSame(409, $this->json('POST', $closurePath, ['confirm' => true, 'calculationFingerprint' => $afterChange['closure']['calculationFingerprint']])['status']);
+
+        // 5. Explicit reopening of the version in force.
+        self::assertSame(422, $this->json('POST', $closurePath.'/reopen', ['version' => 1])['status']);
+        self::assertSame(409, $this->json('POST', $closurePath.'/reopen', ['confirm' => true, 'version' => 2])['status']);
+        $reopened = $this->json('POST', $closurePath.'/reopen', ['confirm' => true, 'version' => 1]);
+        self::assertSame(200, $reopened['status']);
+        self::assertSame('reopened', $reopened['body']['state']);
+
+        $open = $this->json('GET', $comparisonPath)['body'];
+        self::assertSame('available', $open['status']);
+        self::assertSame(50_000, $open['amounts']['differenceCents']);
+        self::assertSame([['version' => 1, 'state' => 'reopened', 'closedAt' => '2027-02-10T09:30:00+00:00', 'reopenedAt' => '2027-02-10T09:30:00+00:00']], $open['closure']['history']);
+        self::assertSame(100_000, $this->closures->rows[0]->closedResult()->amounts()['differenceCents'] ?? null);
+    }
+
+    public function testClosingRequiresTheOwnerOfThePersonAndACompleteCalculation(): void
+    {
+        $this->salaries->save(new NetTaxableSalary('s-alice', self::ALICE_PERSON, 'ACME', 2026, new \DateTimeImmutable('2026-01-01'), new \DateTimeImmutable('2026-12-31'), 2_000_000));
+        $closurePath = '/api/persons/'.self::ALICE_PERSON.'/tax-comparison/2026/closure';
+
+        try {
+            $this->request('POST', $closurePath, ['confirm' => true, 'calculationFingerprint' => str_repeat('a', 64)]);
+            self::fail('anonymous closing must be denied');
+        } catch (AccessDeniedException) {
+        }
+
+        $this->loginAs(self::BOB);
+        self::assertSame(404, $this->json('POST', $closurePath, ['confirm' => true, 'calculationFingerprint' => str_repeat('a', 64)])['status']);
+        self::assertSame(404, $this->json('POST', $closurePath.'/reopen', ['confirm' => true, 'version' => 1])['status']);
+        self::assertSame([], $this->dispatchedCommands->getArrayCopy(), 'nothing is dispatched for a person of another user');
+
+        // Alice's partner has no salary: incomplete, not closable.
+        $this->loginAs(self::ALICE);
+        $partner = $this->json('GET', '/api/persons/'.self::ALICE_PARTNER.'/tax-comparison/2026')['body'];
+        self::assertSame('incomplete', $partner['status']);
+        self::assertFalse($partner['closure']['closable']);
+        self::assertSame(422, $this->json('POST', '/api/persons/'.self::ALICE_PARTNER.'/tax-comparison/2026/closure', ['confirm' => true, 'calculationFingerprint' => $partner['closure']['calculationFingerprint']])['status']);
+        self::assertSame(409, $this->json('POST', '/api/persons/'.self::ALICE_PARTNER.'/tax-comparison/2026/closure/reopen', ['confirm' => true, 'version' => 1])['status']);
+        self::assertSame([], $this->closures->rows);
     }
 
     private function loginAs(string $userId): void

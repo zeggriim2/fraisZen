@@ -34,6 +34,7 @@ final class TaxComparisonTranslationsTest extends TestCase
             TaxComparisonPresenter::DISCLAIMER_KEY,
             'tax.comparison.temporal.'.TaxComparisonPresenter::TEMPORAL_PROVISIONAL,
             'tax.comparison.temporal.'.TaxComparisonPresenter::TEMPORAL_TO_VERIFY,
+            'tax.comparison.temporal.'.TaxComparisonPresenter::TEMPORAL_CLOSED,
             'tax.comparison.outcome.equivalent',
             'tax.comparison.outcome.less_advantageous',
             'tax.comparison.status.configuration_missing',
@@ -86,6 +87,7 @@ final class TaxComparisonTranslationsTest extends TestCase
             self::FRONTEND.'/components/tax/TaxComparisonCard.vue',
             self::FRONTEND.'/components/tax/TaxComparisonDetail.vue',
             self::FRONTEND.'/components/tax/TaxComparisonResult.vue',
+            self::FRONTEND.'/components/tax/TaxClosurePanel.vue',
             self::FRONTEND.'/components/tax/TaxInputsEditor.vue',
             self::FRONTEND.'/components/tax/TaxInputsPanel.vue',
             self::FRONTEND.'/utils/taxComparison.ts',
@@ -107,7 +109,7 @@ final class TaxComparisonTranslationsTest extends TestCase
 
     public function testComponentsNeverDisplayRawEngineOrApiText(): void
     {
-        foreach (['TaxComparisonCard.vue', 'TaxComparisonResult.vue', 'TaxComparisonDetail.vue', 'TaxInputsEditor.vue', 'TaxInputsPanel.vue'] as $component) {
+        foreach (['TaxComparisonCard.vue', 'TaxComparisonResult.vue', 'TaxComparisonDetail.vue', 'TaxClosurePanel.vue', 'TaxInputsEditor.vue', 'TaxInputsPanel.vue'] as $component) {
             $source = file_get_contents(self::FRONTEND.'/components/tax/'.$component);
             self::assertIsString($source);
             self::assertStringNotContainsString('lang="en"', $source, $component);
@@ -131,6 +133,32 @@ final class TaxComparisonTranslationsTest extends TestCase
             $normalized = mb_strtolower(str_replace('’', "'", $message));
             self::assertStringNotContainsString("économie d'impôt", $normalized, $key);
             self::assertStringNotContainsString('gain fiscal', $normalized, $key);
+        }
+    }
+
+    public function testClosedResultIsNeverPresentedAsTheFinalTaxCalculation(): void
+    {
+        $closedEstimate = $this->messages['tax.comparison.temporal.'.TaxComparisonPresenter::TEMPORAL_CLOSED];
+        self::assertStringStartsWith('Estimation clôturée', $closedEstimate);
+        self::assertStringContainsString('ne constitue pas le calcul définitif de votre impôt', $closedEstimate);
+        self::assertStringContainsString('Ce n’est pas le calcul définitif de votre impôt', $this->messages['tax.closure.closedNotice']);
+        self::assertStringContainsString('{date}', $this->messages['tax.closure.closedNotice']);
+        self::assertStringContainsString('{version}', $this->messages['tax.closure.closedNotice']);
+        // The behaviour after closing is explicit: snapshot kept, difference shown, explicit reopening.
+        self::assertStringContainsString('n’est pas modifié', $this->messages['tax.closure.changedAfterClosure']);
+        self::assertStringContainsString('historique', $this->messages['tax.closure.changedAfterClosure']);
+        self::assertStringContainsString('{amount}', $this->messages['tax.closure.currentDifference']);
+        self::assertStringContainsString('Rouvrez', $this->messages['tax.closure.reopenToRecalculate']);
+
+        foreach ($this->messages as $key => $message) {
+            if (!str_starts_with($key, 'tax.')) {
+                continue;
+            }
+            $normalized = mb_strtolower(str_replace('’', "'", $message));
+            self::assertStringNotContainsString('impôt définitif', $normalized, $key);
+            if (str_contains($normalized, 'définitif')) {
+                self::assertMatchesRegularExpression("/(n'est pas|ne constitue pas|pas du) le calcul définitif|(n'est pas|ne constitue pas|pas du) calcul définitif/u", $normalized, $key);
+            }
         }
     }
 

@@ -14,6 +14,15 @@ export function bannerDifferenceLabel(comparison: TaxComparison): string {
   return wholeEuroFormatter.format(comparison.display.roundedDifferenceEuros ?? 0)
 }
 
+const closureDateFormatter = new Intl.DateTimeFormat('fr-FR', { dateStyle: 'long', timeZone: 'Europe/Paris' })
+
+/** Closing / reopening date (ISO 8601 from the API) displayed as a French calendar date. */
+export function fmtClosureDate(iso: string | null): string {
+  if (!iso) return ''
+  const date = new Date(iso)
+  return Number.isNaN(date.getTime()) ? iso : closureDateFormatter.format(date)
+}
+
 export function missingFieldLabel(field: TaxComparisonMissingField, year: number): string {
   return t(`tax.comparison.missing.${field.field}`, { year, code: field.code, ...field.params })
 }

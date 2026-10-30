@@ -2,7 +2,8 @@
   <div :data-person-id="comparison.personId">
     <p class="text-xs text-gray-500 mb-3" data-testid="tax-temporal">{{ t(`tax.comparison.temporal.${comparison.display.temporalQualification}`, { year: comparison.year }) }}</p>
 
-    <template v-if="comparison.status === 'available'">
+    <!-- Un résultat clôturé est toujours un résultat complet, lu depuis son instantané. -->
+    <template v-if="comparison.status === 'available' || comparison.status === 'closed'">
       <!-- Bandeau : uniquement pour un résultat disponible dont l'écart exact est strictement positif (décidé par l'API). -->
       <div v-if="comparison.display.showBanner" role="status" data-testid="tax-banner" class="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-emerald-800">
         <p class="font-semibold">{{ t('tax.comparison.banner.title') }}</p>
@@ -37,6 +38,8 @@
       </ul>
     </div>
 
+    <TaxClosurePanel v-if="comparison.closure" :comparison="comparison" :base-id="baseId" :busy="closureBusy" :error="closureError" @close="fingerprint => emit('close', fingerprint)" @reopen="version => emit('reopen', version)" />
+
     <p v-if="!detailOpen" class="mt-3 text-xs text-gray-500" role="note" data-testid="tax-disclaimer">{{ t(comparison.display.disclaimerKey) }}</p>
   </div>
 </template>
@@ -47,9 +50,14 @@ import type { TaxComparison } from '@/types'
 import { t } from '@/i18n'
 import { bannerDifferenceLabel, missingFieldLabel } from '@/utils/taxComparison'
 import TaxComparisonDetail from '@/components/tax/TaxComparisonDetail.vue'
+import TaxClosurePanel from '@/components/tax/TaxClosurePanel.vue'
 
-/** Display of ONE already loaded result (no fetching): banner, outcome, missing fields, detail, disclaimer. */
-const props = withDefaults(defineProps<{ comparison: TaxComparison; baseId: string; initiallyOpen?: boolean }>(), { initiallyOpen: false })
+/** Display of ONE already loaded result (no fetching): banner, outcome, missing fields, detail, closing state, disclaimer. */
+const props = withDefaults(
+  defineProps<{ comparison: TaxComparison; baseId: string; initiallyOpen?: boolean; closureBusy?: boolean; closureError?: 'conflict' | 'generic' | null }>(),
+  { initiallyOpen: false, closureBusy: false, closureError: null },
+)
+const emit = defineEmits<{ close: [fingerprint: string]; reopen: [version: number] }>()
 
 const detailOpen = ref(props.initiallyOpen)
 watch(() => [props.comparison.personId, props.comparison.year], () => { detailOpen.value = false })

@@ -11,12 +11,13 @@
     <p v-else-if="error" role="alert" class="text-sm text-red-700">
       {{ t('tax.comparison.error') }} <button type="button" class="underline" @click="load">{{ t('tax.comparison.retry') }}</button>
     </p>
-    <TaxComparisonResult v-else-if="comparison" :comparison="comparison" :base-id="baseId" />
+    <TaxComparisonResult v-else-if="comparison" :comparison="comparison" :base-id="baseId" :closure-busy="closureBusy" :closure-error="closureError" @close="close" @reopen="reopen" />
   </section>
 </template>
 
 <script setup lang="ts">
 import { ref, watch, onMounted, computed } from 'vue'
+import type { AxiosError } from 'axios'
 import type { Person, TaxComparison } from '@/types'
 import { taxComparisonApi } from '@/api/taxComparisonApi'
 import { t } from '@/i18n'
@@ -33,6 +34,8 @@ const comparison = ref<TaxComparison | null>(null)
 const loading = ref(false)
 const error = ref(false)
 const baseId = computed(() => `tax-comparison-${props.person.id}`)
+const closureBusy = ref(false)
+const closureError = ref<'conflict' | 'generic' | null>(null)
 
 async function load() {
   const requested = { personId: props.person.id, year: props.year }
@@ -48,7 +51,31 @@ async function load() {
   }
 }
 
-watch(() => [props.person.id, props.year], () => { comparison.value = null; load() })
+/**
+ * Closing / reopening of THIS person's year, then reload. A 409 (calculation changed since it was
+ * displayed, already closed, concurrent change) reloads the result so the user reviews it again.
+ */
+async function runClosureAction(action: () => Promise<unknown>) {
+  closureBusy.value = true; closureError.value = null
+  try {
+    await action()
+  } catch (e) {
+    closureError.value = (e as AxiosError)?.response?.status === 409 ? 'conflict' : 'generic'
+  } finally {
+    closureBusy.value = false
+  }
+  await load()
+}
+
+function close(fingerprint: string) {
+  return runClosureAction(() => taxComparisonApi.close(props.person.id, props.year, fingerprint))
+}
+
+function reopen(version: number) {
+  return runClosureAction(() => taxComparisonApi.reopen(props.person.id, props.year, version))
+}
+
+watch(() => [props.person.id, props.year], () => { comparison.value = null; closureError.value = null; load() })
 watch(() => props.reloadToken, load)
 onMounted(load)
 </script>
