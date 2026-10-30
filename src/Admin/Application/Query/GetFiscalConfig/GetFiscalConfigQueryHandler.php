@@ -15,7 +15,7 @@ final readonly class GetFiscalConfigQueryHandler implements QueryHandlerInterfac
     {
     }
 
-    /** @return array{year: int, remoteWorkDailyAllowance: float, homeMealValue: float}|null */
+    /** @return array<string, mixed>|null see FiscalConfig::toArray() */
     public function __invoke(GetFiscalConfigQuery $query): ?array
     {
         return $this->repository->findByYear($query->year)?->toArray();

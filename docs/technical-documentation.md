@@ -291,6 +291,21 @@ Cette séparation garde le domaine indépendant de Doctrine.
 
 Les routes admin sont préfixées par `/api/admin/` et protégées par `ROLE_ADMIN`. Elles couvrent les utilisateurs, les statistiques, la configuration fiscale et les barèmes kilométriques.
 
+| Méthode | Route | Description |
+|--------|-------|-------------|
+| GET | `/api/admin/fiscal-config` | Liste des configurations fiscales annuelles (`FiscalConfig::toArray()`) |
+| GET | `/api/admin/fiscal-config/{year}` | Configuration d'une année (404 si absente) |
+| PUT | `/api/admin/fiscal-config/{year}` | Création / mise à jour (`UpsertFiscalConfigCommand`) ; 400 si `remoteWorkDailyAllowance` / `homeMealValue` invalides, 422 si les paramètres du forfait violent une règle du domaine |
+
+Contrat JSON de `FiscalConfig::toArray()` (réponse des trois routes) : `year`, `remoteWorkDailyAllowance` et
+`homeMealValue` (euros, inchangés), puis les paramètres du forfait 10 % — `forfaitRatePercent` (entier, %),
+`forfaitMinimumCents` et `forfaitMaximumCents` (**entiers en centimes**, jamais en euros), `version`, `source`,
+`effectiveFrom` (`YYYY-MM-DD`) — tous `null` tant qu'ils ne sont pas saisis, plus `taxComparisonComplete` (booléen)
+et `missingTaxComparisonFields` (liste des paramètres manquants). Le PUT accepte les mêmes clés : les six paramètres
+sont optionnels **en bloc** (tous fournis → `FiscalConfig::defineTaxComparisonRules()` ; tous absents → les
+paramètres déjà enregistrés pour l'année sont conservés ; groupe partiel → 422). Voir aussi
+« Saisie des paramètres du forfait dans le back-office ».
+
 ### Jours fériés
 
 `/api/public-holidays/{year}` expose les jours fériés d’une année via le `SharedKernel`.
@@ -456,6 +471,37 @@ déterministe, en entiers (centimes), filtre toutes les collections par personne
   d'estimation, jamais de calcul définitif de l'impôt.
 - Tests : `Application/TaxYearClosureTest`, `Infrastructure/TaxYearClosurePersistenceTest` (SQLite : aller-retour,
   unicité de version, verrou optimiste), `Infrastructure/TaxHttpTest` (parcours HTTP et droits), `frontend/tests`.
+
+### Saisie des paramètres du forfait dans le back-office (issue #73)
+
+Les six paramètres de `fiscal_config` utilisés par la comparaison sont saisis par l'administrateur dans l'écran
+« Configuration fiscale » (`frontend/src/views/admin/AdminFiscalConfigView.vue`), par année, sous les champs
+historiques (indemnité télétravail, valeur repas) qui restent inchangés.
+
+- Écran : pour chaque année (et dans le bloc « Ajouter une année »), le composant réutilisable
+  `components/admin/AdminForfaitFields.vue` affiche taux (%), minimum (€), plafond (€), version, source et date
+  d'entrée en vigueur, puis un état : « Comparaison forfait / frais réels disponible pour <année> » ou « … non
+  disponible pour <année> : paramètres du forfait incomplets (<champs manquants>) ». Les erreurs sont affichées dans
+  le formulaire (`role="alert"`), sans enregistrement partiel.
+- Montants : saisis en **euros** dans l'UI, envoyés et stockés en **centimes** (`utils/money.ts` : `eurosToCents`,
+  `centsToEurosInput` ; `14 555,00 € → 1455500`, sans perte flottante). L'API admin n'expose jamais ces montants en
+  euros ; la conversion est exclusivement côté frontend (`utils/fiscalConfigForm.ts` : brouillon → payload, règle
+  « les six paramètres ensemble ou aucun », libellés français des champs manquants).
+- Backend : `UpsertFiscalConfigCommand` porte les six paramètres (nullable, `effectiveFrom` en `Y-m-d`) ;
+  `UpsertFiscalConfigCommandHandler` vérifie le groupe, convertit la date et appelle
+  `FiscalConfig::defineTaxComparisonRules()` **avant** toute autre mutation de l'entité ; une
+  `\InvalidArgumentException` du domaine (taux hors 1–100, montant négatif, minimum > plafond, version/source
+  vides) ou une date invalide devient `App\Admin\Application\Exception\InvalidFiscalConfigException`
+  (`\DomainException` → 422 par l'`ExceptionListener` partagé, message lisible dans `error`). Le contrôleur
+  `AdminFiscal\UpsertController` ne fait que le mapping de transport (types des clés) et redispatche la query de
+  lecture. Le moteur de comparaison n'est pas modifié : une fois l'année complète, `TaxComparisonService` passe de
+  `configuration_missing` au calcul effectif.
+- Tests : `tests/Unit/Admin/Application/Command/UpsertFiscalConfigCommandHandlerTest.php` (complet, partiel,
+  chaque violation), `tests/Unit/Admin/Infrastructure/AdminFiscalConfigHttpTest.php` (GET/liste avec les six
+  champs en centimes, PUT 200/400/422, comparaison `configuration_missing` → `available` après saisie complète),
+  `frontend/tests/adminFiscalConfig.test.mjs` (conversion euros ⇄ centimes, brouillon → payload, composant).
+- Valeurs de référence (non codées en dur, à saisir par l'administrateur) : revenus 2025 → 509 € / 14 555 € ;
+  2024 → 504 € / 14 426 € ; 2023 → 495 € / 14 171 €.
 
 ## Docker Compose
 

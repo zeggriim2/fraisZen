@@ -148,6 +148,38 @@ Les écrans d’administration présents côté frontend couvrent :
 
 Côté API, les routes d’administration sont protégées par `ROLE_ADMIN`.
 
+### Écran « Configuration fiscale » : paramètres du forfait 10 %
+
+L’écran « Configuration fiscale » du back-office liste une carte par année. Chaque carte conserve les deux champs
+historiques (indemnité télétravail en €/jour, valeur du repas domicile en €/repas) et ajoute, sous l’intitulé
+« Forfait 10 % — comparaison frais réels », les six paramètres utilisés par la comparaison forfait / frais réels :
+
+| Champ | Saisie | Règle |
+|-------|--------|-------|
+| Taux (%) | entier | entre 1 et 100 |
+| Minimum (€) | montant en euros (ex. 509,00) | ≥ 0 et ≤ plafond |
+| Plafond (€) | montant en euros (ex. 14 555,00) | ≥ 0 |
+| Version | texte (ex. `2025.1`) | non vide |
+| Source | texte (ex. référence BOFiP / article du CGI) | non vide |
+| Date d’entrée en vigueur | date | obligatoire |
+
+Fonctionnement :
+
+- les montants sont saisis en euros et stockés en centimes (14 555,00 € → 1455500), sans perte ;
+- les six paramètres se renseignent **ensemble** : laissés tous vides, l’année reste utilisable pour les dépenses
+  (télétravail, repas) mais la carte indique « Comparaison forfait / frais réels non disponible pour <année> :
+  paramètres du forfait incomplets » et les utilisateurs voient `configuration_missing` pour cette année ;
+- dès que les six champs sont enregistrés, la carte indique « Comparaison forfait / frais réels disponible pour
+  <année> » et la comparaison des utilisateurs pour cette année passe au calcul effectif ;
+- une valeur refusée (taux hors 1–100, minimum supérieur au plafond, montant négatif, version ou source vide, date
+  invalide, groupe incomplet) est signalée dans le formulaire et **rien n’est enregistré**, ni pour les six
+  paramètres ni pour les champs historiques de la même sauvegarde ;
+- le bloc « Ajouter une année » propose les mêmes champs : une année peut être créée avec ou sans les paramètres
+  du forfait, puis complétée plus tard.
+
+Valeurs de référence à saisir par l’administrateur (elles ne sont pas codées dans l’application) : revenus 2025 →
+minimum 509 €, plafond 14 555 € ; revenus 2024 → 504 € / 14 426 € ; revenus 2023 → 495 € / 14 171 €.
+
 ## Limites connues et roadmap
 
 Fonctionnalités indiquées comme **roadmap** ou à compléter :
