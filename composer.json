@@ -33,7 +33,7 @@
         "symfony/twig-bundle": "8.0.*",
         "symfony/uid": "^8.0",
         "symfony/validator": "^8.0",
-        "symfony/yaml": "8.0.*",
+        "symfony/yaml": "8.1.*",
         "symfonycasts/reset-password-bundle": "^1.25",
         "webmozart/assert": "^2.3"
     },
